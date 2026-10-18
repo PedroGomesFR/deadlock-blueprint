@@ -1,0 +1,60 @@
+{
+  "name": "deadlock-tactical-autobuild",
+  "version": "1.2.0",
+  "description": "Application Desktop & Overlay pour Deadlock : Détection d'écran OCR/Vision et recommandation dynamique de builds selon la lane et les ennemis.",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron . --dev",
+    "dev": "concurrently -k \"npm run dev:vite\" \"npm run dev:electron\"",
+    "build": "vite build",
+    "start": "electron .",
+    "update-builds": "node scripts/update-builds.mjs",
+    "dist": "vite build && electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "com.vandicta.deadlock-blueprint",
+    "productName": "Deadlock Blueprint",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Deadlock-Blueprint-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "lucide-react": "^0.460.0",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.15",
+    "tesseract.js": "^5.1.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "wait-on": "^8.0.1"
+  }
+}

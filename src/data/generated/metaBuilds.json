@@ -1,0 +1,5862 @@
+{
+  "generatedAt": "2026-10-18T15:38:51.709Z",
+  "windowDays": 30,
+  "heroes": {
+    "infernus": {
+      "apiHeroId": 1,
+      "nameFr": "Infernus",
+      "matches": 49715,
+      "winRate": 0.47484662576687114,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Napalm",
+          "nameFr": "Napalm",
+          "descriptionFr": "Infernus crache une mixture incendiaire, qui inflige des dégâts spirituels, applique un ralentissement, et recouvre les cibles de napalm."
+        },
+        {
+          "key": "2",
+          "nameEn": "Flame Dash",
+          "nameFr": "Élanflammé",
+          "descriptionFr": "Infernus s'élance vers l'avant, obtient de la slow resistance et laisse une trainée de flammes qui inflige des dégâts spirituels au fil du temps. Maintenez [W] pendant l'élan pour augmenter la distance parcourue."
+        },
+        {
+          "key": "3",
+          "nameEn": "Afterburn",
+          "nameFr": "Ignition persistante",
+          "descriptionFr": "Les impacts des balles accumulent de la brulure et infligent des dégâts spirituels au fil du temps. Les capacités se réinitialisent à la durée de brulure de base et les coups infligés allongent celle-ci."
+        },
+        {
+          "key": "4",
+          "nameEn": "Concussive Combustion",
+          "nameFr": "Combustion explosive",
+          "descriptionFr": "Infernus se transforme en bombe humaine qui inflige des dégâts spirituels et applique un étourdissement à toutes les unités ennemies proches après un délai.Une fois lancée, Combustion explosive ne peut pas être interrompue."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "49 715 parties Oracle+ sur 30 jours • 47,5 % de victoires pour le héros",
+          "winRate": 0.47484662576687114,
+          "matches": 49715,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "extra_regen",
+              "rapid_rounds",
+              "extended_magazine",
+              "extra_charge"
+            ],
+            "mid": [
+              "improved_spirit",
+              "swift_striker",
+              "titanic_magazine",
+              "spirit_lifesteal",
+              "duration_extender",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "rapid_recharge",
+              "toxic_bullets",
+              "debuff_remover",
+              "superior_duration",
+              "escalating_exposure",
+              "spiritual_overflow",
+              "ricochet"
+            ],
+            "situational": [
+              "infuser",
+              "indomitable",
+              "mercurial_magnum",
+              "juggernaut",
+              "leech",
+              "boundless_spirit"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 393668,
+          "title": "Meilleur build publié — 53,8 % de victoires",
+          "subtitle": "« basil dash new new new new new new » • 253 parties Oracle+",
+          "winRate": 0.5375494071146245,
+          "matches": 253,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "grit",
+              "extra_regen",
+              "extended_magazine",
+              "extra_charge",
+              "rapid_rounds",
+              "mystic_reach"
+            ],
+            "mid": [
+              "healbane",
+              "spirit_lifesteal",
+              "improved_spirit",
+              "swift_striker",
+              "debuff_reducer",
+              "titanic_magazine",
+              "duration_extender",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "rapid_recharge",
+              "debuff_remover",
+              "counterspell",
+              "warp_stone",
+              "metal_skin",
+              "spirit_resilience",
+              "bullet_resilience",
+              "toxic_bullets",
+              "superior_duration",
+              "escalating_exposure"
+            ],
+            "situational": [
+              "unstoppable",
+              "infuser",
+              "divine_barrier",
+              "indomitable",
+              "spellbreaker",
+              "plated_armor",
+              "phantom_strike",
+              "transcendent_cooldown",
+              "witchmail",
+              "greater_expansion"
+            ]
+          }
+        }
+      ]
+    },
+    "seven": {
+      "apiHeroId": 2,
+      "nameFr": "Seven",
+      "matches": 33036,
+      "winRate": 0.5335088993824918,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Lightning Ball",
+          "nameFr": "Boule de foudre",
+          "descriptionFr": "Lance une boule de foudre qui se déplace en ligne droite. Inflige des dégâts à toutes les cibles dans son rayon. La boule ralentit sa course lorsqu'elle inflige des dégâts à des unités ennemies et s'arrête si elle rencontre un obstacle."
+        },
+        {
+          "key": "2",
+          "nameEn": "Static Charge",
+          "nameFr": "Charge statique",
+          "descriptionFr": "Applique une charge à une unité occultiste ciblée. Après une courte durée, la charge statique étourdit et inflige des dégâts aux unités ennemies dans son rayon."
+        },
+        {
+          "key": "3",
+          "nameEn": "Power Surge",
+          "nameFr": "Surtension",
+          "descriptionFr": "Seven électrise son arme. Ses balles infligent des dégâts de choc à ses cibles. Ce choc rebondit sur les unités ennemies proches de la cible. Se produit une fois pour chaque rafale de tirs."
+        },
+        {
+          "key": "4",
+          "nameEn": "Storm Cloud",
+          "nameFr": "Orage magnétique",
+          "descriptionFr": "Canalise un orage magnétique grandissant autour de Seven qui inflige des dégâts à toutes les unités ennemies dans son rayon. Ces dernières ne subissent pas de dégâts si elles sont hors du champ de vision."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "33 036 parties Oracle+ sur 30 jours • 53,4 % de victoires pour le héros",
+          "winRate": 0.5335088993824918,
+          "matches": 33036,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_regen",
+              "extra_stamina",
+              "grit",
+              "extra_spirit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "arcane_surge",
+              "healbane",
+              "mystic_vulnerability",
+              "duration_extender",
+              "spirit_lifesteal",
+              "debuff_reducer"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "toxic_bullets",
+              "escalating_exposure",
+              "superior_duration",
+              "greater_expansion",
+              "unstoppable",
+              "infuser"
+            ],
+            "situational": [
+              "mercurial_magnum",
+              "spirit_burn",
+              "lightning_scroll",
+              "boundless_spirit",
+              "spiritual_overflow",
+              "transcendent_cooldown"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 722319,
+          "title": "Meilleur build publié — 59,3 % de victoires",
+          "subtitle": "« SPAM BALLS AND SUPER ULTIMATE - deadlocked.gg » • 241 parties Oracle+",
+          "winRate": 0.5933609958506224,
+          "matches": 241,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "4",
+            "1",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_charge",
+              "extra_spirit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "intensifying_magazine",
+              "healbane",
+              "improved_spirit",
+              "mystic_vulnerability",
+              "duration_extender"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "toxic_bullets",
+              "greater_expansion",
+              "superior_cooldown",
+              "escalating_exposure",
+              "boundless_spirit",
+              "superior_duration",
+              "transcendent_cooldown",
+              "infuser",
+              "spirit_burn"
+            ],
+            "situational": [
+              "extra_regen",
+              "trophy_collector",
+              "enchanters_barrier",
+              "metal_skin",
+              "debuff_remover",
+              "spirit_resilience",
+              "bullet_resilience",
+              "unstoppable",
+              "leech",
+              "refresher"
+            ]
+          }
+        }
+      ]
+    },
+    "vindicta": {
+      "apiHeroId": 3,
+      "nameFr": "Vindicta",
+      "matches": 42380,
+      "winRate": 0.49957527135441243,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Stake",
+          "nameFr": "Entrave",
+          "descriptionFr": "Lance un pieu qui permet d'attacher les unités ennemies à l'endroit où il atterrit. Les déplacements de l'unité piégée sont limités à la longueur de la corde attachée au pieu."
+        },
+        {
+          "key": "2",
+          "nameEn": "Flight",
+          "nameFr": "Envol",
+          "descriptionFr": "Vindicta s'élance dans les airs et s'envole. Une fois en l'air, son arme inflige des dégâts spirituels bonus et ses objets bénéficient d'une portée accrue."
+        },
+        {
+          "key": "3",
+          "nameEn": "Crow Familiar",
+          "nameFr": "Nuée de corneilles",
+          "descriptionFr": "Les corneilles de Vindicta infligent des dégâts d'impact, réduisent la résistance aux balles de la cible et la font saigner, ce qui lui inflige des dégâts en fonction de ses PV actuels."
+        },
+        {
+          "key": "4",
+          "nameEn": "Assassinate",
+          "nameFr": "Assassinat",
+          "descriptionFr": "Vindicta utilise la lunette de son fusil pour effectuer un puissant tir de longue portée. La totalité des dégâts n'est infligée qu'après la charge complète, atteinte 1.0 s après avoir utilisé la lunette. Inflige des dégâts bonus aux cibles ennemies à qui il re"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "42 380 parties Oracle+ sur 30 jours • 50,0 % de victoires pour le héros",
+          "winRate": 0.49957527135441243,
+          "matches": 42380,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_spirit",
+              "extra_charge",
+              "sprint_boots",
+              "rapid_rounds"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "improved_spirit",
+              "quicksilver_reload",
+              "long_range",
+              "enduring_speed",
+              "swift_striker"
+            ],
+            "late": [
+              "rapid_recharge",
+              "counterspell",
+              "sharpshooter",
+              "burst_fire",
+              "spellslinger",
+              "spiritual_overflow",
+              "mercurial_magnum"
+            ],
+            "situational": [
+              "lucky_shot",
+              "vampiric_burst",
+              "leech",
+              "bullet_lifesteal",
+              "weakening_headshot",
+              "spirit_lifesteal"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 668001,
+          "title": "Meilleur build publié — 55,5 % de victoires",
+          "subtitle": "« APZ Carry Vindicta - Twitch.tv/Aypeasy » • 200 parties Oracle+",
+          "winRate": 0.555,
+          "matches": 200,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "extra_charge"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "bullet_resist_shredder",
+              "enchanters_barrier",
+              "active_reload",
+              "swift_striker",
+              "long_range",
+              "fleetfoot"
+            ],
+            "late": [
+              "rapid_recharge",
+              "fury_trance",
+              "blood_tribute",
+              "sharpshooter",
+              "spellslinger",
+              "counterspell",
+              "silencer",
+              "armor_piercer",
+              "leech",
+              "crippling_headshot"
+            ],
+            "situational": [
+              "unstoppable",
+              "siphon_bullets",
+              "frenzy",
+              "monster_rounds",
+              "extra_regen",
+              "healing_rite",
+              "battle_vest",
+              "spirit_shielding",
+              "enduring_speed",
+              "debuff_remover"
+            ]
+          }
+        }
+      ]
+    },
+    "lady_geist": {
+      "apiHeroId": 4,
+      "nameFr": "Dame Geist",
+      "matches": 23148,
+      "winRate": 0.47852946258856055,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Essence Bomb",
+          "nameFr": "Bombe de quintessence",
+          "descriptionFr": "Dame Geist sacrifie une partie de ses PV pour lancer une bombe qui inflige des dégâts après un bref délai d'amorçage.Les dégâts autoinfligés sont spirituels et peuvent être réduits."
+        },
+        {
+          "key": "2",
+          "nameEn": "Life Drain",
+          "nameFr": "Transfert vital",
+          "descriptionFr": "Crée un lien qui draine les PV d'une cible ennemie au fil du temps et soigne Dame Geist. La cible doit être dans le champ de vision et à portée pour que le vol de vie fonctionne. Dame Geist peut tirer et utiliser ses autres capacités pendant ce temps, mais sa "
+        },
+        {
+          "key": "3",
+          "nameEn": "Malice",
+          "nameFr": "Malice",
+          "descriptionFr": "Dame Geist sacrifie une partie de ses PV pour lancer des éclats de sang qui appliquent une charge de Malice. Chaque charge ralentit la cible et augmente les dégâts infligés par Dame Geist. Le ralentissement s'estompe graduellement."
+        },
+        {
+          "key": "4",
+          "nameEn": "Soul Exchange",
+          "nameFr": "Échange d'âmes",
+          "descriptionFr": "Dame Geist échange ses PV avec une unité occultiste ennemie. Les PV de la cible ne peuvent être réduits en dessous d'un pourcentage minimum, et Dame Geist recevra toujours un nombre de PV minimums en fonction des PV actuels de la cible."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "23 148 parties Oracle+ sur 30 jours • 47,9 % de victoires pour le héros",
+          "winRate": 0.47852946258856055,
+          "matches": 23148,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_regen",
+              "mystic_burst",
+              "mystic_regeneration",
+              "extra_spirit",
+              "extra_stamina"
+            ],
+            "mid": [
+              "kinetic_dash",
+              "healing_booster",
+              "recharging_rush",
+              "spirit_lifesteal",
+              "fleetfoot",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "improved_burst",
+              "berserker",
+              "spirit_resilience",
+              "superior_cooldown",
+              "spellslinger",
+              "escalating_exposure"
+            ],
+            "situational": [
+              "frenzy",
+              "spiritual_overflow",
+              "spirit_burn",
+              "refresher",
+              "leech",
+              "transcendent_cooldown"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 749269,
+          "title": "Meilleur build publié — 46,8 % de victoires",
+          "subtitle": "« twitch.tv/oses » • 474 parties Oracle+",
+          "winRate": 0.46835443037974683,
+          "matches": 474,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_regen",
+              "mystic_burst",
+              "mystic_regeneration",
+              "extra_spirit"
+            ],
+            "mid": [
+              "kinetic_dash",
+              "healing_booster",
+              "fleetfoot",
+              "recharging_rush"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "surge_of_power",
+              "spirit_resilience",
+              "berserker",
+              "spellslinger",
+              "warp_stone",
+              "frenzy",
+              "refresher",
+              "plated_armor",
+              "inhibitor"
+            ],
+            "situational": [
+              "ricochet",
+              "healing_tempo",
+              "crippling_headshot",
+              "silencer",
+              "blood_tribute",
+              "unstoppable",
+              "cheat_death",
+              "colossus",
+              "counterspell",
+              "debuff_remover"
+            ]
+          }
+        }
+      ]
+    },
+    "abrams": {
+      "apiHeroId": 6,
+      "nameFr": "Abrams",
+      "matches": 41048,
+      "winRate": 0.5128629896706295,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Siphon Life",
+          "nameFr": "Siphonnage",
+          "descriptionFr": "Abrams draine la vie des unités ennemies proches. Inflige des dégâts spirituels au fil du temps et soigne à hauteur d'une partie des dégâts infligés."
+        },
+        {
+          "key": "2",
+          "nameEn": "Shoulder Charge",
+          "nameFr": "Charge taurine",
+          "descriptionFr": "Abrams charge vers l'avant et entraine ses adversaires avec lui. Plaquer une unité occultiste contre un mur applique un étourdissement.Entrer en collision avec une unité occultiste augmente la vitesse de charge."
+        },
+        {
+          "key": "3",
+          "nameEn": "Infernal Resilience",
+          "nameFr": "Résilience infernale",
+          "descriptionFr": "Abrams obtient un bonus de défense. Quand il subit des dégâts, confère temporairement de la régénération en fonction des dégâts subis."
+        },
+        {
+          "key": "4",
+          "nameEn": "Seismic Impact",
+          "nameFr": "Impact sismique",
+          "descriptionFr": "Abrams s'élance dans les airs avant de s'écraser au sol, ce qui inflige des dégâts spirituels et provoque un étourdissement."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "41 048 parties Oracle+ sur 30 jours • 51,3 % de victoires pour le héros",
+          "winRate": 0.5128629896706295,
+          "matches": 41048,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "extra_regen",
+              "monster_rounds",
+              "close_quarters",
+              "melee_lifesteal"
+            ],
+            "mid": [
+              "stalker",
+              "melee_charge",
+              "bullet_resist_shredder",
+              "healing_booster",
+              "duration_extender"
+            ],
+            "late": [
+              "warp_stone",
+              "hunters_aura",
+              "lifestrike",
+              "superior_duration",
+              "spirit_resilience",
+              "phantom_strike",
+              "crushing_fists"
+            ],
+            "situational": [
+              "colossus",
+              "berserker",
+              "witchmail",
+              "weighted_shots",
+              "spellbreaker",
+              "juggernaut"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 748747,
+          "title": "Meilleur build publié — 51,6 % de victoires",
+          "subtitle": "« lystic » • 900 parties Oracle+",
+          "winRate": 0.5155555555555555,
+          "matches": 900,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "close_quarters",
+              "melee_lifesteal",
+              "extra_regen",
+              "rebuttal"
+            ],
+            "mid": [
+              "melee_charge",
+              "stalker",
+              "bullet_resist_shredder",
+              "debuff_reducer",
+              "battle_vest"
+            ],
+            "late": [
+              "warp_stone",
+              "hunters_aura",
+              "lifestrike",
+              "berserker",
+              "superior_duration",
+              "phantom_strike",
+              "plated_armor",
+              "debuff_remover",
+              "juggernaut",
+              "bullet_resilience"
+            ],
+            "situational": [
+              "spellbreaker",
+              "unstoppable",
+              "colossus",
+              "counterspell",
+              "restorative_locket",
+              "grit",
+              "weighted_shots",
+              "spirit_resilience"
+            ]
+          }
+        }
+      ]
+    },
+    "wraith": {
+      "apiHeroId": 7,
+      "nameFr": "Scopa",
+      "matches": 57795,
+      "winRate": 0.5241110822735531,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Card Trick",
+          "nameFr": "Tour de cartes",
+          "descriptionFr": "Quand Scopa inflige des dégâts des armes, elle invoque des cartes d'une couleur aléatoire qui peuvent être lancées. Les cartes lancées sont projetées vers les cibles ou le point visé. L'utilisation secondaire permet de lancer la première carte."
+        },
+        {
+          "key": "2",
+          "nameEn": "Project Mind",
+          "nameFr": "Projection mentale",
+          "descriptionFr": "Téléporte Scopa à l'endroit ciblé."
+        },
+        {
+          "key": "3",
+          "nameEn": "Full Auto",
+          "nameFr": "Salve automatique",
+          "descriptionFr": "Scopa obtient un bonus temporaire de cadence de tir et inflige des dégâts spirituels bonus."
+        },
+        {
+          "key": "4",
+          "nameEn": "Telekinesis",
+          "nameFr": "Psychokinésie",
+          "descriptionFr": "Scopa soulève une unité ennemie dans les airs et la projette vers l'emplacement ciblé."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "57 795 parties Oracle+ sur 30 jours • 52,4 % de victoires pour le héros",
+          "winRate": 0.5241110822735531,
+          "matches": 57795,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_regen",
+              "extra_health",
+              "rapid_rounds",
+              "extra_spirit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "swift_striker",
+              "healing_booster",
+              "enduring_speed",
+              "improved_spirit",
+              "spirit_lifesteal"
+            ],
+            "late": [
+              "tesla_bullets",
+              "surge_of_power",
+              "debuff_remover",
+              "ricochet",
+              "mercurial_magnum",
+              "capacitor",
+              "spiritual_overflow"
+            ],
+            "situational": [
+              "spellslinger",
+              "boundless_spirit",
+              "silencer",
+              "leech",
+              "indomitable",
+              "unstoppable"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 245057,
+          "title": "Meilleur build publié — 57,1 % de victoires",
+          "subtitle": "« Parzelion's Wraith Build » • 739 parties Oracle+",
+          "winRate": 0.571041948579161,
+          "matches": 739,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_regen",
+              "extra_spirit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "improved_spirit",
+              "bullet_resist_shredder",
+              "swift_striker",
+              "spirit_lifesteal",
+              "healing_booster",
+              "soul_shredder_bullets"
+            ],
+            "late": [
+              "tesla_bullets",
+              "debuff_remover",
+              "capacitor",
+              "mercurial_magnum",
+              "spiritual_overflow",
+              "ricochet",
+              "crippling_headshot",
+              "spirit_rend"
+            ],
+            "situational": [
+              "healbane",
+              "toxic_bullets",
+              "slowing_hex",
+              "counterspell",
+              "spirit_resilience",
+              "inhibitor",
+              "silencer",
+              "boundless_spirit",
+              "spellslinger",
+              "unstoppable"
+            ]
+          }
+        }
+      ]
+    },
+    "mcginnis": {
+      "apiHeroId": 8,
+      "nameFr": "McGinnis",
+      "matches": 16799,
+      "winRate": 0.4922912078099887,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Mini Turret",
+          "nameFr": "Minitourelle",
+          "descriptionFr": "McGinnis déploie une tourelle qui tire sur les adversaires et leur inflige des dégâts spirituels au fil du temps. La tourelle disparait après un certain temps.Les tourelles infligent des dégâts réduits aux troupiers et aux objectifs."
+        },
+        {
+          "key": "2",
+          "nameEn": "Medicinal Specter",
+          "nameFr": "Vaporisateur médicinal",
+          "descriptionFr": "McGinnis conjure un esprit qui soigne les unités alliées proches."
+        },
+        {
+          "key": "3",
+          "nameEn": "Spectral Wall",
+          "nameFr": "Mur spectral",
+          "descriptionFr": "McGinnis crée un mur qui applique un ralentissement aux adversaires sur son passage. McGinnis fait exploser le mur pour diviser le terrain en deux et infliger des dégâts aux unités ennemies à proximité. Après l'incantation, le mur explosera prématurément quand"
+        },
+        {
+          "key": "4",
+          "nameEn": "Heavy Barrage",
+          "nameFr": "Tir de barrage",
+          "descriptionFr": "McGinnis déploie une volée de roquettes à tête chercheuse sur la zone ciblée. McGinnis est ralentie, mais elle peut toujours utiliser de l'endurance."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "16 799 parties Oracle+ sur 30 jours • 49,2 % de victoires pour le héros",
+          "winRate": 0.4922912078099887,
+          "matches": 16799,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_charge",
+              "extra_stamina",
+              "sprint_boots",
+              "mystic_reach"
+            ],
+            "mid": [
+              "intensifying_magazine",
+              "enchanters_barrier",
+              "healbane",
+              "mystic_slow",
+              "mystic_vulnerability",
+              "improved_cooldown"
+            ],
+            "late": [
+              "heroic_aura",
+              "rapid_recharge",
+              "superior_stamina",
+              "escalating_exposure",
+              "superior_cooldown",
+              "greater_expansion",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "spirit_burn",
+              "healing_tempo",
+              "spiritual_overflow",
+              "transcendent_cooldown",
+              "echo_shard",
+              "superior_duration"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 696055,
+          "title": "Meilleur build publié — 44,6 % de victoires",
+          "subtitle": "« Rosalia's - Combat Cycle McG » • 202 parties Oracle+",
+          "winRate": 0.44554455445544555,
+          "matches": 202,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_charge",
+              "extra_stamina",
+              "extra_spirit"
+            ],
+            "mid": [
+              "intensifying_magazine",
+              "healbane",
+              "enchanters_barrier",
+              "arcane_surge",
+              "improved_spirit"
+            ],
+            "late": [
+              "heroic_aura",
+              "warp_stone",
+              "silence_wave",
+              "magic_carpet",
+              "superior_cooldown",
+              "escalating_exposure",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "weapon_shielding",
+              "guardian_ward",
+              "suppressor",
+              "titanic_magazine",
+              "spirit_resilience",
+              "counterspell",
+              "superior_stamina",
+              "rapid_recharge",
+              "greater_expansion",
+              "healing_nova"
+            ]
+          }
+        }
+      ]
+    },
+    "paradox": {
+      "apiHeroId": 10,
+      "nameFr": "Paradox",
+      "matches": 43191,
+      "winRate": 0.46065152462318537,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Pulse Grenade",
+          "nameFr": "Grenade à impulsion",
+          "descriptionFr": "Paradox lance une grenade qui émet des impulsions à l'impact. Chaque impulsion agrandit le rayon et inflige des dégâts spirituels, ralentit le temps et inflige des dégâts augmentés qui se cumulent pour Paradox contre la cible."
+        },
+        {
+          "key": "2",
+          "nameEn": "Time Wall",
+          "nameFr": "Écran temporel",
+          "descriptionFr": "Paradox érige un écran de distorsion temporelle qui arrête le temps pour tous les projectiles et balles ennemis qui la touchent et augmente la vitesse et les dégâts des balles tirées par votre équipe. Les unités ennemies qui touchent le mur sont brièvement ral"
+        },
+        {
+          "key": "3",
+          "nameEn": "Kinetic Carbine",
+          "nameFr": "Carabine cinétique",
+          "descriptionFr": "Paradox charge un puissant tir d'énergie temporelle, qui inflige des dégâts spirituels et arrête le temps pour les unités ennemies touchées. Les dégâts infligés augmentent avec le dégâts des armes. La vitesse de déplacement est augmentée pendant la charge. Pen"
+        },
+        {
+          "key": "4",
+          "nameEn": "Paradoxical Swap",
+          "nameFr": "Permutation paradoxale",
+          "descriptionFr": "Paradox lance un projectile qui échange sa position avec celle de la cible."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "43 191 parties Oracle+ sur 30 jours • 46,1 % de victoires pour le héros",
+          "winRate": 0.46065152462318537,
+          "matches": 43191,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "4",
+            "2",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "headshot_booster",
+              "high_velocity_mag",
+              "extra_health",
+              "mystic_burst",
+              "extra_stamina"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "long_range",
+              "trophy_collector",
+              "mystic_shot",
+              "slowing_hex",
+              "improved_cooldown"
+            ],
+            "late": [
+              "headhunter",
+              "sharpshooter",
+              "express_shot",
+              "improved_burst",
+              "superior_stamina",
+              "mystic_reverb",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "glass_cannon",
+              "spirit_burn",
+              "crippling_headshot",
+              "transcendent_cooldown",
+              "indomitable",
+              "weakening_headshot"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 651526,
+          "title": "Meilleur build publié — 48,6 % de victoires",
+          "subtitle": "« Terrordox By Joechuck (Yoshi's Intended Paradox) » • 142 parties Oracle+",
+          "winRate": 0.4859154929577465,
+          "matches": 142,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "close_quarters",
+              "extra_stamina",
+              "extra_spirit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "arcane_surge",
+              "duration_extender",
+              "improved_spirit",
+              "spirit_lifesteal",
+              "improved_cooldown"
+            ],
+            "late": [
+              "alchemical_fire",
+              "superior_stamina",
+              "echo_shard",
+              "superior_duration",
+              "superior_cooldown",
+              "greater_expansion"
+            ],
+            "situational": [
+              "rebuttal",
+              "extra_health",
+              "extra_regen",
+              "grit",
+              "magic_carpet",
+              "spirit_burn",
+              "transcendent_cooldown",
+              "slowing_hex",
+              "vortex_web",
+              "boundless_spirit"
+            ]
+          }
+        }
+      ]
+    },
+    "dynamo": {
+      "apiHeroId": 11,
+      "nameFr": "Dynamo",
+      "matches": 31176,
+      "winRate": 0.5369835771105979,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Kinetic Pulse",
+          "nameFr": "Impulsion cinétique",
+          "descriptionFr": "Dynamo libère un choc énergétique. La cible subit des dégâts spirituels ainsi qu'une projection aérienne."
+        },
+        {
+          "key": "2",
+          "nameEn": "Quantum Entanglement",
+          "nameFr": "Intrication quantique",
+          "descriptionFr": "Dynamo devient brièvement intouchable et se téléporte vers l'endroit ciblé. Son endurance est restaurée. : téléporte également les unités alliées proches."
+        },
+        {
+          "key": "3",
+          "nameEn": "Rejuvenating Aurora",
+          "nameFr": "Aurore curative",
+          "descriptionFr": "Pendant la canalisation, Dynamo restaure progressivement ses PV et ceux des occultistes de l'équipe à proximité.Les élans et les attaques de mêlée n'interrompent pas la canalisation."
+        },
+        {
+          "key": "4",
+          "nameEn": "Singularity",
+          "nameFr": "Singularité",
+          "descriptionFr": "Dynamo génère une singularité dans ses mains, ce qui inflige des dégâts spirituels au fil du temps, applique un étourdissement et attire les unités ennemies à proximité."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "31 176 parties Oracle+ sur 30 jours • 53,7 % de victoires pour le héros",
+          "winRate": 0.5369835771105979,
+          "matches": 31176,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "headshot_booster",
+              "extra_regen",
+              "extra_charge",
+              "sprint_boots",
+              "extra_stamina",
+              "mystic_reach"
+            ],
+            "mid": [
+              "trophy_collector",
+              "arcane_surge",
+              "healing_booster",
+              "improved_cooldown",
+              "duration_extender",
+              "debuff_reducer"
+            ],
+            "late": [
+              "rapid_recharge",
+              "warp_stone",
+              "superior_cooldown",
+              "superior_duration",
+              "greater_expansion",
+              "unstoppable",
+              "refresher"
+            ],
+            "situational": [
+              "healing_tempo",
+              "diviners_kevlar",
+              "transcendent_cooldown",
+              "indomitable",
+              "cheat_death",
+              "mystic_reverb"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 802727,
+          "title": "Meilleur build publié — 58,8 % de victoires",
+          "subtitle": "« durag dynamo ttvcrayon_fps » • 114 parties Oracle+",
+          "winRate": 0.5877192982456141,
+          "matches": 114,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_charge",
+              "rapid_rounds"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "swift_striker",
+              "fleetfoot",
+              "enduring_speed",
+              "recharging_rush",
+              "bullet_resist_shredder",
+              "quicksilver_reload",
+              "battle_vest"
+            ],
+            "late": [
+              "berserker",
+              "spirit_resilience",
+              "siphon_bullets",
+              "mercurial_magnum",
+              "spiritual_overflow",
+              "plated_armor",
+              "cheat_death",
+              "colossus",
+              "armor_piercer",
+              "crippling_headshot"
+            ],
+            "situational": [
+              "silencer",
+              "frenzy",
+              "juggernaut",
+              "healing_tempo",
+              "vampiric_burst",
+              "boundless_spirit",
+              "ethereal_shift",
+              "unstoppable",
+              "spellbreaker"
+            ]
+          }
+        }
+      ]
+    },
+    "kelvin": {
+      "apiHeroId": 12,
+      "nameFr": "Kelvin",
+      "matches": 26958,
+      "winRate": 0.535573855627272,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Frost Grenade",
+          "nameFr": "Grenade de givre",
+          "descriptionFr": "Kelvin lance une grenade qui explose dans un nuage de glace qui soigne les unités alliées et inflige des dégâts spirituels et unralentissement aux adversaires."
+        },
+        {
+          "key": "2",
+          "nameEn": "Ice Path",
+          "nameFr": "Voie glacée",
+          "descriptionFr": "Kelvin crée une voie flottante faite de glace et de neige qui augmente sa vitesse de déplacement et celles des unités alliées. Pendant la durée de la capacité, Kelvin gagne 60 % de résistance aux ralentissements. Les unités ennemies peuvent aussi marcher sur l"
+        },
+        {
+          "key": "3",
+          "nameEn": "Arctic Beam",
+          "nameFr": "Rayon arctique",
+          "descriptionFr": "Kelvin projette de l'énergie glaciale devant lui. Les cibles subissent des dégâts et leur vitesse de déplacement et leur cadence de tir sont réduites. Plus elles sont ciblées longtemps par le rayon, plus la réduction est importante. La vitesse de déplacement d"
+        },
+        {
+          "key": "4",
+          "nameEn": "Frozen Shelter",
+          "nameFr": "Dôme gelé",
+          "descriptionFr": "Kelvin se cible lui-même ou une unité alliée et crée un dôme impénétrable. Les unités alliées sous le dôme bénéficient d'une régénération rapide, tandis que les unités ennemies sont ralenties. Les objectifs deviennent invulnérables et gèlent sous le Dôme gelé."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "26 958 parties Oracle+ sur 30 jours • 53,6 % de victoires pour le héros",
+          "winRate": 0.535573855627272,
+          "matches": 26958,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "extra_charge",
+              "sprint_boots",
+              "extra_spirit",
+              "mystic_burst",
+              "mystic_reach"
+            ],
+            "mid": [
+              "trophy_collector",
+              "healing_booster",
+              "healbane",
+              "improved_spirit",
+              "mystic_vulnerability",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "superior_cooldown",
+              "escalating_exposure",
+              "superior_duration",
+              "boundless_spirit",
+              "greater_expansion",
+              "spirit_burn"
+            ],
+            "situational": [
+              "infuser",
+              "mystic_reverb",
+              "healing_tempo",
+              "transcendent_cooldown",
+              "juggernaut",
+              "refresher"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 241631,
+          "title": "Meilleur build publié — 56,0 % de victoires",
+          "subtitle": "« Cirno's Medi-Beam » • 175 parties Oracle+",
+          "winRate": 0.56,
+          "matches": 175,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "mystic_reach"
+            ],
+            "mid": [
+              "arcane_surge",
+              "enchanters_barrier",
+              "healing_booster",
+              "enduring_speed",
+              "mystic_vulnerability",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "improved_burst",
+              "superior_cooldown",
+              "boundless_spirit",
+              "rapid_recharge",
+              "greater_expansion",
+              "superior_duration",
+              "spirit_burn",
+              "escalating_exposure",
+              "mystic_reverb",
+              "scourge"
+            ],
+            "situational": [
+              "infuser",
+              "indomitable",
+              "healing_rite",
+              "rebuttal",
+              "monster_rounds",
+              "battle_vest",
+              "radiant_regeneration",
+              "return_fire",
+              "metal_skin",
+              "counterspell"
+            ]
+          }
+        }
+      ]
+    },
+    "haze": {
+      "apiHeroId": 13,
+      "nameFr": "Nébula",
+      "matches": 85206,
+      "winRate": 0.5266530526019294,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Sleep Dagger",
+          "nameFr": "Dague de sommeil",
+          "descriptionFr": "Lance une dague qui inflige des dégâts et endort la cible ennemie. Les cibles endormies se réveillent peu après avoir subi des dégâts. Lancer une dague ne met pas fin à l'effet d'invisibilité. La dague n'interrompt pas les capacités canalisées des cibles ennem"
+        },
+        {
+          "key": "2",
+          "nameEn": "Smoke Bomb",
+          "nameFr": "Fumibombe",
+          "descriptionFr": "Disparait du champ de bataille. Devient invisible et gagne de la vitesse de course. L'invisibilité prend fin après avoir attaqué, mais pas si des objets sont utilisés. Même invisible, Nébula est visible des unités ennemies proches."
+        },
+        {
+          "key": "3",
+          "nameEn": "Fixation",
+          "nameFr": "Fixation",
+          "descriptionFr": "Tirer sur une cible augmente les dégâts balistiques contre celle-ci. Accorde une charge par tir réussi (trois s'il s'agit d'un tir en pleine tête)."
+        },
+        {
+          "key": "4",
+          "nameEn": "Bullet Dance",
+          "nameFr": "Danse balistique",
+          "descriptionFr": "Tire une salve de balles sur les unités ennemies proches avec une précision parfaite et inflige des dégâts balistiques supplémentaires"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "85 206 parties Oracle+ sur 30 jours • 52,7 % de victoires pour le héros",
+          "winRate": 0.5266530526019294,
+          "matches": 85206,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "rapid_rounds",
+              "extended_magazine",
+              "extra_health",
+              "sprint_boots"
+            ],
+            "mid": [
+              "active_reload",
+              "swift_striker",
+              "slowing_hex",
+              "enduring_speed",
+              "bullet_lifesteal",
+              "bullet_resist_shredder"
+            ],
+            "late": [
+              "fortitude",
+              "surge_of_power",
+              "burst_fire",
+              "ricochet",
+              "spirit_resilience",
+              "siphon_bullets",
+              "silencer"
+            ],
+            "situational": [
+              "lucky_shot",
+              "crippling_headshot",
+              "mercurial_magnum",
+              "inhibitor",
+              "rapid_recharge",
+              "hollow_point"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 262104,
+          "title": "Meilleur build publié — 55,9 % de victoires",
+          "subtitle": "« BIG GORDO AP » • 1 084 parties Oracle+",
+          "winRate": 0.559040590405904,
+          "matches": 1084,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "extra_charge",
+              "mystic_burst",
+              "sprint_boots"
+            ],
+            "mid": [
+              "enchanters_barrier",
+              "enduring_speed",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "warp_stone",
+              "improved_burst",
+              "spirit_burn",
+              "superior_cooldown",
+              "echo_shard",
+              "refresher",
+              "boundless_spirit",
+              "transcendent_cooldown",
+              "greater_expansion"
+            ],
+            "situational": [
+              "superior_duration",
+              "spellbreaker",
+              "plated_armor",
+              "debuff_remover",
+              "spirit_resilience",
+              "bullet_resilience",
+              "silence_wave",
+              "return_fire",
+              "suppressor",
+              "counterspell"
+            ]
+          }
+        }
+      ]
+    },
+    "holliday": {
+      "apiHeroId": 14,
+      "nameFr": "Holliday",
+      "matches": 33535,
+      "winRate": 0.5035038019979127,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Powder Keg",
+          "nameFr": "Baril de poudre",
+          "descriptionFr": "Holliday lance un baril qui explose après un certain temps et inflige des dégâts spirituels, met le feu aux adversaires et applique une projection aérienne. Le baril peut exploser prématurément s'il reçoit une balle, une attaque de mêlée, ou un autre baril. Le"
+        },
+        {
+          "key": "2",
+          "nameEn": "Bounce Pad",
+          "nameFr": "Trampoline",
+          "descriptionFr": "Holliday déploie un trampoline qui propulse les occultistes dans les airs. L'atterrissage provoque une explosion qui inflige des dégâts aux adversaires à proximité. Il ne peut y avoir qu'une explosion par personne et par trampoline."
+        },
+        {
+          "key": "3",
+          "nameEn": "Crackshot",
+          "nameFr": "As de la gâchette",
+          "descriptionFr": "Les tirs en pleine tête de Holliday infligent des dégâts bonus et appliquent un ralentissement qui s'estompe. Cet effet n'est appliqué que quand la capacité n'est pas en cours de récupération. Le temps de récupération est réduit de 50 % par PNJ touché. As de l"
+        },
+        {
+          "key": "4",
+          "nameEn": "Spirit Lasso",
+          "nameFr": "Lasso spirituel",
+          "descriptionFr": "Holliday lance son lasso. Il inflige des dégâts spirituels, entraine sa cible et applique un étourdissementL'utilisation du Trampoline prolonge la durée du Lasso spirituel."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "33 535 parties Oracle+ sur 30 jours • 50,4 % de victoires pour le héros",
+          "winRate": 0.5035038019979127,
+          "matches": 33535,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "headshot_booster",
+              "extra_charge",
+              "extra_spirit",
+              "sprint_boots",
+              "extra_stamina",
+              "mystic_burst"
+            ],
+            "mid": [
+              "trophy_collector",
+              "improved_spirit",
+              "mystic_shot",
+              "recharging_rush",
+              "duration_extender",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "headhunter",
+              "superior_stamina",
+              "improved_burst",
+              "superior_duration",
+              "superior_cooldown",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "lucky_shot",
+              "escalating_exposure",
+              "spirit_burn",
+              "spellslinger",
+              "glass_cannon",
+              "mystic_vulnerability"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 865553,
+          "title": "Meilleur build publié — 60,0 % de victoires",
+          "subtitle": "« Lomein holliday » • 130 parties Oracle+",
+          "winRate": 0.6,
+          "matches": 130,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "monster_rounds",
+              "extra_charge",
+              "spirit_strike",
+              "mystic_burst",
+              "restorative_shot",
+              "extra_stamina"
+            ],
+            "mid": [
+              "healbane",
+              "recharging_rush",
+              "duration_extender"
+            ],
+            "late": [
+              "rapid_recharge",
+              "debuff_remover",
+              "spirit_snatch",
+              "alchemical_fire",
+              "superior_stamina",
+              "improved_burst",
+              "superior_duration",
+              "superior_cooldown",
+              "indomitable",
+              "cursed_relic"
+            ],
+            "situational": [
+              "crippling_headshot",
+              "phantom_strike",
+              "unstoppable",
+              "transcendent_cooldown",
+              "slowing_hex",
+              "reactive_barrier",
+              "warp_stone",
+              "counterspell",
+              "diviners_kevlar",
+              "veil_walker"
+            ]
+          }
+        }
+      ]
+    },
+    "bebop": {
+      "apiHeroId": 15,
+      "nameFr": "Bebop",
+      "matches": 63932,
+      "winRate": 0.4754270162047175,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Exploding Uppercut",
+          "nameFr": "Uppercut explosif",
+          "descriptionFr": "Bebop repousse et inflige des dégâts de mêlée aux adversaires à proximité et inflige du recul. À l'atterrissage, les cibles infligent des dégâts spirituels et appliquent une cadence de tir diminuée aux autres adversaires proches. Uppercut explosif peut être la"
+        },
+        {
+          "key": "2",
+          "nameEn": "Sticky Bomb",
+          "nameFr": "Bombe collante",
+          "descriptionFr": "Bebop colle une bombe à retardement. L'explosion inflige des dégâts spirituels aux adversaires à proximité. Si la bombe touche ou tue une unité occultiste, Bombe collante obtient un bonus permanent de dégâts. Les charges sont réduites de moitié après 60 attaqu"
+        },
+        {
+          "key": "3",
+          "nameEn": "Grapple Arm",
+          "nameFr": "Bras mécanique",
+          "descriptionFr": "Bebop lance une main mécanique qui entraine la première cible sur sa trajectoire et la ramène. Bras mécanique peut être utilisé sur les unités alliées."
+        },
+        {
+          "key": "4",
+          "nameEn": "Hyper Beam",
+          "nameFr": "Hyperlaser",
+          "descriptionFr": "Bebop canalise un puissant flux d'énergie qui inflige des dégâts spirituels et applique un ralentissement."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "63 932 parties Oracle+ sur 30 jours • 47,5 % de victoires pour le héros",
+          "winRate": 0.4754270162047175,
+          "matches": 63932,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "headshot_booster",
+              "extra_regen",
+              "mystic_burst",
+              "spirit_strike",
+              "sprint_boots"
+            ],
+            "mid": [
+              "trophy_collector",
+              "stalker",
+              "slowing_hex",
+              "healing_booster",
+              "enduring_speed",
+              "fleetfoot"
+            ],
+            "late": [
+              "headhunter",
+              "veil_walker",
+              "fortitude",
+              "spirit_snatch",
+              "improved_burst",
+              "spirit_resilience",
+              "siphon_bullets"
+            ],
+            "situational": [
+              "silencer",
+              "mystic_reverb",
+              "transcendent_cooldown",
+              "witchmail",
+              "crippling_headshot",
+              "spirit_burn"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 722329,
+          "title": "Meilleur build publié — 56,4 % de victoires",
+          "subtitle": "« Bebop - HOOK, BOMB, DELETE and REPEAT - deadlocked.gg » • 140 parties Oracle+",
+          "winRate": 0.5642857142857143,
+          "matches": 140,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "spirit_strike",
+              "extra_spirit",
+              "sprint_boots"
+            ],
+            "mid": [
+              "trophy_collector",
+              "arcane_surge",
+              "improved_spirit"
+            ],
+            "late": [
+              "spirit_snatch",
+              "fortitude",
+              "veil_walker",
+              "boundless_spirit",
+              "improved_burst",
+              "witchmail",
+              "unstoppable",
+              "transcendent_cooldown"
+            ],
+            "situational": [
+              "healing_rite",
+              "extra_regen",
+              "slowing_hex",
+              "enchanters_barrier",
+              "healbane",
+              "echo_shard",
+              "bullet_resilience",
+              "spirit_resilience",
+              "counterspell",
+              "debuff_remover"
+            ]
+          }
+        }
+      ]
+    },
+    "calico": {
+      "apiHeroId": 16,
+      "nameFr": "Calico",
+      "matches": 43784,
+      "winRate": 0.501347524209757,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Gloom Bombs",
+          "nameFr": "Bombes moroses",
+          "descriptionFr": "Calico lance une grappe de bombes qui explosent après un certain temps et infligent des dégâts spirituels.Les cibles touchées par plusieurs bombes subissent 65 % de dégâts."
+        },
+        {
+          "key": "2",
+          "nameEn": "Leaping Slash",
+          "nameFr": "Bond lacérant",
+          "descriptionFr": "Calico fonce vers l'avant puis lacère les adversaires autour d'elle, infligeant des dégâts de mêlée. Si la compétence touche au moins une unité occultiste, elle obtient un faible montant de soins."
+        },
+        {
+          "key": "3",
+          "nameEn": "Ava",
+          "nameFr": "Ava",
+          "descriptionFr": "Calico rejoint le royaume des ombres et prend possession d'Ava. Elle gagne en bonus move speed qui augmente avec le temps, et devient invisible sur la minicarte. Après avoir subi des dégâts d'une unité occultiste ennemie, Calico perd son bonus de vitesse de dé"
+        },
+        {
+          "key": "4",
+          "nameEn": "Return to Shadows",
+          "nameFr": "Retour aux ombres",
+          "descriptionFr": "Calico rejoint le royaume des ombres. Elle devient intouchable, gagne de la bonus move speed, et inflige des dégâts spirituels. Après un délai, elle reprend sa forme humaine et inflige à nouveau des dégâts spirituels."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "43 784 parties Oracle+ sur 30 jours • 50,1 % de victoires pour le héros",
+          "winRate": 0.501347524209757,
+          "matches": 43784,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "3",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "melee_lifesteal",
+              "spirit_strike",
+              "sprint_boots",
+              "extra_spirit"
+            ],
+            "mid": [
+              "stalker",
+              "trophy_collector",
+              "cold_front",
+              "soul_shredder_bullets",
+              "mystic_vulnerability",
+              "improved_spirit"
+            ],
+            "late": [
+              "spirit_snatch",
+              "hunters_aura",
+              "debuff_remover",
+              "torment_pulse",
+              "arctic_blast",
+              "boundless_spirit",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "transcendent_cooldown",
+              "indomitable",
+              "spirit_burn",
+              "escalating_exposure",
+              "focus_lens",
+              "scourge"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 266497,
+          "title": "Meilleur build publié — 53,2 % de victoires",
+          "subtitle": "« I love cat[girl]s! Skelly's Spirit Assassin Build » • 284 parties Oracle+",
+          "winRate": 0.5316901408450704,
+          "matches": 284,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "3",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "melee_lifesteal",
+              "spirit_strike",
+              "sprint_boots"
+            ],
+            "mid": [
+              "stalker",
+              "trophy_collector",
+              "cold_front",
+              "improved_spirit",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "spirit_snatch",
+              "debuff_remover",
+              "hunters_aura",
+              "torment_pulse",
+              "arctic_blast",
+              "boundless_spirit",
+              "scourge",
+              "superior_cooldown",
+              "transcendent_cooldown",
+              "spirit_burn"
+            ],
+            "situational": [
+              "indomitable",
+              "ethereal_shift",
+              "colossus",
+              "escalating_exposure",
+              "crippling_headshot",
+              "improved_burst",
+              "close_quarters",
+              "extra_regen",
+              "grit",
+              "rebuttal"
+            ]
+          }
+        }
+      ]
+    },
+    "grey_talon": {
+      "apiHeroId": 17,
+      "nameFr": "Serregrise",
+      "matches": 23487,
+      "winRate": 0.46276663686294545,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Charged Shot",
+          "nameFr": "Tir chargé",
+          "descriptionFr": "Serregrise charge un tir puissant qui transperce les unités ennemies. Maintenez Capacité 1 ou pour retenir le tir."
+        },
+        {
+          "key": "2",
+          "nameEn": "Rain of Arrows",
+          "nameFr": "Pluie de flèches",
+          "descriptionFr": "Serregrise saute dans les airs et plane lentement. Tant qu'il est dans les airs, il gagne des dégâts des armes et des tirs multiples. permet de réduire la hauteur du saut. Appuyez sur Sauter/grimper pour arrêter de planer."
+        },
+        {
+          "key": "3",
+          "nameEn": "Spirit Snare",
+          "nameFr": "Collet spirituel",
+          "descriptionFr": "Lance un piège qui s'amorce seul. Une fois prêt, le piège se referme dès qu'une unité ennemie entre dans son rayon. Elle est alors ralentie et se voit infligée une malédiction qui l'interrompt, la réduit au silence, la désarme et l'empêche d'utiliser ses objet"
+        },
+        {
+          "key": "4",
+          "nameEn": "Guided Owl",
+          "nameFr": "Hibou guidé",
+          "descriptionFr": "Après une incantation de 1.5 s, Serregrise lance un hibou et le contrôle. À l'impact, le hibou explose, inflige des dégâts et étourdit les unités ennemies. Maintenez [W] pour augmenter la vitesse du hibou.Appuyez sur Sauter/grimper pour le faire exploser. Serr"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "23 487 parties Oracle+ sur 30 jours • 46,3 % de victoires pour le héros",
+          "winRate": 0.46276663686294545,
+          "matches": 23487,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "mystic_burst",
+              "rapid_rounds",
+              "extra_charge",
+              "extra_spirit",
+              "extra_stamina"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "long_range",
+              "enchanters_barrier",
+              "improved_cooldown",
+              "improved_spirit",
+              "recharging_rush"
+            ],
+            "late": [
+              "sharpshooter",
+              "improved_burst",
+              "rapid_recharge",
+              "superior_stamina",
+              "superior_cooldown",
+              "boundless_spirit",
+              "spirit_burn"
+            ],
+            "situational": [
+              "spiritual_overflow",
+              "mystic_reverb",
+              "spirit_lifesteal",
+              "indomitable",
+              "transcendent_cooldown",
+              "glass_cannon"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 671384,
+          "title": "Meilleur build publié — 52,0 % de victoires",
+          "subtitle": "« It's a bird It's a plane no wait IT'S A NUKE!!! » • 102 parties Oracle+",
+          "winRate": 0.5196078431372549,
+          "matches": 102,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_charge",
+              "mystic_burst",
+              "extra_spirit"
+            ],
+            "mid": [
+              "improved_spirit",
+              "improved_cooldown",
+              "enchanters_barrier"
+            ],
+            "late": [
+              "superior_stamina",
+              "improved_burst",
+              "rapid_recharge",
+              "boundless_spirit",
+              "superior_cooldown",
+              "counterspell",
+              "debuff_remover",
+              "warp_stone",
+              "mystic_reverb",
+              "spirit_burn"
+            ],
+            "situational": [
+              "indomitable",
+              "transcendent_cooldown",
+              "spiritual_overflow",
+              "trophy_collector",
+              "reactive_barrier",
+              "rebuttal",
+              "healing_rite",
+              "spirit_resilience",
+              "bullet_resilience",
+              "metal_skin"
+            ]
+          }
+        }
+      ]
+    },
+    "mo_and_krill": {
+      "apiHeroId": 18,
+      "nameFr": "Miro et Minus",
+      "matches": 45219,
+      "winRate": 0.5039032265198258,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Scorn",
+          "nameFr": "Intimidation",
+          "descriptionFr": "Miro et Minus infligent des dégâts aux adversaires à proximité et se soignent en fonction des dégâts infligés. Les soins sont amplifiés pour les dégâts infligés aux occultistes adverses."
+        },
+        {
+          "key": "2",
+          "nameEn": "Burrow",
+          "nameFr": "Forage",
+          "descriptionFr": "Miro et Minus creusent une galerie souterraine qui augmente leur vitesse de déplacement et leurs protections spirituelle et balistique. Les dégâts infligés par les occultistes adverses diminuent le bonus de vitesse. Quand Miro et Minus sortent de terre, ils in"
+        },
+        {
+          "key": "3",
+          "nameEn": "Sand Blast",
+          "nameFr": "Jet de sable",
+          "descriptionFr": "Miro et Minus jettent du sable qui désarme les unités ennemies en face d'eux et leur inflige des dégâts."
+        },
+        {
+          "key": "4",
+          "nameEn": "Combo",
+          "nameFr": "Dérouillée",
+          "descriptionFr": "Miro et Minus immobilisent l'occultiste adverse, l'étourdissent et lui infligent des dégâts pendant toute la durée de la canalisation. En cas de victime pendant la capacité ou dans les 3 secondes qui suivent, accorde un bonus permanent de PV max."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "45 219 parties Oracle+ sur 30 jours • 50,4 % de victoires pour le héros",
+          "winRate": 0.5039032265198258,
+          "matches": 45219,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "mystic_reach",
+              "sprint_boots",
+              "extra_spirit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "trophy_collector",
+              "cold_front",
+              "healbane",
+              "improved_cooldown",
+              "duration_extender"
+            ],
+            "late": [
+              "torment_pulse",
+              "warp_stone",
+              "improved_burst",
+              "spirit_resilience",
+              "superior_duration",
+              "superior_cooldown",
+              "scourge"
+            ],
+            "situational": [
+              "escalating_exposure",
+              "spirit_burn",
+              "transcendent_cooldown",
+              "boundless_spirit",
+              "witchmail",
+              "arctic_blast"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 438182,
+          "title": "Meilleur build publié — 53,6 % de victoires",
+          "subtitle": "« Зарыл мать и трахаю | DoLLIuk » • 153 parties Oracle+",
+          "winRate": 0.5359477124183006,
+          "matches": 153,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "1",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "sprint_boots",
+              "extra_spirit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "trophy_collector",
+              "cold_front",
+              "enduring_speed",
+              "improved_cooldown",
+              "mystic_vulnerability",
+              "improved_spirit"
+            ],
+            "late": [
+              "warp_stone",
+              "scourge",
+              "superior_cooldown",
+              "superior_duration",
+              "escalating_exposure",
+              "witchmail",
+              "transcendent_cooldown",
+              "colossus",
+              "boundless_spirit",
+              "juggernaut"
+            ],
+            "situational": [
+              "spellbreaker",
+              "torment_pulse",
+              "healbane",
+              "reactive_barrier",
+              "fleetfoot",
+              "magic_carpet",
+              "divine_barrier",
+              "veil_walker",
+              "greater_expansion",
+              "improved_burst"
+            ]
+          }
+        }
+      ]
+    },
+    "shiv": {
+      "apiHeroId": 19,
+      "nameFr": "Surin",
+      "matches": 48871,
+      "winRate": 0.46127560311841376,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Serrated Knives",
+          "nameFr": "Couteau de chasse",
+          "descriptionFr": "Surin lance un couteau qui fait saigner une cible ennemie. Chaque attaque supplémentaire ajoute une charge et réinitialise la durée du saignement. Chaque charge augmente l'intensité du saignement."
+        },
+        {
+          "key": "2",
+          "nameEn": "Slice and Dice",
+          "nameFr": "Élan incisif",
+          "descriptionFr": "Surin s'élance vers l'avant et inflige des dégâts aux adversaires sur son passage. Les cibles ennemies touchées voient leur résistance spirituelle réduite. L'effet négatif peut se cumuler."
+        },
+        {
+          "key": "3",
+          "nameEn": "Bloodletting",
+          "nameFr": "Saignée",
+          "descriptionFr": "Surin ne subit qu'une partie des dégâts immédiats. Les dégâts restants sont retardés et appliqués au fur et à mesure. À l'activation, annule une partie des dégâts retardés."
+        },
+        {
+          "key": "4",
+          "nameEn": "Killing Blow",
+          "nameFr": "Coup de grâce",
+          "descriptionFr": "Effet actif : Surin bondit vers l'avant et inflige des dégâts spirituels à la première cible occultiste ennemie rencontrée. Si cette dernière est sous le seuil de PV, elle est exécutée.Si Coup de grâce fait une victime, Surin peut relancer la capacité pendant "
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "48 871 parties Oracle+ sur 30 jours • 46,1 % de victoires pour le héros",
+          "winRate": 0.46127560311841376,
+          "matches": 48871,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "3",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "extra_regen",
+              "close_quarters",
+              "extra_charge",
+              "mystic_regeneration",
+              "high_velocity_mag"
+            ],
+            "mid": [
+              "battle_vest",
+              "bullet_resist_shredder",
+              "healbane",
+              "healing_booster",
+              "mystic_vulnerability",
+              "improved_cooldown"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "hunters_aura",
+              "debuff_remover",
+              "torment_pulse",
+              "express_shot",
+              "spirit_resilience",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "glass_cannon",
+              "lucky_shot",
+              "mystic_reverb",
+              "transcendent_cooldown",
+              "scourge",
+              "witchmail"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 818625,
+          "title": "Meilleur build publié — 52,7 % de victoires",
+          "subtitle": "« oneshot (actual oneshot) | wouwei » • 355 parties Oracle+",
+          "winRate": 0.5267605633802817,
+          "matches": 355,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "3",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "close_quarters",
+              "mystic_regeneration"
+            ],
+            "mid": [
+              "battle_vest",
+              "bullet_resist_shredder"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "hunters_aura",
+              "express_shot",
+              "berserker",
+              "plated_armor",
+              "lucky_shot",
+              "ethereal_shift"
+            ],
+            "situational": [
+              "extra_health",
+              "rebuttal",
+              "healbane",
+              "enchanters_barrier",
+              "debuff_remover",
+              "spirit_resilience",
+              "counterspell",
+              "warp_stone",
+              "cold_front",
+              "arctic_blast"
+            ]
+          }
+        }
+      ]
+    },
+    "ivy": {
+      "apiHeroId": 20,
+      "nameFr": "Lyanne",
+      "matches": 38515,
+      "winRate": 0.5301830455666623,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Entangling Thorns",
+          "nameFr": "Épines enchevêtrantes",
+          "descriptionFr": "Lyanne invoque un fouillis d'épines qui infligent des dégâts et ralentissent les unités ennemies dans la zone."
+        },
+        {
+          "key": "2",
+          "nameEn": "Kudzu Connection",
+          "nameFr": "Liaison épineuse",
+          "descriptionFr": "Lyanne se lie à une unité alliée proche. Elle obtient des bonus, des soins répliqués, et ignore la pénalité de vitesse de déplacement quand elle tire.Lyanne reçoit 50 % des bonus sans liaison.La liaison ne fonctionne que si l'unité est dans le champ de vision."
+        },
+        {
+          "key": "3",
+          "nameEn": "Stone Form",
+          "nameFr": "Pétrification",
+          "descriptionFr": "Transforme Lyanne en pierre et la rend invulnérable. Elle tombe au sol, et étourdit et inflige des dégâts aux adversaires proches. Lyanne est soignée selon un pourcentage de ses PV max."
+        },
+        {
+          "key": "4",
+          "nameEn": "Air Drop",
+          "nameFr": "Largage aérien",
+          "descriptionFr": "Lyanne attrape une unité alliée et s'envole avec elle. Quand l'unité alliée est lâchée, elle provoque une explosion qui inflige des dégâts spirituels. Lyanne et l'unité alliée infligent des dégâts supplémentaires à la fin du vol. Le temps de récupération est r"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "38 515 parties Oracle+ sur 30 jours • 53,0 % de victoires pour le héros",
+          "winRate": 0.5301830455666623,
+          "matches": 38515,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "1",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extended_magazine",
+              "monster_rounds",
+              "extra_charge",
+              "extra_regen",
+              "sprint_boots",
+              "mystic_reach"
+            ],
+            "mid": [
+              "titanic_magazine",
+              "active_reload",
+              "healbane",
+              "healing_booster",
+              "slowing_hex",
+              "bullet_resist_shredder"
+            ],
+            "late": [
+              "tesla_bullets",
+              "capacitor",
+              "rapid_recharge",
+              "greater_expansion",
+              "superior_duration",
+              "healing_tempo",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "transcendent_cooldown",
+              "spirit_burn",
+              "boundless_spirit",
+              "silencer",
+              "escalating_exposure",
+              "crippling_headshot"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 512979,
+          "title": "Meilleur build publié — 57,6 % de victoires",
+          "subtitle": "« Piggy`s Support Ivy (twitch.tv/piggyxdd) » • 422 parties Oracle+",
+          "winRate": 0.5758293838862559,
+          "matches": 422,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "2",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "extended_magazine",
+              "rusted_barrel",
+              "healing_rite",
+              "mystic_reach"
+            ],
+            "mid": [
+              "titanic_magazine",
+              "healing_booster",
+              "duration_extender",
+              "mystic_slow"
+            ],
+            "late": [
+              "tesla_bullets",
+              "healing_nova",
+              "healing_tempo"
+            ],
+            "situational": [
+              "golden_goose_egg",
+              "headshot_booster",
+              "monster_rounds",
+              "extra_regen",
+              "alchemical_fire",
+              "heroic_aura",
+              "guardian_ward",
+              "rescue_beam",
+              "divine_barrier",
+              "disarming_hex"
+            ]
+          }
+        }
+      ]
+    },
+    "warden": {
+      "apiHeroId": 25,
+      "nameFr": "Marshal",
+      "matches": 10109,
+      "winRate": 0.44742308833712535,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Alchemical Flask",
+          "nameFr": "Flasque alchimique",
+          "descriptionFr": "Marshal lance une flasque qui inflige des dégâts et réduit les dégâts des armes et la vitesse de déplacement des cibles touchées."
+        },
+        {
+          "key": "2",
+          "nameEn": "Willpower",
+          "nameFr": "Bravoure",
+          "descriptionFr": "Marshal gagne une protection et de la vitesse de déplacement."
+        },
+        {
+          "key": "3",
+          "nameEn": "Binding Word",
+          "nameFr": "Mitard",
+          "descriptionFr": "Marshal immobilise l'occultiste adverse. Si la cible ne sort pas de la zone pendant le temps d'évasion, elle subira des dégâts et sera immobilisée."
+        },
+        {
+          "key": "4",
+          "nameEn": "Last Stand",
+          "nameFr": "Charge ultime",
+          "descriptionFr": "Après 2 s de canalisation, Marshal émet des impulsions qui infligent des dégâts et le soignent en fonction de ces dégâts. Durant la canalisation de Charge ultime, Marshal bénéficie d'une meilleure résistance spirituelle et d'une meilleure résistance aux balles"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "10 109 parties Oracle+ sur 30 jours • 44,7 % de victoires pour le héros",
+          "winRate": 0.44742308833712535,
+          "matches": 10109,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_regen",
+              "monster_rounds",
+              "extended_magazine",
+              "rapid_rounds",
+              "sprint_boots"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "swift_striker",
+              "titanic_magazine",
+              "quicksilver_reload",
+              "enduring_speed",
+              "fleetfoot"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "fortitude",
+              "mercurial_magnum",
+              "spirit_resilience",
+              "spiritual_overflow",
+              "siphon_bullets",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "silencer",
+              "vampiric_burst",
+              "blood_tribute",
+              "improved_spirit",
+              "spellslinger",
+              "unstoppable"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 357243,
+          "title": "Meilleur build publié — 47,4 % de victoires",
+          "subtitle": "« twitch.tv/oses » • 137 parties Oracle+",
+          "winRate": 0.4744525547445255,
+          "matches": 137,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "monster_rounds"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "swift_striker",
+              "titanic_magazine",
+              "quicksilver_reload",
+              "fleetfoot"
+            ],
+            "late": [
+              "mercurial_magnum",
+              "spiritual_overflow",
+              "siphon_bullets",
+              "blood_tribute",
+              "boundless_spirit",
+              "colossus",
+              "transcendent_cooldown",
+              "witchmail",
+              "juggernaut",
+              "armor_piercer"
+            ],
+            "situational": [
+              "enduring_speed",
+              "spirit_resilience",
+              "debuff_remover",
+              "veil_walker",
+              "spirit_shielding",
+              "frenzy",
+              "crippling_headshot",
+              "ricochet",
+              "silencer",
+              "inhibitor"
+            ]
+          }
+        }
+      ]
+    },
+    "yamato": {
+      "apiHeroId": 27,
+      "nameFr": "Yamato",
+      "matches": 45968,
+      "winRate": 0.5169900800556909,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Power Slash",
+          "nameFr": "Estafilade",
+          "descriptionFr": "Yamato canalise son attaque pendant 1.4 secondes pour augmenter ses dégâts, puis assène une attaque complètement chargée avec son sabre.Appuyez sur Capacité 1 ou pour déclencher l'attaque prématurément et n'infliger qu'une partie des dégâts."
+        },
+        {
+          "key": "2",
+          "nameEn": "Flying Slash",
+          "nameFr": "Accroche tranchante",
+          "descriptionFr": "Yamato lance un grappin qui la tracte jusqu'à une cible ennemie, lui inflige des dégâts de mêlée légers et un ralentissement à l'arrivée."
+        },
+        {
+          "key": "3",
+          "nameEn": "Crimson Slash",
+          "nameFr": "Shomen écarlate",
+          "descriptionFr": "Yamato taillade les adversaires en face d'elle, leur inflige des dégâts et réduit leur cadence de tir. Blesser des occultistes soigne Yamato."
+        },
+        {
+          "key": "4",
+          "nameEn": "Shadow Transformation",
+          "nameFr": "Transformation sépulcrale",
+          "descriptionFr": "Yamato se transforme en esprit et devient brièvement invincible pendant la transformation. Ses capacités sont réinitialisées et sont 60 % plus rapides. Accorde l'immunité contre les effets de statut négatifs et augmente considérablement sa résistance spirituel"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "45 968 parties Oracle+ sur 30 jours • 51,7 % de victoires pour le héros",
+          "winRate": 0.5169900800556909,
+          "matches": 45968,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "melee_lifesteal",
+              "spirit_strike",
+              "mystic_regeneration",
+              "extra_regen",
+              "close_quarters"
+            ],
+            "mid": [
+              "stalker",
+              "mystic_shot",
+              "bullet_resist_shredder",
+              "recharging_rush",
+              "healbane",
+              "healing_booster"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "lifestrike",
+              "spirit_snatch",
+              "hunters_aura",
+              "torment_pulse",
+              "express_shot",
+              "berserker"
+            ],
+            "situational": [
+              "refresher",
+              "crushing_fists",
+              "colossus",
+              "diviners_kevlar",
+              "transcendent_cooldown",
+              "witchmail"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 830818,
+          "title": "Meilleur build publié — 61,0 % de victoires",
+          "subtitle": "« yam2 » • 136 parties Oracle+",
+          "winRate": 0.6102941176470589,
+          "matches": 136,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "melee_lifesteal",
+              "close_quarters",
+              "mystic_regeneration",
+              "high_velocity_mag"
+            ],
+            "mid": [
+              "mystic_shot",
+              "stalker",
+              "bullet_resist_shredder",
+              "healing_booster"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "lifestrike",
+              "torment_pulse",
+              "hunters_aura",
+              "berserker",
+              "express_shot",
+              "colossus",
+              "refresher",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "extra_regen",
+              "transcendent_cooldown",
+              "siphon_bullets",
+              "witchmail",
+              "ethereal_shift",
+              "indomitable",
+              "diviners_kevlar",
+              "scourge",
+              "crushing_fists"
+            ]
+          }
+        }
+      ]
+    },
+    "lash": {
+      "apiHeroId": 31,
+      "nameFr": "Cravache",
+      "matches": 69301,
+      "winRate": 0.5060388738979236,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Ground Strike",
+          "nameFr": "Frappe au sol",
+          "descriptionFr": "Cravache frappe le sol et inflige des dégâts aux unités ennemies devant lui. Si Cravache lance Frappe au sol en l'air, il plonge rapidement vers le sol. Les dégâts par mètre sont réduits après 25 m."
+        },
+        {
+          "key": "2",
+          "nameEn": "Grapple",
+          "nameFr": "Grappin",
+          "descriptionFr": "Cravache s'élance dans les airs en direction d'une cible. Grappin réinitialise également la limite de sauts aériens et élancés."
+        },
+        {
+          "key": "3",
+          "nameEn": "Flog",
+          "nameFr": "Flagellation",
+          "descriptionFr": "Cravache fouette les adversaires devant lui, ce qui le soigne à hauteur d'une partie des dégâts infligés."
+        },
+        {
+          "key": "4",
+          "nameEn": "Death Slam",
+          "nameFr": "Placage mortel",
+          "descriptionFr": "Cravache se concentre pour lier les unités ennemies avec son fouet. Après la canalisation, les unités ennemies liées sont soulevées et étourdies, puis jetées au sol. Les cibles et toute unité ennemie dans la zone d'atterrissage sont ralenties et subissent des "
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "69 301 parties Oracle+ sur 30 jours • 50,6 % de victoires pour le héros",
+          "winRate": 0.5060388738979236,
+          "matches": 69301,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "headshot_booster",
+              "mystic_burst",
+              "extra_spirit",
+              "extra_charge",
+              "extra_stamina",
+              "mystic_reach"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "cold_front",
+              "improved_spirit",
+              "mystic_shot",
+              "healbane",
+              "improved_cooldown"
+            ],
+            "late": [
+              "headhunter",
+              "superior_stamina",
+              "improved_burst",
+              "superior_cooldown",
+              "greater_expansion",
+              "boundless_spirit",
+              "spirit_burn"
+            ],
+            "situational": [
+              "mystic_reverb",
+              "siphon_bullets",
+              "transcendent_cooldown",
+              "indomitable",
+              "majestic_leap",
+              "unstoppable"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 217576,
+          "title": "Meilleur build publié — 56,2 % de victoires",
+          "subtitle": "« lash [ STRIKE ] max DMG by Hotoke / 70% wr » • 137 parties Oracle+",
+          "winRate": 0.5620437956204379,
+          "matches": 137,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "mystic_burst",
+              "extra_charge",
+              "extra_stamina"
+            ],
+            "mid": [
+              "improved_spirit",
+              "trophy_collector",
+              "cold_front",
+              "improved_cooldown",
+              "spirit_lifesteal"
+            ],
+            "late": [
+              "majestic_leap",
+              "improved_burst",
+              "superior_stamina",
+              "boundless_spirit",
+              "superior_cooldown",
+              "mystic_reverb",
+              "spirit_burn",
+              "rapid_recharge",
+              "transcendent_cooldown",
+              "arctic_blast"
+            ],
+            "situational": [
+              "witchmail",
+              "leech",
+              "infuser",
+              "refresher",
+              "spiritual_overflow",
+              "crippling_headshot",
+              "diviners_kevlar",
+              "unstoppable",
+              "extra_regen",
+              "restorative_shot"
+            ]
+          }
+        }
+      ]
+    },
+    "viscous": {
+      "apiHeroId": 35,
+      "nameFr": "Myxo",
+      "matches": 19473,
+      "winRate": 0.46859754531915987,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Splatter",
+          "nameFr": "Explosion gluante",
+          "descriptionFr": "Lance une boule visqueuse qui inflige des dégâts et laisse une flaque gluante qui ralentit les adversaires dans la zone."
+        },
+        {
+          "key": "2",
+          "nameEn": "The Cube",
+          "nameFr": "Cube gélatineux",
+          "descriptionFr": "Myxo enveloppe la cible dans un cube de gelée curative qui protège des dégâts et augmente la régénération de PV. La cible ne peut pas agir dans le cube. Myxo peut utiliser la capacité sur lui-même. Appuyez sur Sauter/grimper pour sortir du cube prématurément."
+        },
+        {
+          "key": "3",
+          "nameEn": "Puddle Punch",
+          "nameFr": "Poing poisseux",
+          "descriptionFr": "Myxo fait apparaitre un poing qui frappe toutes les unités ennemies dans la zone, et applique une projection aérienne. Les cibles frappées subissent des dégâts de mêlée et un ralentissement. Les adversaires peuvent parer cette attaque.Myxo et ses partenaires} "
+        },
+        {
+          "key": "4",
+          "nameEn": "Goo Ball",
+          "nameFr": "Boule visqueuse",
+          "descriptionFr": "Transforme Myxo en une boule visqueuse qui inflige des dégâts et étourdit les unités ennemies à l'impact. La boule augmente considérablement la résistance aux balles et la résistance spirituelle de Myxo. La boule rebondit contre les murs. Pendant qu'il est tra"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "19 473 parties Oracle+ sur 30 jours • 46,9 % de victoires pour le héros",
+          "winRate": 0.46859754531915987,
+          "matches": 19473,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "high_velocity_mag",
+              "extra_charge",
+              "spirit_strike",
+              "mystic_reach",
+              "extra_spirit"
+            ],
+            "mid": [
+              "mystic_shot",
+              "trophy_collector",
+              "arcane_surge",
+              "melee_charge",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "express_shot",
+              "lifestrike",
+              "spirit_snatch",
+              "improved_burst",
+              "rapid_recharge",
+              "superior_cooldown",
+              "greater_expansion"
+            ],
+            "situational": [
+              "phantom_strike",
+              "mystic_reverb",
+              "spirit_burn",
+              "transcendent_cooldown",
+              "witchmail",
+              "divine_barrier"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 275231,
+          "title": "Meilleur build publié — 47,3 % de victoires",
+          "subtitle": "« AndrewChicken's NEW Fistcous Build (Annotated) » • 131 parties Oracle+",
+          "winRate": 0.4732824427480916,
+          "matches": 131,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "close_quarters",
+              "melee_lifesteal",
+              "mystic_burst",
+              "extra_charge",
+              "mystic_reach",
+              "spirit_strike"
+            ],
+            "mid": [
+              "trophy_collector",
+              "pristine_emblem",
+              "melee_charge"
+            ],
+            "late": [
+              "point_blank",
+              "lifestrike",
+              "rapid_recharge",
+              "spirit_snatch",
+              "crushing_fists",
+              "ballistic_enchantment",
+              "improved_burst"
+            ],
+            "situational": [
+              "recharging_rush",
+              "weighted_shots",
+              "stalker",
+              "express_shot",
+              "bullet_resilience",
+              "spirit_resilience",
+              "counterspell",
+              "debuff_remover",
+              "healbane",
+              "superior_stamina"
+            ]
+          }
+        }
+      ]
+    },
+    "pocket": {
+      "apiHeroId": 50,
+      "nameFr": "Pocket",
+      "matches": 37851,
+      "winRate": 0.4668040474492087,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Barrage",
+          "nameFr": "Tirs de couverture",
+          "descriptionFr": "Capacité canalisée. Pocket lance des projectiles qui infligent des dégâts spirituels et appliquent un ralentissement près de leur point d'impact. Les projectiles qui touchent une unité occultiste accordent à Pocket des dégâts augmentés cumulables.Pocket peut u"
+        },
+        {
+          "key": "2",
+          "nameEn": "Flying Cloak",
+          "nameFr": "Redingote volante",
+          "descriptionFr": "Pocket lance une redingote ensorcelée vers l'avant qui inflige des dégâts aux unités ennemies. Appuyez sur Capacité 2 pour vous téléporter vers son emplacement."
+        },
+        {
+          "key": "3",
+          "nameEn": "Enchanter's Satchel",
+          "nameFr": "Mallette de passepasse",
+          "descriptionFr": "Pocket se réfugie dans sa mallette. Quand la capacité prend fin, il inflige des dégâts spirituels aux adversaires à proximité. La capacité peut être interrompue en effectuant n'importe quelle action."
+        },
+        {
+          "key": "4",
+          "nameEn": "Affliction",
+          "nameFr": "Fléau",
+          "descriptionFr": "Pocket inflige des dégâts au fil du temps aux adversaires à proximité.Les dégâts de Fléau ne sont pas mortels et ne déclenchent pas les effets d'objets."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "37 851 parties Oracle+ sur 30 jours • 46,7 % de victoires pour le héros",
+          "winRate": 0.4668040474492087,
+          "matches": 37851,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "mystic_burst",
+              "monster_rounds",
+              "rapid_rounds",
+              "extra_spirit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "cold_front",
+              "enchanters_barrier",
+              "swift_striker",
+              "mystic_vulnerability",
+              "improved_cooldown",
+              "duration_extender"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "majestic_leap",
+              "improved_burst",
+              "superior_cooldown",
+              "spirit_burn",
+              "superior_duration",
+              "greater_expansion"
+            ],
+            "situational": [
+              "spiritual_overflow",
+              "cheat_death",
+              "diviners_kevlar",
+              "ethereal_shift",
+              "spirit_lifesteal",
+              "boundless_spirit"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 207750,
+          "title": "Meilleur build publié — 49,8 % de victoires",
+          "subtitle": "« Dew » • 954 parties Oracle+",
+          "winRate": 0.4979035639412998,
+          "matches": 954,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "mystic_burst",
+              "monster_rounds",
+              "mystic_reach"
+            ],
+            "mid": [
+              "battle_vest",
+              "swift_striker",
+              "improved_cooldown",
+              "duration_extender"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "improved_burst",
+              "debuff_remover",
+              "superior_cooldown",
+              "spirit_burn",
+              "majestic_leap",
+              "superior_duration",
+              "greater_expansion",
+              "transcendent_cooldown",
+              "ethereal_shift"
+            ],
+            "situational": [
+              "spiritual_overflow",
+              "cheat_death",
+              "refresher",
+              "indomitable",
+              "restorative_shot",
+              "enchanters_barrier",
+              "mystic_vulnerability",
+              "cold_front",
+              "improved_spirit",
+              "boundless_spirit"
+            ]
+          }
+        }
+      ]
+    },
+    "mirage": {
+      "apiHeroId": 52,
+      "nameFr": "Mirage",
+      "matches": 16298,
+      "winRate": 0.4410357099030556,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Fire Scarabs",
+          "nameFr": "Scarabées de feu",
+          "descriptionFr": "Mirage infeste une unité ennemie de scarabées de feu. Les scarabées volent les PV de la cible et réduisent les dégâts qu'elle inflige."
+        },
+        {
+          "key": "2",
+          "nameEn": "Dust Devil",
+          "nameFr": "Diable de sable",
+          "descriptionFr": "Mirage se transforme en un tourbillon qui se déplace vers l'avant,ce qui inflige des dégâts aux unités ennemies, ralentit leur vitesse de déplacement et les soulève dans les airs. Après avoir émergé de la tornade, Mirage bénéficie d'une meilleure esquive des b"
+        },
+        {
+          "key": "3",
+          "nameEn": "Djinn's Mark",
+          "nameFr": "Marque de Djinn",
+          "descriptionFr": "Capacité active : consomme toutes les Marques de Djinn pour infliger les dégâts immédiatement."
+        },
+        {
+          "key": "4",
+          "nameEn": "Traveler",
+          "nameFr": "Voyage",
+          "descriptionFr": "Mirage cible un emplacement sur la minicarte. Après un court instant, il se téléporte vers l'emplacement. Si Mirage reçoit des dégâts pendant la préparation de la téléportation, celle-ci est annulée."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "16 298 parties Oracle+ sur 30 jours • 44,1 % de victoires pour le héros",
+          "winRate": 0.4410357099030556,
+          "matches": 16298,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "mystic_regeneration",
+              "monster_rounds",
+              "headshot_booster",
+              "extended_magazine"
+            ],
+            "mid": [
+              "suppressor",
+              "healbane",
+              "improved_cooldown",
+              "kinetic_dash",
+              "mystic_vulnerability",
+              "titanic_magazine"
+            ],
+            "late": [
+              "headhunter",
+              "debuff_remover",
+              "toxic_bullets",
+              "ricochet",
+              "escalating_exposure",
+              "superior_cooldown",
+              "inhibitor"
+            ],
+            "situational": [
+              "diviners_kevlar",
+              "spiritual_overflow",
+              "silencer",
+              "boundless_spirit",
+              "siphon_bullets",
+              "transcendent_cooldown"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 492664,
+          "title": "Meilleur build publié — 47,5 % de victoires",
+          "subtitle": "« twitch.tv/oses » • 324 parties Oracle+",
+          "winRate": 0.47530864197530864,
+          "matches": 324,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "mystic_regeneration",
+              "monster_rounds",
+              "headshot_booster"
+            ],
+            "mid": [
+              "suppressor",
+              "healbane",
+              "recharging_rush",
+              "improved_cooldown",
+              "mystic_vulnerability",
+              "titanic_magazine"
+            ],
+            "late": [
+              "headhunter",
+              "debuff_remover",
+              "toxic_bullets",
+              "escalating_exposure",
+              "superior_cooldown",
+              "ricochet",
+              "inhibitor",
+              "diviners_kevlar",
+              "boundless_spirit",
+              "silencer"
+            ],
+            "situational": [
+              "siphon_bullets",
+              "transcendent_cooldown",
+              "crippling_headshot",
+              "plated_armor",
+              "indomitable",
+              "counterspell",
+              "warp_stone",
+              "reactive_barrier",
+              "debuff_reducer",
+              "spirit_shielding"
+            ]
+          }
+        }
+      ]
+    },
+    "vyper": {
+      "apiHeroId": 58,
+      "nameFr": "Vypère",
+      "matches": 20291,
+      "winRate": 0.526538859592923,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Screwjab Dagger",
+          "nameFr": "Lame fulgurante",
+          "descriptionFr": "Vypère lance une dague qui inflige des dégâts spirituels et applique un ralentissement. Chaque nouvelle dague lancée sur la même cible cumule des dégâts spirituels et du ralentissement."
+        },
+        {
+          "key": "2",
+          "nameEn": "Lethal Venom",
+          "nameFr": "Venin mortel",
+          "descriptionFr": "Injecte du venin mortel à une cible. Après un certain temps, le venin se déclenche et inflige des dégâts spirituels proportionnellement aux PV manquants de la cible.Venin mortel outrepasse le blocage des dégâts de la pétrification."
+        },
+        {
+          "key": "3",
+          "nameEn": "Slither",
+          "nameFr": "Reptation",
+          "descriptionFr": "La distance de glissade de Vypère augmente, elle peut glisser même dans les montées et sa vitesse de rotation augmente pendant les glissades."
+        },
+        {
+          "key": "4",
+          "nameEn": "Petrifying Bola",
+          "nameFr": "Bolas pétrifiants",
+          "descriptionFr": "Vypère lance des bolas explosifs. En explosant, les bolas ralentissent et infligent des dégâts à toutes les unités ennemies dans la zone. Les unités ennemies touchées par un bola subissent des dégâts supplémentaires et sont pétrifiées. Les unités pétrifiées bl"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "20 291 parties Oracle+ sur 30 jours • 52,7 % de victoires pour le héros",
+          "winRate": 0.526538859592923,
+          "matches": 20291,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "close_quarters",
+              "extra_spirit",
+              "grit",
+              "rapid_rounds",
+              "extra_stamina"
+            ],
+            "mid": [
+              "swift_striker",
+              "improved_spirit",
+              "spirit_shielding",
+              "split_shot",
+              "quicksilver_reload",
+              "bullet_lifesteal"
+            ],
+            "late": [
+              "tesla_bullets",
+              "burst_fire",
+              "superior_stamina",
+              "mercurial_magnum",
+              "spirit_resilience",
+              "ricochet",
+              "unstoppable"
+            ],
+            "situational": [
+              "lucky_shot",
+              "leech",
+              "silencer",
+              "spiritual_overflow",
+              "glass_cannon",
+              "boundless_spirit"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 317846,
+          "title": "Meilleur build publié — 50,9 % de victoires",
+          "subtitle": "« Vyper - Gun-Initiator [65% WR] [tracklock.gg] » • 114 parties Oracle+",
+          "winRate": 0.5087719298245614,
+          "matches": 114,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "close_quarters",
+              "extra_regen",
+              "high_velocity_mag",
+              "grit",
+              "rapid_rounds"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "quicksilver_reload",
+              "split_shot",
+              "bullet_lifesteal"
+            ],
+            "late": [
+              "tesla_bullets",
+              "burst_fire",
+              "superior_stamina",
+              "mercurial_magnum",
+              "ricochet",
+              "vampiric_burst"
+            ],
+            "situational": [
+              "extra_spirit",
+              "swift_striker",
+              "improved_spirit",
+              "bullet_resist_shredder",
+              "monster_rounds",
+              "intensifying_magazine",
+              "extra_stamina",
+              "silencer",
+              "point_blank",
+              "spiritual_overflow"
+            ]
+          }
+        }
+      ]
+    },
+    "sinclair": {
+      "apiHeroId": 60,
+      "nameFr": "Sinclair",
+      "matches": 20577,
+      "winRate": 0.4842785634446226,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Vexing Bolt",
+          "nameFr": "Éclair accablant",
+          "descriptionFr": "Sinclair lance un éclair magique qui inflige des dégâts qui augmentent avec la distance parcourue. Si l'Assistante spectrale a été invoquée, elle lance une instance d'Éclair accablant, infligeant des dégâts réduits. Appuyez sur Capacité 1 pour rediriger l'écla"
+        },
+        {
+          "key": "2",
+          "nameEn": "Spectral Assistant",
+          "nameFr": "Assistante spectrale",
+          "descriptionFr": "Sinclair invoque son assistante à l'emplacement ciblé. L'Assistante attaque quand Sinclair tire, infligeant des dégâts. Quand l'Assistante est invoquée, appuyez sur Capacité 2 pour échanger sa position avec Sinclair. Le lancement d'Assistante spectrale recharg"
+        },
+        {
+          "key": "3",
+          "nameEn": "Rabbit Hex",
+          "nameFr": "Lagomorphose",
+          "descriptionFr": "Sinclair maudit une zone cible et transforme temporairement les adversaires qui s'y trouvent en lapins. Les lapins sont petits et leur vitesse de déplacement est augmentée, mais ils sont plus vulnérables aux dégâts et ils sont incapables d'effectuer la plupart"
+        },
+        {
+          "key": "4",
+          "nameEn": "Audience Participation",
+          "nameFr": "Participation du public",
+          "descriptionFr": "Sinclair imite la capacité ultime d'une unité occultiste ennemie pendant une durée limitée. La réactivation de la capacité lancera la capacité imitée.Le niveau d'amélioration de cette capacité s'applique aux imitations.La capacité Participation du public imite"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "20 577 parties Oracle+ sur 30 jours • 48,4 % de victoires pour le héros",
+          "winRate": 0.4842785634446226,
+          "matches": 20577,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "3",
+            "2",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_charge",
+              "extra_spirit",
+              "sprint_boots",
+              "grit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "trophy_collector",
+              "improved_spirit",
+              "enchanters_barrier",
+              "duration_extender",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "veil_walker",
+              "greater_expansion",
+              "superior_duration",
+              "boundless_spirit",
+              "superior_cooldown",
+              "diviners_kevlar"
+            ],
+            "situational": [
+              "transcendent_cooldown",
+              "magic_carpet",
+              "mystic_reverb",
+              "divine_barrier",
+              "spirit_burn",
+              "escalating_exposure"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 726719,
+          "title": "Meilleur build publié — 56,5 % de victoires",
+          "subtitle": "« CF3 Magic Bolts of Boom V2.1 » • 108 parties Oracle+",
+          "winRate": 0.5648148148148148,
+          "matches": 108,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_spirit",
+              "extra_charge",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "improved_spirit",
+              "spirit_sap",
+              "trophy_collector",
+              "duration_extender",
+              "slowing_hex",
+              "improved_cooldown",
+              "mystic_slow"
+            ],
+            "late": [
+              "rapid_recharge",
+              "veil_walker",
+              "superior_duration",
+              "alchemical_fire",
+              "greater_expansion",
+              "vortex_web",
+              "boundless_spirit",
+              "cursed_relic",
+              "diviners_kevlar",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "transcendent_cooldown",
+              "lightning_scroll",
+              "mystic_vulnerability",
+              "fortitude",
+              "spirit_burn",
+              "unstoppable",
+              "infuser",
+              "escalating_exposure",
+              "disarming_hex",
+              "plated_armor"
+            ]
+          }
+        }
+      ]
+    },
+    "mina": {
+      "apiHeroId": 63,
+      "nameFr": "Mina",
+      "matches": 48916,
+      "winRate": 0.4895126339030174,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Rake",
+          "nameFr": "Ratissage",
+          "descriptionFr": ""
+        },
+        {
+          "key": "2",
+          "nameEn": "Sanguine Retreat",
+          "nameFr": "Retraite sanguine",
+          "descriptionFr": "Mina se disperse brièvement, elle devient intouchable et s'envole vers l'emplacement ciblé. La capacité peut être relancée pendant un bref laps de temps."
+        },
+        {
+          "key": "3",
+          "nameEn": "Love Bites",
+          "nameFr": "Morsures passionnelles",
+          "descriptionFr": "Vos balles infligent des dégâts spirituels supplémentaires. Les dégâts infligés par vos capacités prennent la forme d'une vilaine morsure qui inflige une explosion de dégâts spirituels bonus. Le temps de récupération de Morsures passionnelles est unique à chaq"
+        },
+        {
+          "key": "4",
+          "nameEn": "Nox Nostra",
+          "nameFr": "Nox Nostra",
+          "descriptionFr": "Effet actif : Mina libère une nuée importante de chauvesouris, chacune infligeant des dégâts spirituels et appliquant Silence.Passive : lancer Morsures passionnelles sur une unité occultiste augmente de manière permanente le nombre de chauvesouris libérées."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "48 916 parties Oracle+ sur 30 jours • 49,0 % de victoires pour le héros",
+          "winRate": 0.4895126339030174,
+          "matches": 48916,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "mystic_burst",
+              "extra_health",
+              "mystic_reach",
+              "extra_stamina",
+              "grit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "spirit_sap",
+              "improved_spirit",
+              "reactive_barrier",
+              "swift_striker",
+              "soul_shredder_bullets"
+            ],
+            "late": [
+              "debuff_remover",
+              "superior_stamina",
+              "improved_burst",
+              "boundless_spirit",
+              "spirit_burn",
+              "superior_cooldown",
+              "greater_expansion"
+            ],
+            "situational": [
+              "diviners_kevlar",
+              "spiritual_overflow",
+              "cheat_death",
+              "ethereal_shift",
+              "spirit_lifesteal",
+              "indomitable"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 514631,
+          "title": "Meilleur build publié — 52,1 % de victoires",
+          "subtitle": "« Eido Carry/Burst Mina » • 303 parties Oracle+",
+          "winRate": 0.5214521452145214,
+          "matches": 303,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "extra_spirit",
+              "extra_stamina",
+              "grit"
+            ],
+            "mid": [
+              "quicksilver_reload",
+              "spirit_sap",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "debuff_remover",
+              "superior_stamina",
+              "improved_burst",
+              "spirit_burn",
+              "ethereal_shift",
+              "boundless_spirit",
+              "spiritual_overflow",
+              "arctic_blast",
+              "greater_expansion",
+              "diviners_kevlar"
+            ],
+            "situational": [
+              "crippling_headshot",
+              "focus_lens",
+              "siphon_bullets",
+              "spellbreaker",
+              "superior_cooldown",
+              "mystic_shot",
+              "cold_front",
+              "slowing_hex",
+              "soul_shredder_bullets",
+              "spirit_rend"
+            ]
+          }
+        }
+      ]
+    },
+    "drifter": {
+      "apiHeroId": 64,
+      "nameFr": "Rôdeur",
+      "matches": 60249,
+      "winRate": 0.4964231771481684,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Rend",
+          "nameFr": "Déchirure",
+          "descriptionFr": "Rôdeur frappe les adversaires dans une zone conique devant lui, leur infligeant des dégâts spirituels. Si la cible se trouve à bout portant, il inflige des dégâts de mêlée supplémentaires."
+        },
+        {
+          "key": "2",
+          "nameEn": "Stalker's Mark",
+          "nameFr": "Marque du rôdeur",
+          "descriptionFr": "Rôdeur envoie une marque qui fait saigner la première cible touchée, infligeant des dégâts spirituels au fil du temps. Tant que l'unité adverse saigne, vous pouvez réactiver la Marque du rôdeur pour apparaitre instantanément derrière elle."
+        },
+        {
+          "key": "3",
+          "nameEn": "Bloodscent",
+          "nameFr": "Odeur du sang",
+          "descriptionFr": "Actif : aiguisez vos sens en révélant une trainée qui mène aux occultistes les plus proches."
+        },
+        {
+          "key": "4",
+          "nameEn": "Eternal Night",
+          "nameFr": "Nuit éternelle",
+          "descriptionFr": "Rôdeur plonge les unités ennemies proches dans l'obscurité, réduisant considérablement leur champ de vision. Les unités affectées sont brièvement révélées à Rôdeur et sont considérées comme étant isolées pendant la durée de la capacité.Rôdeur reçoit de la bonu"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "60 249 parties Oracle+ sur 30 jours • 49,6 % de victoires pour le héros",
+          "winRate": 0.4964231771481684,
+          "matches": 60249,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "melee_lifesteal",
+              "close_quarters",
+              "mystic_burst",
+              "spirit_strike",
+              "sprint_boots",
+              "extra_health"
+            ],
+            "mid": [
+              "stalker",
+              "trophy_collector",
+              "kinetic_dash",
+              "healbane",
+              "melee_charge",
+              "duration_extender"
+            ],
+            "late": [
+              "spirit_snatch",
+              "fortitude",
+              "lifestrike",
+              "hunters_aura",
+              "improved_burst",
+              "burst_fire",
+              "superior_duration"
+            ],
+            "situational": [
+              "lucky_shot",
+              "transcendent_cooldown",
+              "colossus",
+              "silencer",
+              "boundless_spirit",
+              "crushing_fists"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 641585,
+          "title": "Meilleur build publié — 53,1 % de victoires",
+          "subtitle": "« DRIFTER- DPS GUN » • 832 parties Oracle+",
+          "winRate": 0.53125,
+          "matches": 832,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "close_quarters",
+              "rapid_rounds",
+              "extra_stamina",
+              "sprint_boots",
+              "extra_health"
+            ],
+            "mid": [
+              "stalker",
+              "kinetic_dash",
+              "trophy_collector",
+              "swift_striker",
+              "bullet_lifesteal"
+            ],
+            "late": [
+              "fortitude",
+              "point_blank",
+              "hunters_aura",
+              "hollow_point",
+              "burst_fire"
+            ],
+            "situational": [
+              "extra_regen",
+              "melee_lifesteal",
+              "rebuttal",
+              "slowing_hex",
+              "weighted_shots",
+              "toxic_bullets",
+              "counterspell",
+              "debuff_remover",
+              "disarming_hex",
+              "lucky_shot"
+            ]
+          }
+        }
+      ]
+    },
+    "venator": {
+      "apiHeroId": 65,
+      "nameFr": "Venator",
+      "matches": 53908,
+      "winRate": 0.4807449729168213,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Consecrating Grenade",
+          "nameFr": "Grenade consécratrice",
+          "descriptionFr": "Venator lance une grenade qui rebondit avant d'exploser. Elle inflige des dégâts des armes et enflamme les adversaires. Les cibles en feu infligent des dégâts purs aux unités ennemies proches et subissent une pénalité de soins."
+        },
+        {
+          "key": "2",
+          "nameEn": "Gutshot",
+          "nameFr": "Quinte ventrale",
+          "descriptionFr": "Venator tire avec son arme, ce qui inflige des dégâts des armes et repousse les unités ennemies. Celles qui se trouvent près d'un mur subissent un étourdissement et des dégâts des armes bonus."
+        },
+        {
+          "key": "3",
+          "nameEn": "Hex-Lined Snap Trap",
+          "nameFr": "Souricière sainte",
+          "descriptionFr": "Venator lance un piège qui s'arme après un bref délai. Le piège se déclenche au premier contact avec une unité ennemie, ce qui lui inflige des dégâts spirituels et une immobilisation. Les unités piégées sont également temporairement révélées."
+        },
+        {
+          "key": "4",
+          "nameEn": "Ira Domini",
+          "nameFr": "Ira Domini",
+          "descriptionFr": "Venator arme son arbalète de 3 pieux pour infliger des dégâts des armes dévastateurs.Venator bénit le pieu final, qui inflige des dégâts purs supplémentaires et achève les occultistes avec peu de PV."
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "53 908 parties Oracle+ sur 30 jours • 48,1 % de victoires pour le héros",
+          "winRate": 0.4807449729168213,
+          "matches": 53908,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "monster_rounds",
+              "close_quarters",
+              "rapid_rounds",
+              "extra_health",
+              "extended_magazine"
+            ],
+            "mid": [
+              "swift_striker",
+              "battle_vest",
+              "titanic_magazine",
+              "enduring_speed",
+              "fleetfoot",
+              "bullet_lifesteal"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "fortitude",
+              "hollow_point",
+              "spirit_resilience",
+              "siphon_bullets",
+              "vampiric_burst",
+              "silencer"
+            ],
+            "situational": [
+              "lucky_shot",
+              "spellslinger",
+              "ricochet",
+              "unstoppable",
+              "debuff_reducer",
+              "inhibitor"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 471671,
+          "title": "Meilleur build publié — 51,1 % de victoires",
+          "subtitle": "« ftFades Chudator (SOLVED VENATOR) » • 769 parties Oracle+",
+          "winRate": 0.5110533159947984,
+          "matches": 769,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "2",
+            "1",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "close_quarters",
+              "extra_health"
+            ],
+            "mid": [
+              "weakening_headshot",
+              "swift_striker",
+              "battle_vest",
+              "fleetfoot",
+              "recharging_rush"
+            ],
+            "late": [
+              "fortitude",
+              "point_blank",
+              "hollow_point",
+              "spirit_resilience",
+              "escalating_resilience"
+            ],
+            "situational": [
+              "debuff_remover",
+              "warp_stone",
+              "counterspell",
+              "spellslinger",
+              "siphon_bullets",
+              "silencer",
+              "inhibitor",
+              "vampiric_burst",
+              "crippling_headshot",
+              "ricochet"
+            ]
+          }
+        }
+      ]
+    },
+    "victor": {
+      "apiHeroId": 66,
+      "nameFr": "Victor",
+      "matches": 31762,
+      "winRate": 0.5199609596373025,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Pain Battery",
+          "nameFr": "Batterie d'affliction",
+          "descriptionFr": "Subir des dégâts recharge de manière passive la Batterie d'affliction de Victor. Quand elle est pleine, l'activation de la capacité déclenche une salve de rayons électriques qui infligent des dégâts spirituels une fois par cible"
+        },
+        {
+          "key": "2",
+          "nameEn": "Jumpstart",
+          "nameFr": "Coup de jus",
+          "descriptionFr": "Victor s'autoinflige des dégâts spirituels. Il obtient ensuite un bonus de régénération et de bonus move speed qui diminuent avec le temps."
+        },
+        {
+          "key": "3",
+          "nameEn": "Aura of Suffering",
+          "nameFr": "Aura de souffrance",
+          "descriptionFr": "Victor déchaine sa douleur en infligeant des dégâts spirituels au fil du temps à la fois à ses adversaires et à lui-même. Les dégâts continuent d'augmenter au fur et à mesure que la capacité est canalisée, jusqu'à son maximum."
+        },
+        {
+          "key": "4",
+          "nameEn": "Shocking Reanimation",
+          "nameFr": "Défibrillation",
+          "descriptionFr": "Victor libère une vague après avoir subi des dégâts mortels, qui applique un ralentissement s'estompant au fil du temps.Après une brève canalisation, Victor est réanimé, il inflige alors des dégâts spirituels et applique un étourdissement aux unité ennemies pr"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "31 762 parties Oracle+ sur 30 jours • 52,0 % de victoires pour le héros",
+          "winRate": 0.5199609596373025,
+          "matches": 31762,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "extra_regen",
+              "sprint_boots",
+              "extra_charge",
+              "mystic_reach"
+            ],
+            "mid": [
+              "improved_spirit",
+              "healing_booster",
+              "spirit_lifesteal",
+              "enduring_speed",
+              "mystic_vulnerability",
+              "improved_cooldown"
+            ],
+            "late": [
+              "torment_pulse",
+              "radiant_regeneration",
+              "infuser",
+              "escalating_exposure",
+              "warp_stone",
+              "greater_expansion",
+              "superior_cooldown"
+            ],
+            "situational": [
+              "witchmail",
+              "transcendent_cooldown",
+              "boundless_spirit",
+              "scourge",
+              "ethereal_shift",
+              "refresher"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 847995,
+          "title": "Meilleur build publié — 56,6 % de victoires",
+          "subtitle": "« lomein  victor » • 396 parties Oracle+",
+          "winRate": 0.5656565656565656,
+          "matches": 396,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "extra_regen",
+              "extra_charge",
+              "mystic_reach"
+            ],
+            "mid": [
+              "improved_spirit",
+              "healing_booster",
+              "spirit_lifesteal",
+              "enduring_speed",
+              "mystic_vulnerability",
+              "suppressor",
+              "improved_cooldown"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "rapid_recharge",
+              "greater_expansion",
+              "superior_cooldown",
+              "infuser",
+              "escalating_exposure",
+              "transcendent_cooldown",
+              "metal_skin",
+              "ethereal_shift",
+              "plated_armor"
+            ],
+            "situational": [
+              "debuff_reducer",
+              "healbane",
+              "spirit_burn",
+              "spirit_resilience",
+              "bullet_resilience",
+              "spellbreaker",
+              "unstoppable",
+              "refresher",
+              "witchmail",
+              "frenzy"
+            ]
+          }
+        }
+      ]
+    },
+    "paige": {
+      "apiHeroId": 67,
+      "nameFr": "Paige",
+      "matches": 47624,
+      "winRate": 0.5444943725852511,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Bookwyrm",
+          "nameFr": "Vouivre savante",
+          "descriptionFr": "Paige invoque un dragon qui apparait à l'endroit ciblé et qui s'envole vers l'avant en infligeant des dégâts spirituels et en laissant derrière lui une trainée de flammes."
+        },
+        {
+          "key": "2",
+          "nameEn": "Plot Armor",
+          "nameFr": "Immunité narrative",
+          "descriptionFr": "Paige confère une protection à une unité alliée. Tant que la protection est active, le duo inflige des dégâts des armes bonus."
+        },
+        {
+          "key": "3",
+          "nameEn": "Captivating Read",
+          "nameFr": "Récit captivant",
+          "descriptionFr": "Paige ensorcelle une zone, infligeant un ralentissement. Les particules de magie explosent après un certain temps, ce qui inflige des dégâts spirituels et une immobilisation."
+        },
+        {
+          "key": "4",
+          "nameEn": "Rallying Charge",
+          "nameFr": "Charge de ralliement",
+          "descriptionFr": "Paige libère une vague de chevaliers spectraux sur l'ensemble de la carte. La capacité soigne les unités alliées et inflige des dégâts spirituels aux adversaires. L'efficacité des soins et des dégâts spirituels augmente en fonction de la distance parcourue par"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "47 624 parties Oracle+ sur 30 jours • 54,4 % de victoires pour le héros",
+          "winRate": 0.5444943725852511,
+          "matches": 47624,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "grit",
+              "sprint_boots",
+              "extra_charge",
+              "mystic_reach",
+              "extra_spirit"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "trophy_collector",
+              "guardian_ward",
+              "slowing_hex",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "knockdown",
+              "rapid_recharge",
+              "superior_cooldown",
+              "vortex_web",
+              "divine_barrier",
+              "greater_expansion",
+              "superior_duration"
+            ],
+            "situational": [
+              "transcendent_cooldown",
+              "boundless_spirit",
+              "indomitable",
+              "refresher",
+              "escalating_exposure",
+              "spirit_burn"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 317851,
+          "title": "Meilleur build publié — 61,7 % de victoires",
+          "subtitle": "« Paige - Bruiser-Healer [63% WR] [tracklock.gg] » • 261 parties Oracle+",
+          "winRate": 0.6168582375478927,
+          "matches": 261,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_charge",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "guardian_ward",
+              "trophy_collector",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "express_shot",
+              "knockdown",
+              "superior_cooldown",
+              "divine_barrier",
+              "greater_expansion",
+              "superior_duration",
+              "refresher"
+            ],
+            "situational": [
+              "grit",
+              "slowing_hex",
+              "sprint_boots",
+              "healbane",
+              "duration_extender",
+              "extra_spirit",
+              "healing_rite",
+              "rapid_recharge",
+              "cursed_relic",
+              "vortex_web"
+            ]
+          }
+        }
+      ]
+    },
+    "doorman": {
+      "apiHeroId": 69,
+      "nameFr": "Le Portier",
+      "matches": 18638,
+      "winRate": 0.4692563579783239,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Call Bell",
+          "nameFr": "Sonnette",
+          "descriptionFr": "Le Portier lance une sonnette qui inflige des dégâts spirituels à l'impact et qui explose après un court délai, infligeant des dégâts spirituels supplémentaires, un ralentissement des déplacements et réduisant temporairement la précision de l'arme des unités e"
+        },
+        {
+          "key": "2",
+          "nameEn": "Doorway",
+          "nameFr": "Porte dérobée",
+          "descriptionFr": "Le Portier place deux portes connectées sur la carte. Les occultistes et la plupart des projectiles entrant par une porte sortiront par l'autre. Les portes se fermeront à la fin de la durée.Les deux portes peuvent être placées jusqu'à une certaine distance l'u"
+        },
+        {
+          "key": "3",
+          "nameEn": "Luggage Cart",
+          "nameFr": "Charriot à bagages",
+          "descriptionFr": "Le Portier envoie un charriot à bagages qui inflige des dégâts spirituels, et entraine les occultistes adverses sur son chemin. Peut être lancé avec en faveur des occultistes de son équipe."
+        },
+        {
+          "key": "4",
+          "nameEn": "Hotel Guest",
+          "nameFr": "Clientèle de l'hôtel",
+          "descriptionFr": "Le Portier envoie l'enveloppe corporelle de la cible en séjour au Baroness Hotel. La cible doit se rendre rapidement à l'ascenseur de sortie qui le ramènera à sa position d'origine. Un séjour au Baroness Hotel est réglé en dégâts spirituels. Si la cible ne par"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "18 638 parties Oracle+ sur 30 jours • 46,9 % de victoires pour le héros",
+          "winRate": 0.4692563579783239,
+          "matches": 18638,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "mystic_burst",
+              "extra_charge",
+              "sprint_boots",
+              "mystic_reach",
+              "extra_spirit"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "trophy_collector",
+              "guardian_ward",
+              "slowing_hex",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "improved_burst",
+              "vortex_web",
+              "greater_expansion",
+              "superior_cooldown",
+              "boundless_spirit",
+              "cheat_death"
+            ],
+            "situational": [
+              "mystic_reverb",
+              "spirit_burn",
+              "divine_barrier",
+              "indomitable",
+              "transcendent_cooldown",
+              "heroic_aura"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 610355,
+          "title": "Meilleur build publié — 50,2 % de victoires",
+          "subtitle": "« Joechuck's DOOR MAXING: I dont like gun » • 311 parties Oracle+",
+          "winRate": 0.5016077170418006,
+          "matches": 311,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_charge",
+              "mystic_burst",
+              "mystic_reach",
+              "sprint_boots",
+              "grit",
+              "extra_spirit"
+            ],
+            "mid": [
+              "slowing_hex",
+              "pristine_emblem",
+              "recharging_rush",
+              "mystic_shot",
+              "kinetic_dash"
+            ],
+            "late": [
+              "vortex_web",
+              "cheat_death",
+              "greater_expansion",
+              "rapid_recharge",
+              "improved_burst"
+            ],
+            "situational": [
+              "trophy_collector",
+              "spirit_shielding",
+              "weapon_shielding",
+              "reactive_barrier",
+              "guardian_ward",
+              "extra_regen",
+              "close_quarters",
+              "rebuttal",
+              "debuff_reducer",
+              "rescue_beam"
+            ]
+          }
+        }
+      ]
+    },
+    "billy": {
+      "apiHeroId": 72,
+      "nameFr": "Billy",
+      "matches": 32629,
+      "winRate": 0.49161788592969446,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Bashdown",
+          "nameFr": "Matraquage",
+          "descriptionFr": "Billy frappe sa batte au sol et entraine l'adversaire à terre, infligeant des dégâts de mêlée.L'impact crée une onde de choc qui inflige des dégâts spirituels et applique une projection aérienne."
+        },
+        {
+          "key": "2",
+          "nameEn": "Rising Ram",
+          "nameFr": "Bélier de tête",
+          "descriptionFr": "Billy fonce tête la première sur une unité ennemie. Billy et sa cible sont projetées dans les airs.Réduit de moitié le temps de récupération à l'impact."
+        },
+        {
+          "key": "3",
+          "nameEn": "Blasted",
+          "nameFr": "Cul sec",
+          "descriptionFr": "Effet passif : les attaques de mêlée restaurent des munitions et infligent Démolition sur l'unité ciblée pendant 7.0 s."
+        },
+        {
+          "key": "4",
+          "nameEn": "Chain Gang",
+          "nameFr": "Chaine de forçats",
+          "descriptionFr": "Billy enchaine les adversaires à proximité. Les unités enchainées ne peuvent pas utiliser leurs capacités de déplacement et reçoivent un ralentissement considérable lorsqu'elles tirent sur la chaine.Après un certain temps, tire tout le monde vers Billy et infl"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "32 629 parties Oracle+ sur 30 jours • 49,2 % de victoires pour le héros",
+          "winRate": 0.49161788592969446,
+          "matches": 32629,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "3",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "melee_lifesteal",
+              "monster_rounds",
+              "close_quarters",
+              "grit",
+              "spirit_strike",
+              "extra_charge"
+            ],
+            "mid": [
+              "stalker",
+              "battle_vest",
+              "spirit_shielding",
+              "bullet_resist_shredder",
+              "slowing_hex",
+              "melee_charge"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "lifestrike",
+              "spirit_snatch",
+              "point_blank",
+              "rapid_recharge",
+              "spirit_resilience",
+              "crushing_fists"
+            ],
+            "situational": [
+              "colossus",
+              "phantom_strike",
+              "scourge",
+              "indomitable",
+              "juggernaut",
+              "greater_expansion"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 435330,
+          "title": "Meilleur build publié — 54,7 % de victoires",
+          "subtitle": "« HipsterLion 70% WinRate 1 Shot G.O.A.T » • 137 parties Oracle+",
+          "winRate": 0.5474452554744526,
+          "matches": 137,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "monster_rounds",
+              "close_quarters",
+              "melee_lifesteal",
+              "sprint_boots",
+              "extra_charge"
+            ],
+            "mid": [
+              "battle_vest",
+              "enduring_speed",
+              "slowing_hex"
+            ],
+            "late": [
+              "weighted_shots",
+              "spirit_snatch",
+              "spirit_resilience",
+              "escalating_resilience",
+              "crushing_fists",
+              "rapid_recharge"
+            ],
+            "situational": [
+              "restorative_shot",
+              "healing_rite",
+              "rusted_barrel",
+              "grit",
+              "reactive_barrier",
+              "healbane",
+              "enchanters_barrier",
+              "spirit_shielding",
+              "knockdown",
+              "silence_wave"
+            ]
+          }
+        }
+      ]
+    },
+    "graves": {
+      "apiHeroId": 76,
+      "nameFr": "Tombale",
+      "matches": 29946,
+      "winRate": 0.5328925399051626,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Jar of Dead",
+          "nameFr": "Mort en bocal",
+          "descriptionFr": "Effet passif : Tombale prélève l'essence mortelle de toutes les unités qui succombent à proximité et la conserve dans son bocal.Effet actif : Tombale lance le bocal pour invoquer des têtes de mort qui infligent des dégâts spirituels aux adversaires de manière "
+        },
+        {
+          "key": "2",
+          "nameEn": "Grasping Hands",
+          "nameFr": "Mains d'outre-tombe",
+          "descriptionFr": "Tombale déterre un mur de mains d'outre-tombe, ce qui invoque une goule et laisse une fissure qui inflige des dégâts spirituels et une immobilisation aux unités ennemies qui la traversent. L'utilisation secondaire fait pivoter le mur."
+        },
+        {
+          "key": "3",
+          "nameEn": "Essence Theft",
+          "nameFr": "Vol d'essence",
+          "descriptionFr": "L'arme vole des dégâts des armes et de la résistance spirituelle au fil du temps, jusqu'à un montant max. par cible"
+        },
+        {
+          "key": "4",
+          "nameEn": "Borrowed Decree",
+          "nameFr": "Clause mortuaire",
+          "descriptionFr": ""
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "29 946 parties Oracle+ sur 30 jours • 53,3 % de victoires pour le héros",
+          "winRate": 0.5328925399051626,
+          "matches": 29946,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "4",
+            "3",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "extra_stamina",
+              "extra_spirit"
+            ],
+            "mid": [
+              "mystic_shot",
+              "arcane_surge",
+              "enchanters_barrier",
+              "improved_spirit",
+              "duration_extender",
+              "improved_cooldown"
+            ],
+            "late": [
+              "heroic_aura",
+              "toxic_bullets",
+              "superior_stamina",
+              "superior_duration",
+              "echo_shard",
+              "superior_cooldown",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "siphon_bullets",
+              "spiritual_overflow",
+              "diviners_kevlar",
+              "silencer",
+              "leech",
+              "escalating_exposure"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 872212,
+          "title": "Meilleur build publié — 57,7 % de victoires",
+          "subtitle": "« Jamlex Tank Graves » • 194 parties Oracle+",
+          "winRate": 0.5773195876288659,
+          "matches": 194,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "grit",
+              "extra_spirit",
+              "extra_stamina"
+            ],
+            "mid": [
+              "mystic_shot",
+              "enchanters_barrier",
+              "improved_spirit",
+              "mystic_vulnerability",
+              "spirit_lifesteal"
+            ],
+            "late": [
+              "tesla_bullets",
+              "torment_pulse",
+              "superior_stamina",
+              "toxic_bullets",
+              "siphon_bullets",
+              "capacitor",
+              "escalating_exposure",
+              "scourge",
+              "spiritual_overflow",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "infuser",
+              "extra_regen",
+              "spirit_shielding",
+              "debuff_remover",
+              "counterspell",
+              "metal_skin",
+              "reactive_barrier",
+              "indomitable",
+              "silencer",
+              "spellbreaker"
+            ]
+          }
+        }
+      ]
+    },
+    "apollo": {
+      "apiHeroId": 77,
+      "nameFr": "Apollon",
+      "matches": 26979,
+      "winRate": 0.5045035027243412,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Disengaging Sigil",
+          "nameFr": "Sceau de désengagement",
+          "descriptionFr": "Apollon trace un sceau magique en face de lui puis bat en retraite avant qu'il n'explose. Les adversaires dans la zone subissent des dégâts et un ralentissement."
+        },
+        {
+          "key": "2",
+          "nameEn": "Riposte",
+          "nameFr": "Riposte",
+          "descriptionFr": "Apollon se prépare à parer la prochaine attaque dont il est la cible. En cas de parade réussie, Apollon devient invulnérable et s'élance vers une cible ennemie. La cible est étourdie et sa résistance aux attaques de mêlée est affaiblie.Appuyez sur Capacité 2 p"
+        },
+        {
+          "key": "3",
+          "nameEn": "Flawless Advance",
+          "nameFr": "Attaque en flèche",
+          "descriptionFr": "Apollon effectue une série d'estocades devant lui. Maintenez la touche de la capacité pour synchroniser les attaques et infliger des dégâts plus importants en fonction de la durée d'appui sur la touche. Si la touche est relâchée pendant l'intervalle parfait, l"
+        },
+        {
+          "key": "4",
+          "nameEn": "Itani Lo Sahn",
+          "nameFr": "Itani Lo Sahn",
+          "descriptionFr": "Après un temps de recharge, Apollon donne un grand coup d'épée loin devant lui. Les unités ennemies touchées ne peuvent ni agir ni se soigner et sont ralenties. À l'expiration de l'effet, elles subissent des dégâts dévastateurs et les unités qui avaient moins "
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "26 979 parties Oracle+ sur 30 jours • 50,5 % de victoires pour le héros",
+          "winRate": 0.5045035027243412,
+          "matches": 26979,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "mystic_burst",
+              "extra_regen",
+              "extra_spirit",
+              "melee_lifesteal",
+              "mystic_reach",
+              "spirit_strike"
+            ],
+            "mid": [
+              "cold_front",
+              "improved_spirit",
+              "healing_booster",
+              "healbane",
+              "melee_charge",
+              "improved_cooldown"
+            ],
+            "late": [
+              "spirit_snatch",
+              "debuff_remover",
+              "boundless_spirit",
+              "improved_burst",
+              "superior_cooldown",
+              "greater_expansion",
+              "spirit_burn"
+            ],
+            "situational": [
+              "witchmail",
+              "mystic_reverb",
+              "escalating_exposure",
+              "scourge",
+              "crushing_fists",
+              "ethereal_shift"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 467779,
+          "title": "Meilleur build publié — 52,8 % de victoires",
+          "subtitle": "« ABL (twitch ablkz) » • 980 parties Oracle+",
+          "winRate": 0.5275510204081633,
+          "matches": 980,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "1",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "melee_lifesteal",
+              "mystic_burst",
+              "mystic_reach",
+              "spirit_strike",
+              "close_quarters"
+            ],
+            "mid": [
+              "improved_spirit",
+              "healing_booster",
+              "melee_charge",
+              "improved_cooldown"
+            ],
+            "late": [
+              "spirit_snatch",
+              "lifestrike",
+              "hunters_aura",
+              "boundless_spirit",
+              "improved_burst",
+              "superior_cooldown",
+              "spirit_burn",
+              "greater_expansion",
+              "scourge",
+              "transcendent_cooldown"
+            ],
+            "situational": [
+              "extra_regen",
+              "monster_rounds",
+              "debuff_remover",
+              "counterspell",
+              "mystic_vulnerability",
+              "escalating_exposure",
+              "ethereal_shift",
+              "cursed_relic",
+              "refresher",
+              "spellbreaker"
+            ]
+          }
+        }
+      ]
+    },
+    "deadman_danny": {
+      "apiHeroId": 78,
+      "nameFr": "Danny la Dépouille",
+      "matches": 18993,
+      "winRate": 0.38003474964460593,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Strix Salvo",
+          "nameFr": "Salve Strix",
+          "descriptionFr": "Danny la Dépouille lance une salve de missiles spirituels qui se logent dans le sol le long d'une ligne. Les missiles explosent après un délai ou dès qu'ils détectent une cible ennemie. L'explosion inflige des dégâts spirituels et marque la cible.Faire un tir "
+        },
+        {
+          "key": "2",
+          "nameEn": "Chimera Mk1",
+          "nameFr": "Chimère 1ʳᵉ gén.",
+          "descriptionFr": "Maintenez Sauter/grimper pour voler, ce qui emmagasine la chaleur. Lorsque la chaleur maximale est atteinte, le jetpack commence à surchauffer.Surchauffe : après un court délai, Danny la Dépouille plonge vers le sol. Lors de l'impact, il crée une explosion qui"
+        },
+        {
+          "key": "3",
+          "nameEn": "Jettison Fuel",
+          "nameFr": "Largage de kérosène",
+          "descriptionFr": "Danny la Dépouille pulvérise du kérosène qui inflige des dégâts des armes au fil du temps et réduit la résistance aux balles, jusqu'à déclencher un énorme souffle arrière qui inflige des dégâts spirituels et le projette en arrière.Purge le jetpack lorsqu'il in"
+        },
+        {
+          "key": "4",
+          "nameEn": "Close The Deal",
+          "nameFr": "Affaire conclue",
+          "descriptionFr": "Danny la Dépouille attrape une unité ennemie et lui offre un baptême de l'air. Ils gagnent rapidement en altitude avant de s'écraser au sol.Danny la Dépouille et sa cible subissent des dégâts spirituels au fil du temps pendant la chute et des dégâts spirituels"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "18 993 parties Oracle+ sur 30 jours • 38,0 % de victoires pour le héros",
+          "winRate": 0.38003474964460593,
+          "matches": 18993,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_spirit",
+              "grit",
+              "extra_health",
+              "mystic_burst",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "long_range",
+              "improved_spirit",
+              "enchanters_barrier",
+              "reactive_barrier",
+              "improved_cooldown"
+            ],
+            "late": [
+              "express_shot",
+              "sharpshooter",
+              "fortitude",
+              "improved_burst",
+              "greater_expansion",
+              "superior_cooldown",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "diviners_kevlar",
+              "spirit_burn",
+              "spiritual_overflow",
+              "mystic_reverb",
+              "transcendent_cooldown",
+              "indomitable"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 884866,
+          "title": "Meilleur build publié — 44,4 % de victoires",
+          "subtitle": "« Incoming! | Yeski Spirit Nuke! (ANNOTATED) » • 606 parties Oracle+",
+          "winRate": 0.4438943894389439,
+          "matches": 606,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "1",
+            "4",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "grit"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "enchanters_barrier",
+              "improved_spirit",
+              "reactive_barrier",
+              "healbane"
+            ],
+            "late": [
+              "sharpshooter",
+              "improved_burst",
+              "greater_expansion",
+              "superior_cooldown",
+              "debuff_remover",
+              "boundless_spirit",
+              "spirit_burn",
+              "diviners_kevlar",
+              "transcendent_cooldown",
+              "mystic_reverb"
+            ],
+            "situational": [
+              "restorative_shot",
+              "extra_regen",
+              "monster_rounds",
+              "metal_skin",
+              "counterspell",
+              "spirit_resilience",
+              "shadow_weave",
+              "indomitable",
+              "plated_armor",
+              "unstoppable"
+            ]
+          }
+        }
+      ]
+    },
+    "rem": {
+      "apiHeroId": 79,
+      "nameFr": "Rem",
+      "matches": 28178,
+      "winRate": 0.4770743132940592,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Pillow Toss",
+          "nameFr": "Bataille de polochons",
+          "descriptionFr": "Rem lance son fidèle oreiller pour infliger des dégâts spirituels et un recul considérable.Chaque coup qui touche sa cible réduit les temps de récupération des autres capacités de Rem."
+        },
+        {
+          "key": "2",
+          "nameEn": "Tag Along",
+          "nameFr": "Sieste ambulante",
+          "descriptionFr": "Rem bondit vers une unité alliée et fait une sieste à ses côtés. Rem et l'unité reçoivent des soins instantanés en fonction de leur PV manquants, suivis d'une régénération qui persiste.Rem passe d'une unité alliée à l'autre avec Capacité 2 pour leur prodiguer "
+        },
+        {
+          "key": "3",
+          "nameEn": "Lil Helpers",
+          "nameFr": "Petites mains",
+          "descriptionFr": "Rem délègue ses tâches à l'un de ses assistants. Ils peuvent détruire des caisses, utiliser le distributeur d'âmes et accompagner les occultistes et troupiers alliés.Suivi d'occultiste : confère un bref bonus de résistance spirituelle et de la vitesse de dépla"
+        },
+        {
+          "key": "4",
+          "nameEn": "Naptime",
+          "nameFr": "Mauvais rêves",
+          "descriptionFr": "Le regard de Rem transperce les murs et le sol. Les unités ennemies dans son champ de vision sont ralenties, y compris dans leurs élans, et ne peuvent plus utiliser leurs capacités de déplacement. Une fois la canalisation terminée, elles s'endorment avant de s"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "28 178 parties Oracle+ sur 30 jours • 47,7 % de victoires pour le héros",
+          "winRate": 0.4770743132940592,
+          "matches": 28178,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_charge",
+              "sprint_boots",
+              "grit",
+              "extra_regen",
+              "extra_spirit"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "trophy_collector",
+              "guardian_ward",
+              "healing_booster",
+              "improved_spirit",
+              "improved_cooldown"
+            ],
+            "late": [
+              "rapid_recharge",
+              "divine_barrier",
+              "superior_cooldown",
+              "cursed_relic",
+              "superior_duration",
+              "greater_expansion",
+              "transcendent_cooldown"
+            ],
+            "situational": [
+              "cheat_death",
+              "spirit_burn",
+              "boundless_spirit",
+              "scourge",
+              "healing_tempo",
+              "mystic_reverb"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 478907,
+          "title": "Meilleur build publié — 52,6 % de victoires",
+          "subtitle": "« saintmxsm » • 171 parties Oracle+",
+          "winRate": 0.5263157894736842,
+          "matches": 171,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_charge",
+              "grit",
+              "extra_stamina",
+              "extra_spirit"
+            ],
+            "mid": [
+              "cold_front",
+              "restorative_locket",
+              "arcane_surge",
+              "healing_booster",
+              "guardian_ward",
+              "improved_spirit",
+              "improved_cooldown",
+              "duration_extender"
+            ],
+            "late": [
+              "scourge",
+              "divine_barrier",
+              "superior_cooldown",
+              "echo_shard",
+              "transcendent_cooldown",
+              "superior_duration",
+              "boundless_spirit",
+              "greater_expansion",
+              "arctic_blast",
+              "cheat_death"
+            ],
+            "situational": [
+              "healing_tempo",
+              "indomitable",
+              "diviners_kevlar",
+              "cursed_relic",
+              "slowing_hex",
+              "knockdown",
+              "disarming_hex",
+              "healing_rite",
+              "rescue_beam",
+              "healing_nova"
+            ]
+          }
+        }
+      ]
+    },
+    "silver": {
+      "apiHeroId": 80,
+      "nameFr": "Silver",
+      "matches": 27310,
+      "winRate": 0.48264372024899305,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Slam Fire",
+          "nameFr": "Rafale éclair",
+          "descriptionFr": "Silver recharge son arme instantanément. Elle gagne un bonus de cadence de tir et inflige des dégâts des armes bonus en fonction des PV de la cible pendant un nombre limité de tirs dont la précision est réduite.Inflige des dégâts bonus aux troupiers et aux cré"
+        },
+        {
+          "key": "2",
+          "nameEn": "Boot Kick",
+          "nameFr": "Coup de botte",
+          "descriptionFr": ""
+        },
+        {
+          "key": "3",
+          "nameEn": "Entangling Bola",
+          "nameFr": "Bola entravant",
+          "descriptionFr": "Silver lance un bola qui inflige des dégâts spirituels, ce qui applique un ralentissement et entrave les capacités de déplacement et l'utilisation de l'endurance."
+        },
+        {
+          "key": "4",
+          "nameEn": "Lycan Curse",
+          "nameFr": "Lycanthropie",
+          "descriptionFr": "Effet passif : les dégâts infligés génèrent de la soif de sang qui est augmentée en cas de PV faibles. Au paroxysme de sa soif de sang, Silver lance automatiquement Lycanthropie.Effet actif : Silver se transforme instantanément et obtient un bonus de PV max. e"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "27 310 parties Oracle+ sur 30 jours • 48,3 % de victoires pour le héros",
+          "winRate": 0.48264372024899305,
+          "matches": 27310,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "melee_lifesteal",
+              "extra_regen",
+              "close_quarters",
+              "grit"
+            ],
+            "mid": [
+              "stalker",
+              "slowing_bullets",
+              "spirit_shielding",
+              "slowing_hex",
+              "healing_booster",
+              "debuff_reducer"
+            ],
+            "late": [
+              "lifestrike",
+              "hunters_aura",
+              "weighted_shots",
+              "spirit_resilience",
+              "berserker",
+              "superior_duration",
+              "unstoppable"
+            ],
+            "situational": [
+              "silencer",
+              "diviners_kevlar",
+              "frenzy",
+              "phantom_strike",
+              "healing_tempo",
+              "inhibitor"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 622924,
+          "title": "Meilleur build publié — 50,8 % de victoires",
+          "subtitle": "« ttv/ShiroRz major patch silver (new) » • 356 parties Oracle+",
+          "winRate": 0.5084269662921348,
+          "matches": 356,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "1",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "melee_lifesteal",
+              "close_quarters",
+              "extra_regen"
+            ],
+            "mid": [
+              "stalker",
+              "slowing_bullets",
+              "slowing_hex",
+              "healing_booster",
+              "duration_extender"
+            ],
+            "late": [
+              "lifestrike",
+              "hunters_aura",
+              "weighted_shots",
+              "spirit_resilience",
+              "superior_duration",
+              "frenzy",
+              "unstoppable",
+              "berserker",
+              "scourge",
+              "diviners_kevlar"
+            ],
+            "situational": [
+              "plated_armor",
+              "silencer",
+              "healing_tempo",
+              "superior_cooldown",
+              "transcendent_cooldown",
+              "juggernaut",
+              "divine_barrier",
+              "phantom_strike",
+              "inhibitor",
+              "guardian_ward"
+            ]
+          }
+        }
+      ]
+    },
+    "celeste": {
+      "apiHeroId": 81,
+      "nameFr": "Céleste",
+      "matches": 27090,
+      "winRate": 0.5259874492432632,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Light Eater",
+          "nameFr": "Luminophage",
+          "descriptionFr": "Céleste aveugle les adversaires dans une zone conique en face d'elle. Céleste inflige des dégâts spirituels dès qu'elle les attaque et reçoit du vol de vie spirituel."
+        },
+        {
+          "key": "2",
+          "nameEn": "Dazzling Trick",
+          "nameFr": "Prisme cristallin",
+          "descriptionFr": "Céleste s'entoure d'un prisme protecteur. Si la protection est détruite, elle réduit au silence les adversaires les plus proches et leur inflige une partie de la quantité de protection sous forme de dégâts."
+        },
+        {
+          "key": "3",
+          "nameEn": "Radiant Daggers",
+          "nameFr": "Dagues rayonnantes",
+          "descriptionFr": "Un faisceau de lumière tombe du ciel. Après un court laps de temps, le faisceau se forme complètement et provoque une explosion qui inflige des dégâts spirituels à toutes les cibles de la zone. Céleste reçoit un bonus cumulable de dégâts spirituels à chaque fo"
+        },
+        {
+          "key": "4",
+          "nameEn": "Shining Wonder",
+          "nameFr": "Astre prodigieux",
+          "descriptionFr": "Céleste lance un globe de lumière mortel qui inflige des dégâts spirituels, applique un ralentissement et réduit la distance d'élan à l'impact. Le globe rebondit ensuite sur les unités ennemies proches. En l'absence de cible, le globe persistera un instant en "
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "27 090 parties Oracle+ sur 30 jours • 52,6 % de victoires pour le héros",
+          "winRate": 0.5259874492432632,
+          "matches": 27090,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "high_velocity_mag",
+              "mystic_regeneration",
+              "mystic_burst",
+              "mystic_reach",
+              "grit"
+            ],
+            "mid": [
+              "suppressor",
+              "healing_booster",
+              "spirit_shielding",
+              "restorative_locket",
+              "pristine_emblem",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "torment_pulse",
+              "superior_stamina",
+              "greater_expansion",
+              "superior_cooldown",
+              "witchmail",
+              "escalating_exposure"
+            ],
+            "situational": [
+              "scourge",
+              "ethereal_shift",
+              "spellslinger",
+              "spiritual_overflow",
+              "transcendent_cooldown",
+              "boundless_spirit"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 690420,
+          "title": "Meilleur build publié — 55,1 % de victoires",
+          "subtitle": "« pinnkpawz on TTV | NEW PATCH BUILD !! » • 463 parties Oracle+",
+          "winRate": 0.550755939524838,
+          "matches": 463,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "high_velocity_mag",
+              "mystic_burst",
+              "mystic_reach",
+              "mystic_regeneration"
+            ],
+            "mid": [
+              "healing_booster",
+              "restorative_locket",
+              "spirit_shielding"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "torment_pulse",
+              "greater_expansion",
+              "improved_burst",
+              "witchmail",
+              "refresher",
+              "escalating_exposure"
+            ],
+            "situational": [
+              "healing_rite",
+              "pristine_emblem",
+              "mystic_slow",
+              "healbane",
+              "improved_cooldown",
+              "superior_cooldown",
+              "mystic_vulnerability",
+              "weapon_shielding",
+              "reactive_barrier",
+              "debuff_reducer"
+            ]
+          }
+        }
+      ]
+    },
+    "rat_king": {
+      "apiHeroId": 84,
+      "nameFr": "Roi des rats",
+      "matches": 68569,
+      "winRate": 0.5564030392743077,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Scrap Grenade",
+          "nameFr": "Grenade de ferraille",
+          "descriptionFr": "Roi des rats lance une grenade de ferraille qui explose à plusieurs reprises, elle inflige des dégâts balistiques et applique un ralentissement. Une attaque de mêlée permet de dévier la grenade."
+        },
+        {
+          "key": "2",
+          "nameEn": "Rat Swarm",
+          "nameFr": "Horde de rats",
+          "descriptionFr": "Roi des rats invoque une horde de rats qui bondissent sur les adversaires à proximité pour les mordre. Chaque morsure inflige des dégâts spirituels au fil du temps et réduit la résistance aux balles des cibles. Plus il y a de rats accrochés, plus les morsures "
+        },
+        {
+          "key": "3",
+          "nameEn": "Royal Pestments",
+          "nameFr": "Apparat royal",
+          "descriptionFr": "Roi des rats se pare de son armure de fortune, qui lui accorde une protection basée sur ses PV max. Tant que l'armure résiste, les balles ont une chance d'être renvoyées vers l'adversaire.Les résistances n'améliorent pas la protection."
+        },
+        {
+          "key": "4",
+          "nameEn": "Rule, Ratannia!",
+          "nameFr": "Gloire à la Ratannie !",
+          "descriptionFr": "Roi des rats charge au cœur de la bataille et invoque la bannière de la Ratannie. Les unités occultistes alliées à proximité bénéficient d'une vitesse de déplacement accrue, sont invulnérables aux ralentissements et subissent des dégâts réduits tant qu'elles s"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "68 569 parties Oracle+ sur 30 jours • 55,6 % de victoires pour le héros",
+          "winRate": 0.5564030392743077,
+          "matches": 68569,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "3",
+            "1",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "monster_rounds",
+              "extra_health",
+              "extended_magazine",
+              "sprint_boots",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "swift_striker",
+              "titanic_magazine",
+              "enduring_speed",
+              "fleetfoot",
+              "improved_cooldown"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "fortitude",
+              "ballistic_enchantment",
+              "berserker",
+              "spirit_resilience",
+              "superior_cooldown",
+              "siphon_bullets"
+            ],
+            "situational": [
+              "diviners_kevlar",
+              "spellslinger",
+              "hunters_aura",
+              "colossus",
+              "duration_extender",
+              "superior_duration"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 836698,
+          "title": "Meilleur build publié — 57,5 % de victoires",
+          "subtitle": "« THE TANKIEST GUNNER [Lockbuilds.com] » • 1 000 parties Oracle+",
+          "winRate": 0.575,
+          "matches": 1000,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "4",
+            "3",
+            "1",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_regen",
+              "extended_magazine",
+              "sprint_boots",
+              "extra_health"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "battle_vest",
+              "fleetfoot",
+              "enduring_speed",
+              "return_fire",
+              "titanic_magazine",
+              "spirit_shielding"
+            ],
+            "late": [
+              "cultist_sacrifice",
+              "fortitude",
+              "ballistic_enchantment",
+              "escalating_resilience",
+              "heroic_aura",
+              "berserker",
+              "siphon_bullets",
+              "superior_cooldown",
+              "glass_cannon",
+              "juggernaut"
+            ],
+            "situational": [
+              "debuff_remover",
+              "metal_skin",
+              "spirit_resilience",
+              "bullet_resilience",
+              "counterspell",
+              "transcendent_cooldown",
+              "unstoppable",
+              "witchmail",
+              "lucky_shot",
+              "vampiric_burst"
+            ]
+          }
+        }
+      ]
+    },
+    "solomon": {
+      "apiHeroId": 85,
+      "nameFr": "Salomon",
+      "matches": 26827,
+      "winRate": 0.4406754389234726,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Setup Bishop",
+          "nameFr": "Placement du fou",
+          "descriptionFr": "Salomon crée un fou qui reste en place indéfiniment.Déplacement ( ) : déplace le fou, en appliquant un ralentissement dégressif et en infligeant des dégâts spirituels aux adversaires qu'il traverse. Après un délai, active des cases diagonales qui infligent des"
+        },
+        {
+          "key": "2",
+          "nameEn": "Kingside Knight",
+          "nameFr": "Cavalier du roi",
+          "descriptionFr": "Salomon promeut une unité alliée en cavalier. Elle bénéficie alors d'un bonus d'endurance et d'une protection pendant un certain temps.Si Salomon lance la capacité sur lui-même, il se promeut roi et obtient le double de la protection, mais pas d'endurance. Dép"
+        },
+        {
+          "key": "3",
+          "nameEn": "Rook Battery",
+          "nameFr": "Batterie de tours",
+          "descriptionFr": "Salomon crée deux tours qui avancent et infligent des dégâts spirituels et appliquent une immobilisation. Si les tours touchent un mur, elles repartent dans la direction opposée. Réactivation : sépare les tours perpendiculairement."
+        },
+        {
+          "key": "4",
+          "nameEn": "Develop Queen",
+          "nameFr": "Développement de la dame",
+          "descriptionFr": ""
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "26 827 parties Oracle+ sur 30 jours • 44,1 % de victoires pour le héros",
+          "winRate": 0.4406754389234726,
+          "matches": 26827,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "2",
+            "4",
+            "1"
+          ],
+          "phases": {
+            "early": [
+              "high_velocity_mag",
+              "extra_spirit",
+              "grit",
+              "mystic_reach",
+              "extra_stamina",
+              "mystic_burst"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "long_range",
+              "guardian_ward",
+              "improved_spirit",
+              "enchanters_barrier",
+              "improved_cooldown"
+            ],
+            "late": [
+              "sharpshooter",
+              "superior_stamina",
+              "superior_cooldown",
+              "greater_expansion",
+              "improved_burst",
+              "boundless_spirit",
+              "spirit_burn"
+            ],
+            "situational": [
+              "magic_carpet",
+              "divine_barrier",
+              "escalating_exposure",
+              "indomitable",
+              "vortex_web",
+              "transcendent_cooldown"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 869710,
+          "title": "Meilleur build publié — 48,5 % de victoires",
+          "subtitle": "« Piggy`s Solomon (twitch.tv/piggyxdd) » • 268 parties Oracle+",
+          "winRate": 0.48507462686567165,
+          "matches": 268,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "extra_spirit",
+              "close_quarters",
+              "high_velocity_mag",
+              "grit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "pristine_emblem",
+              "guardian_ward",
+              "improved_cooldown",
+              "improved_spirit"
+            ],
+            "late": [
+              "superior_cooldown",
+              "warp_stone",
+              "greater_expansion"
+            ],
+            "situational": [
+              "rusted_barrel",
+              "monster_rounds",
+              "extra_regen",
+              "rebuttal",
+              "extra_stamina",
+              "slowing_hex",
+              "knockdown",
+              "rescue_beam",
+              "decay",
+              "cursed_relic"
+            ]
+          }
+        }
+      ]
+    },
+    "violet": {
+      "apiHeroId": 86,
+      "nameFr": "Violette",
+      "matches": 7806,
+      "winRate": 0.44055854470919803,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Living Ink",
+          "nameFr": "Encre vive",
+          "descriptionFr": "Effet passif : lancer n'importe quelle autre capacité réinitialise le temps de récupération de Souffle créateur."
+        },
+        {
+          "key": "2",
+          "nameEn": "Flow State",
+          "nameFr": "Souffle créateur",
+          "descriptionFr": "Violette fait glisser un pinceau qui continue d'avancer en laissant une trainée qui octroie de la distance de glissade bonus aux membres de l'équipe, ainsi qu'un ralentissement et des dégâts spirituels dégressifs aux occultiste adverses qu'il traverse avec un "
+        },
+        {
+          "key": "3",
+          "nameEn": "Still Life",
+          "nameFr": "Nature morte",
+          "descriptionFr": "Violette choisit l'occultiste qui sera son modèle pour lui infliger des dégâts spirituels au fil du temps en continu tant qu'elle l'observe. Si elle termine son croquis, la cible subit des dégâts spirituels supplémentaires, souffre d'un étourdissement, et lais"
+        },
+        {
+          "key": "4",
+          "nameEn": "Abstract Landscape",
+          "nameFr": "Paysage abstrait",
+          "descriptionFr": "Violette peint un cercle qui bloque la vision et accorde du Pouvoir spirituel aux membres de l'équipe.Les unités adverses dans la zone sont révélées. Quand elles en sortent, elles subissent des dégâts spirituels et un ralentissement et sont réduites au Silence"
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "7 806 parties Oracle+ sur 30 jours • 44,1 % de victoires pour le héros",
+          "winRate": 0.44055854470919803,
+          "matches": 7806,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "2",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_regen",
+              "extra_spirit",
+              "mystic_regeneration",
+              "extra_charge",
+              "grit",
+              "mystic_burst"
+            ],
+            "mid": [
+              "healing_booster",
+              "mystic_shot",
+              "spirit_shielding",
+              "improved_spirit",
+              "improved_cooldown",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "rapid_recharge",
+              "superior_stamina",
+              "torment_pulse",
+              "improved_burst",
+              "superior_cooldown",
+              "boundless_spirit"
+            ],
+            "situational": [
+              "spirit_burn",
+              "transcendent_cooldown",
+              "escalating_exposure",
+              "divine_barrier",
+              "spiritual_overflow",
+              "diviners_kevlar"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 897554,
+          "title": "Meilleur build publié — 56,3 % de victoires",
+          "subtitle": "« RANGER VIOLET TWITCH.TV/RANGERNS » • 158 parties Oracle+",
+          "winRate": 0.5632911392405063,
+          "matches": 158,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "4",
+            "2",
+            "3"
+          ],
+          "phases": {
+            "early": [
+              "restorative_shot",
+              "grit",
+              "extra_charge",
+              "mystic_regeneration",
+              "extra_spirit",
+              "extra_stamina",
+              "rusted_barrel"
+            ],
+            "mid": [
+              "mystic_shot",
+              "healing_booster",
+              "spirit_shielding",
+              "weapon_shielding",
+              "guardian_ward",
+              "improved_spirit",
+              "reactive_barrier"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "torment_pulse",
+              "rapid_recharge",
+              "improved_burst",
+              "superior_cooldown",
+              "divine_barrier",
+              "transcendent_cooldown",
+              "boundless_spirit",
+              "superior_stamina",
+              "spirit_burn"
+            ],
+            "situational": [
+              "escalating_exposure",
+              "spiritual_overflow",
+              "indomitable",
+              "diviners_kevlar",
+              "healing_tempo"
+            ]
+          }
+        }
+      ]
+    },
+    "baba": {
+      "apiHeroId": 88,
+      "nameFr": "Baba",
+      "matches": 33081,
+      "winRate": 0.5162177685076026,
+      "badgeMin": 81,
+      "abilities": [
+        {
+          "key": "1",
+          "nameEn": "Threadsap",
+          "nameFr": "Fil siphonnant",
+          "descriptionFr": "Baba tisse un vieux fil râpé qui suit votre viseur avant d'exploser le long de sa trajectoire. L'explosion inflige des dégâts spirituels et vole du Pouvoir spirituel, dont l'efficacité augmente pour Baba.Le Pouvoir spirituel qu'elle vole confère à ses balles d"
+        },
+        {
+          "key": "2",
+          "nameEn": "Granny Long Legs",
+          "nameFr": "Mamie gambettes",
+          "descriptionFr": "Les pieds du banc de Baba s'allongent. Elle bénéficie alors de bonus move speed, de hauteur de saut supplémentaire, de résistance aux effets négatifs et de résistance aux attaques de mêlée.Attaque de mêlée légère : Baba donne un coup de pied qui repousse les a"
+        },
+        {
+          "key": "3",
+          "nameEn": "Baba's Brew",
+          "nameFr": "Breuvage de Baba",
+          "descriptionFr": "Baba prépare une tisane dans sa théière qui applique un effet magique dans une zone lorsqu'elle est lancée. L'effet alterne entre une apaisante protection, une réduction au Silence, ou une brulure cuisante qui inflige des dégâts spirituels au fil du temps et r"
+        },
+        {
+          "key": "4",
+          "nameEn": "Feed The Birds",
+          "nameFr": "Nourrir les p'tits oiseaux",
+          "descriptionFr": "Baba couvre les cibles devant elle de miettes de pain, qui appliquent des charges cumulables de ralentissement.Une fois la canalisation terminée, une volée de pigeons bombarde les cibles, qui subissent des dégâts spirituels et se transforment en pigeons. Plus "
+        }
+      ],
+      "builds": [
+        {
+          "kind": "stats",
+          "title": "Méta Oracle+ — objets les plus achetés",
+          "subtitle": "33 081 parties Oracle+ sur 30 jours • 51,6 % de victoires pour le héros",
+          "winRate": 0.5162177685076026,
+          "matches": 33081,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "phases": {
+            "early": [
+              "extra_charge",
+              "extra_regen",
+              "mystic_regeneration",
+              "spirit_strike",
+              "grit",
+              "mystic_reach"
+            ],
+            "mid": [
+              "healing_booster",
+              "reactive_barrier",
+              "healbane",
+              "improved_cooldown",
+              "duration_extender",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "torment_pulse",
+              "spirit_snatch",
+              "superior_cooldown",
+              "rapid_recharge",
+              "greater_expansion",
+              "superior_duration"
+            ],
+            "situational": [
+              "boundless_spirit",
+              "transcendent_cooldown",
+              "escalating_exposure",
+              "plated_armor",
+              "alchemical_fire",
+              "restorative_locket"
+            ]
+          }
+        },
+        {
+          "kind": "published",
+          "sourceBuildId": 861468,
+          "title": "Meilleur build publié — 63,6 % de victoires",
+          "subtitle": "« BABA [ LIGHTBRINGER ] » • 327 parties Oracle+",
+          "winRate": 0.636085626911315,
+          "matches": 327,
+          "badgeMin": 81,
+          "abilitiesOrder": [
+            "3",
+            "1",
+            "4",
+            "2"
+          ],
+          "phases": {
+            "early": [
+              "extra_charge",
+              "extra_regen",
+              "mystic_regeneration",
+              "spirit_strike",
+              "grit"
+            ],
+            "mid": [
+              "healing_booster",
+              "reactive_barrier",
+              "restorative_locket",
+              "improved_cooldown",
+              "duration_extender",
+              "mystic_vulnerability"
+            ],
+            "late": [
+              "radiant_regeneration",
+              "superior_cooldown",
+              "torment_pulse",
+              "spirit_snatch",
+              "superior_duration",
+              "boundless_spirit",
+              "escalating_exposure",
+              "transcendent_cooldown",
+              "scourge",
+              "healing_tempo"
+            ],
+            "situational": [
+              "indomitable",
+              "spirit_rend",
+              "spiritual_overflow",
+              "blood_tribute",
+              "rebuttal",
+              "counterspell",
+              "warp_stone",
+              "metal_skin",
+              "rapid_recharge",
+              "alchemical_fire"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

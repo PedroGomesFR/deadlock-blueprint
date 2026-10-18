@@ -1,0 +1,12 @@
+# Dependencies (npm install)
+node_modules/
+
+# Build outputs (npm run build / npm run dist)
+dist/
+release/
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+*.log
