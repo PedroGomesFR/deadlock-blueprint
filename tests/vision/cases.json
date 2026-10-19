@@ -150,7 +150,6 @@
         "mode": "hud",
         "highlighted": null,
         "allySlots": [null, "vindicta", null, null, "seven", null],
-        "enemySlots": [null, "warden", null, null, null, null],
         "slots": ["extra_regen", "enduring_speed", "slowing_hex", "lifestrike", ".", "lock", "stalker", "spirit_shielding", "rapid_recharge", "crushing_fists", ".", "lock"],
         "locked": 2,
         "souls": null
