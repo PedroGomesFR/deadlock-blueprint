@@ -14,7 +14,7 @@
  * Désactivé par défaut : le joueur l'active au premier lancement ou dans les Réglages (`dl_gameLogs`). Rien n'est
  * envoyé, les fichiers ne quittent le PC que s'il les joint lui-même à un signalement.
  */
-import type { InventorySlotReading, VisionDetectionResult } from './visionScanner';
+import { drawNormalizedFrame, type InventorySlotReading, type VisionDetectionResult } from './visionScanner';
 
 export const GAME_LOGS_KEY = 'dl_gameLogs';
 
@@ -104,21 +104,21 @@ function describeSlot(s: InventorySlotReading): string {
   }
 }
 
-/** Saves a region given in 1920x1080 coordinates, rescaled to that reference size. */
+let normLogCanvas: HTMLCanvasElement | null = null;
+
+/** Saves a region given in 1920x1080 coordinates, normalized from any screen resolution or aspect ratio. */
 function saveRegion(
-  frame: ImageBitmap,
+  frame: ImageBitmap | HTMLCanvasElement,
   region: { x: number; y: number; w: number; h: number },
   name: string,
   quality: number
 ): void {
-  const sx = frame.width / 1920;
-  const sy = frame.height / 1080;
   const canvas = document.createElement('canvas');
   canvas.width = region.w;
   canvas.height = region.h;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  ctx.drawImage(frame, region.x * sx, region.y * sy, region.w * sx, region.h * sy, 0, 0, region.w, region.h);
+  ctx.drawImage(frame, region.x, region.y, region.w, region.h, 0, 0, region.w, region.h);
   canvas.toBlob(
     (blob) => {
       blob?.arrayBuffer().then((data) => logApi()?.image(name, data));
@@ -182,11 +182,24 @@ export function logScan(detection: VisionDetectionResult, frame: ImageBitmap | s
     const stamp = `${String(imageIndex++).padStart(4, '0')}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(
       d.getSeconds()
     )}`;
-    saveRegion(frame, INV_CROP, `inv_${stamp}.jpg`, 0.95);
-    saveRegion(frame, TOP_CROP, `top_${stamp}.jpg`, 0.95);
+    let src: ImageBitmap | HTMLCanvasElement = frame;
+    if (frame.width !== 1920 || frame.height !== 1080) {
+      if (!normLogCanvas) {
+        normLogCanvas = document.createElement('canvas');
+        normLogCanvas.width = 1920;
+        normLogCanvas.height = 1080;
+      }
+      const nCtx = normLogCanvas.getContext('2d', { willReadFrequently: true });
+      if (nCtx) {
+        drawNormalizedFrame(frame, nCtx);
+        src = normLogCanvas;
+      }
+    }
+    saveRegion(src, INV_CROP, `inv_${stamp}.jpg`, 0.95);
+    saveRegion(src, TOP_CROP, `top_${stamp}.jpg`, 0.95);
     if (now - lastFullImageAt >= FULL_IMAGE_INTERVAL_MS) {
       lastFullImageAt = now;
-      saveRegion(frame, { x: 0, y: 0, w: 1920, h: 1080 }, `full_${stamp}.jpg`, 0.85);
+      saveRegion(src, { x: 0, y: 0, w: 1920, h: 1080 }, `full_${stamp}.jpg`, 0.85);
     }
   }
 }

@@ -11,7 +11,7 @@ First public version.
 - **Builds stay up to date on their own**: the meta builds and the item catalogue are refreshed every week and downloaded at launch, so a Deadlock patch no longer needs a new release.
 - **Report a problem** (Diagnostics or Settings): creates a .zip with the system info and, if you want, your last game log, then opens a pre-filled GitHub issue.
 - **Settings**: language, game logs, updates, about.
-- **Unsupported screen format** (not 16:9: ultrawide, 16:10, windowed with borders): detection is paused and the app says why, instead of showing wrong recommendations. A hint also appears when Deadlock is open but no in-game HUD has been recognized for several minutes.
+- **All screen sizes & formats supported**: 720p, 1080p, 2K (`2560×1440`, `2560×1600`, `3440×1440`), 4K (`3840×2160`), 16:9, 16:10, ultrawide 21:9 / 32:9, High-DPI Windows scaling (125% / 150% / 200%), and windowed mode with borders. A hint appears when Deadlock is open but no in-game HUD has been recognized for several minutes.
 - The **Diagnostics** tab now shows what the scanner reads, live: capture, portraits slot by slot, inventory slot by slot.
 
 ### Detection

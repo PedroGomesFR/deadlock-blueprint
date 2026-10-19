@@ -311,6 +311,90 @@
         "locked": 1,
         "souls": 3386
       }
+    },
+    {
+      "name": "sapphire_late_2k_1440p",
+      "description": "2K QHD 2560x1440 (16:9): HUD, portraits, 10 items, and souls read at 2K.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_late_2k_16x10",
+      "description": "2K WQXGA 2560x1600 (16:10): Panorama width-scaled HUD with top bar at y=0 and bottom HUD pinned to bottom.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2560, "height": 1600, "mode": "16:10" },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1600",
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_late_2k_ultrawide",
+      "description": "2K UWQHD 3440x1440 (21:9 ultrawide): centered top bar & abilities, left-pinned inventory & souls.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 3440, "height": 1440, "mode": "ultrawide" },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "3440x1440",
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_late_2k_windowed",
+      "description": "2K Windowed mode 2576x1487 with Win32 titlebar (39px) and borders (8px) around a 2560x1440 game view.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2576, "height": 1487, "mode": "windowed", "borderX": 8, "borderTop": 39, "borderBottom": 8 },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2576x1487",
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
     }
   ]
 }

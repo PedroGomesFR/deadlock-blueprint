@@ -64,19 +64,21 @@ export const NEW_MATCH_MIN_GAP_MS = 30000;
 // wiped the items and unlocked the hero mid-game, which then flipped 3 times on the ability icons.
 const NEW_MATCH_WINDOW_MS = 3 * 60 * 1000;
 
-// The scanner is calibrated for 16:9 (every coordinate is scaled from 1920x1080)
-const ASPECT_16_9 = 16 / 9;
-const ASPECT_TOLERANCE = 0.03;
+// The scanner normalizes 16:9, 16:10, 21:9, 32:9, 4:3, 5:4 and windowed frames onto 1920x1080
+const MIN_ASPECT_RATIO = 1.2; // 5:4 (1.25) and 4:3 (1.33)
+const MAX_ASPECT_RATIO = 3.8; // 32:9 super-ultrawide (3.55)
 const FORMAT_SCANS = 3;
 // Deadlock captured this long without any game screen: the HUD is probably not where the scanner looks
 const HUD_MISSING_AFTER_MS = 5 * 60 * 1000;
 
 const LANE_BY_PAIR: LaneColor[] = ['yellow', 'blue', 'orange'];
 
-/** Is the frame 16:9? (`undefined` sizes count as supported.) */
+/** Is the captured frame a valid landscape game resolution (16:9, 16:10, 21:9, 32:9, 4:3, windowed)? */
 export function isSupportedFormat(width?: number, height?: number): boolean {
   if (!width || !height) return true;
-  return Math.abs(width / height - ASPECT_16_9) <= ASPECT_TOLERANCE;
+  if (width < 640 || height < 360) return false;
+  const ratio = width / height;
+  return ratio >= MIN_ASPECT_RATIO && ratio <= MAX_ASPECT_RATIO;
 }
 
 /**

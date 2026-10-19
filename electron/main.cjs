@@ -24,11 +24,7 @@ v8.setFlagsFromString('--expose_gc');
 const collectGarbage = vm.runInNewContext('gc');
 let lastFallbackGc = 0;
 
-// Disable buggy WGC capturer (wgc_capturer_win.cc:356 -2147024809) and suppress noisy Chromium stderr logs
-app.commandLine.appendSwitch(
-  'disable-features',
-  'AllowWgcScreenCapturer,AllowWgcScreenZeroHz,AllowWgcWindowCapturer,AllowWgcWindowZeroHz,WebRtcAllowWgcDesktopCapturer'
-);
+// Suppress noisy Chromium stderr logs
 app.commandLine.appendSwitch('log-level', '3');
 
 const APP_ICON = path.join(__dirname, '../dist/icons/upscalemedia-transformed.png');
@@ -51,14 +47,31 @@ function getAppUrlOrFile(win) {
   }
 }
 
+/** Physical pixel resolution of a display (Electron's `bounds` is divided by Windows DPI scaleFactor). */
+function getDisplayPixelSize(disp) {
+  if (!disp) return { width: 0, height: 0 };
+  const scale = disp.scaleFactor || 1;
+  return {
+    width: Math.round(disp.bounds.width * scale),
+    height: Math.round(disp.bounds.height * scale),
+  };
+}
+
 function getGamingDisplay() {
   const displays = screen.getAllDisplays();
   const primary = screen.getPrimaryDisplay();
-  // Prefer primary display if landscape, otherwise any landscape display
+  // Prefer primary display if landscape, otherwise the highest-resolution landscape display
   if (primary.bounds.width >= primary.bounds.height) {
     return primary;
   }
-  return displays.find((d) => d.bounds.width > d.bounds.height) || primary;
+  const landscapes = displays
+    .filter((d) => d.bounds.width > d.bounds.height)
+    .sort((a, b) => {
+      const pa = getDisplayPixelSize(a);
+      const pb = getDisplayPixelSize(b);
+      return pb.width * pb.height - pa.width * pa.height;
+    });
+  return landscapes[0] || primary;
 }
 
 function createWindow() {
@@ -227,6 +240,7 @@ app.on('window-all-closed', () => {
 // (src/services/screenCapture.ts).
 ipcMain.handle('find-capture-source', async (_event, preferredSourceId) => {
   try {
+    const displays = screen.getAllDisplays();
     const gamingDisplay = getGamingDisplay();
     const sources = await desktopCapturer.getSources({
       types: ['window', 'screen'],
@@ -234,13 +248,15 @@ ipcMain.handle('find-capture-source', async (_event, preferredSourceId) => {
       fetchWindowIcons: false,
     });
     // Raw names: the interface adds its own (translated) labels
-    const describe = (s, isDeadlockWindow) => ({
-      id: s.id,
-      isDeadlockWindow,
-      sourceName: isDeadlockWindow
-        ? s.name
-        : `${s.name} (${gamingDisplay.bounds.width}x${gamingDisplay.bounds.height})`,
-    });
+    const describe = (s, isDeadlockWindow) => {
+      const disp = displays.find((d) => String(d.id) === String(s.display_id)) || gamingDisplay;
+      const px = getDisplayPixelSize(disp);
+      return {
+        id: s.id,
+        isDeadlockWindow,
+        sourceName: isDeadlockWindow ? s.name : `${s.name} (${px.width}x${px.height})`,
+      };
+    };
 
     // 1. User explicitly chosen source
     const preferred = preferredSourceId && sources.find((s) => s.id === preferredSourceId);
@@ -262,16 +278,21 @@ ipcMain.handle('find-capture-source', async (_event, preferredSourceId) => {
   }
 });
 
-// Fallback capture only (when the live stream is not available): a 1920x1080 thumbnail of EVERY window and
-// screen per call, so it is heavy (~45 MB per call with 9 windows) and needs the explicit GC below.
+// Fallback capture only (when the live stream is not available): a thumbnail of EVERY window and
+// screen per call, so it is heavy and needs the explicit GC below.
 ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
   try {
+    const displays = screen.getAllDisplays();
     const gamingDisplay = getGamingDisplay();
     const gamingDisplayId = String(gamingDisplay.id);
+    const gamingPx = getDisplayPixelSize(gamingDisplay);
 
     const sources = await desktopCapturer.getSources({
       types: ['window', 'screen'],
-      thumbnailSize: { width: 1920, height: 1080 },
+      thumbnailSize: {
+        width: Math.max(1920, Math.min(3840, gamingPx.width || 1920)),
+        height: Math.max(1080, Math.min(2160, gamingPx.height || 1080)),
+      },
       fetchWindowIcons: false,
     });
 
@@ -300,7 +321,7 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
       }
     }
 
-    // 3. Fallback: Primary Gaming Monitor (DISPLAY2: 1920x1080, display_id === gamingDisplayId)
+    // 3. Fallback: Primary Gaming Monitor
     if (!targetSource) {
       const screenSources = sources.filter((s) => s.id.startsWith('screen:') && !s.thumbnail.isEmpty());
       targetSource =
@@ -315,12 +336,14 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
     const jpegBuf = targetSource.thumbnail.toJPEG(92);
     const dataUrl = `data:image/jpeg;base64,${jpegBuf.toString('base64')}`;
     const size = targetSource.thumbnail.getSize();
+    const disp = displays.find((d) => String(d.id) === String(targetSource.display_id)) || gamingDisplay;
+    const px = getDisplayPixelSize(disp);
 
     return {
       success: true,
       sourceName: isDeadlockWindow
         ? targetSource.name
-        : `${targetSource.name} (${gamingDisplay.bounds.width}x${gamingDisplay.bounds.height})`,
+        : `${targetSource.name} (${px.width}x${px.height})`,
       sourceId: targetSource.id,
       isDeadlockWindow,
       width: size.width,
@@ -357,12 +380,13 @@ ipcMain.handle('get-sources', async () => {
     });
     return sources.map((s) => {
       const disp = displays.find((d) => String(d.id) === String(s.display_id));
+      const px = getDisplayPixelSize(disp);
       return {
         id: s.id,
         name: s.name,
         type: 'screen',
-        width: disp ? disp.bounds.width : 0,
-        height: disp ? disp.bounds.height : 0,
+        width: px.width,
+        height: px.height,
         preview: s.thumbnail.toDataURL(),
       };
     });
@@ -493,7 +517,10 @@ ipcMain.handle('create-problem-report', (_event, payload) => {
     `Windows ${os.release()} ${os.arch()} — Electron ${process.versions.electron}, Chrome ${process.versions.chrome}`,
     `Displays: ${screen
       .getAllDisplays()
-      .map((d) => `${d.size.width}x${d.size.height} @${d.scaleFactor}x${d.id === screen.getPrimaryDisplay().id ? ' (primary)' : ''}`)
+      .map((d) => {
+        const px = getDisplayPixelSize(d);
+        return `${px.width}x${px.height} @${d.scaleFactor}x${d.id === screen.getPrimaryDisplay().id ? ' (primary)' : ''}`;
+      })
       .join(', ')}`,
   ].join('\n');
   const entries = [

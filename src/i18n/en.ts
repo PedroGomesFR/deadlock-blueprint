@@ -133,9 +133,9 @@ export const MESSAGES_EN: Messages = {
 
   'resolution.title': 'Unsupported screen format',
   'resolution.body': (w, h, ratio) =>
-    `Deadlock is captured at ${w}×${h} (${ratio}). Detection is calibrated for 16:9 (1920×1080, 2560×1440…), so it is paused rather than showing wrong recommendations.`,
+    `Deadlock is captured at ${w}×${h} (${ratio}). Detection supports all landscape displays (1080p, 2K, 4K, 16:9, 16:10, 21:9, 32:9, 4:3) and is paused on this format.`,
   'resolution.help':
-    'Run Deadlock in 16:9, fullscreen or borderless windowed. Meanwhile, pick your hero and the enemies by hand.',
+    'Run Deadlock in fullscreen or borderless windowed on a landscape display. Meanwhile, pick your hero and the enemies by hand.',
   'resolution.report': 'Report my format',
   'hud.notFoundTitle': 'No in-game HUD recognized',
   'hud.notFoundBody':
@@ -185,7 +185,7 @@ export const MESSAGES_EN: Messages = {
     'If you turn this on, the app keeps a log of your last 5 matches on your PC (text + HUD captures, ~30 MB per match). It only leaves your PC if you click "Report a problem" and attach the file yourself. You can change this any time in Settings.',
   'onboarding.enableLogs': 'Turn on game logs',
   'onboarding.noLogs': 'No thanks',
-  'onboarding.resolutionNote': 'Calibrated for 16:9 (1920×1080 and 2560×1440). Other formats are flagged.',
+  'onboarding.resolutionNote': 'Supports all screen sizes (1080p, 2K 1440p/1600p, 4K, 16:9, 16:10, 21:9 ultrawide).',
 
   'report.title': 'Report a problem',
   'report.body':

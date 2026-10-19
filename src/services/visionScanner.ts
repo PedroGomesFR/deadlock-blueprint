@@ -564,6 +564,7 @@ export function resetScannerState(): void {
   lastMintPixels = -1;
   lastMintXSum = -1;
   cachedDetectedSouls = undefined;
+  lastProvenLayout = null;
 }
 
 /** Resolves once the background souls OCR is done (replay harness: the next scan of the frame reads the souls). */
@@ -578,6 +579,237 @@ export async function waitForOcrIdle(timeoutMs = 15000): Promise<void> {
 let sharedFullCanvas: HTMLCanvasElement | null = null;
 let shared20x20Canvas: HTMLCanvasElement | null = null;
 let shared20x27Canvas: HTMLCanvasElement | null = null;
+
+/**
+ * How the game's HUD inside a captured frame of size (rawW x rawH) maps onto our 1920x1080 reference canvas.
+ * Covers 16:9 at any resolution (720p, 1080p, 2K 2560x1440, 4K 3840x2160), Ultrawide 21:9 / 32:9 (2560x1080,
+ * 3440x1440, 5120x1440), 16:10 / 4:3 (2560x1600, 1920x1200, 1440x1080 — native Panorama, letterboxed or
+ * stretched), and Windowed mode with a Windows title bar and borders (e.g. 1936x1119, 2576x1487).
+ */
+interface HudLayout {
+  name: string;
+  rawW: number;
+  rawH: number;
+  vx: number;
+  vy: number;
+  vw: number;
+  vh: number;
+  scaleX: number;
+  scaleY: number;
+  leftHudOffsetX: number;
+}
+
+let lastProvenLayout: HudLayout | null = null;
+
+function buildHudCandidates(rawW: number, rawH: number): HudLayout[] {
+  const ratio = rawW / rawH;
+  const aspect16x9 = 16 / 9;
+  const list: HudLayout[] = [];
+  const add = (
+    name: string,
+    vx: number,
+    vy: number,
+    vw: number,
+    vh: number,
+    scaleX: number,
+    scaleY: number,
+    leftHudOffsetX = 0
+  ) => {
+    if (vw < 320 || vh < 240 || scaleX <= 0 || scaleY <= 0) return;
+    list.push({ name, rawW, rawH, vx, vy, vw, vh, scaleX, scaleY, leftHudOffsetX });
+  };
+
+  if (Math.abs(ratio - aspect16x9) <= 0.02) {
+    // Standard 16:9 (1280x720, 1600x900, 1920x1080, 2560x1440 2K, 3840x2160 4K)
+    add('16:9', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
+  } else if (ratio > aspect16x9) {
+    // Ultrawide (21:9 2560x1080, 3440x1440 2K, 32:9 5120x1440) or maximized window above taskbar
+    const s = rawH / 1080;
+    add('ultrawide', 0, 0, rawW, rawH, s, s, 0);
+    const safeOffset = Math.max(0, Math.round((rawW - 1920 * s) / 2));
+    if (safeOffset > 8) {
+      add('ultrawide-safe', 0, 0, rawW, rawH, s, s, safeOffset);
+    }
+    add('stretched', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
+  } else {
+    // Narrower than 16:9: 16:10 (2560x1600 2K, 1920x1200), 4:3 (1440x1080), or 16:9 window with title bar / borders.
+    // Standard 16:9 widths (1280, 1600, 1920, 2560, 3840) are all multiples of 64, so (rawW % 64) / 2 gives the exact Win32 border.
+    const exactBorder = rawW % 64 !== 0 && (rawW % 64) % 2 === 0 && rawW % 64 <= 40 ? (rawW % 64) / 2 : null;
+    const borderCandidates = exactBorder !== null ? [exactBorder] : [8, 0];
+    for (const b of borderCandidates) {
+      const vw = rawW - 2 * b;
+      const vh = Math.round((vw * 9) / 16);
+      const vy = rawH - b - vh;
+      if (vy >= 18 && vy <= Math.round((64 * rawH) / 1080)) {
+        add(`windowed-16:9-b${b}`, b, vy, vw, vh, vw / 1920, vh / 1080);
+      }
+    }
+    const sw = rawW / 1920;
+    add('narrow-native', 0, 0, rawW, rawH, sw, sw);
+    const letterH = Math.round((rawW * 9) / 16);
+    const letterY = Math.round((rawH - letterH) / 2);
+    if (letterY >= 8) {
+      add('letterbox-16:9', 0, letterY, rawW, letterH, sw, letterH / 1080);
+    }
+    add('stretched', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
+  }
+
+  // Fallback windowed title-bar offsets (e.g. borderless window with a title bar at the top)
+  const tb = Math.round((31 * rawH) / 1080);
+  if (rawH - tb >= 300) {
+    add('titlebar', 0, tb, rawW, rawH - tb, rawW / 1920, (rawH - tb) / 1080);
+  }
+
+  if (lastProvenLayout && lastProvenLayout.rawW === rawW && lastProvenLayout.rawH === rawH) {
+    const idx = list.findIndex((c) => c.name === lastProvenLayout!.name);
+    if (idx > 0) {
+      const [proven] = list.splice(idx, 1);
+      list.unshift(proven);
+    }
+  }
+  return list;
+}
+
+function drawTopBarZone(img: HTMLImageElement | ImageBitmap, ctx: CanvasRenderingContext2D, l: HudLayout): void {
+  const srcX = l.vx + l.vw / 2 - 960 * l.scaleX;
+  const srcY = l.vy;
+  const srcW = 1920 * l.scaleX;
+  const srcH = 160 * l.scaleY;
+  ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, 1920, 160);
+}
+
+function drawHudLayout(img: HTMLImageElement | ImageBitmap, ctx: CanvasRenderingContext2D, l: HudLayout): void {
+  if (
+    l.vx === 0 &&
+    l.vy === 0 &&
+    l.vw === l.rawW &&
+    l.vh === l.rawH &&
+    Math.abs(l.vw - 1920 * l.scaleX) <= 1 &&
+    Math.abs(l.vh - 1080 * l.scaleY) <= 1 &&
+    l.leftHudOffsetX === 0
+  ) {
+    if (l.rawW === 1920 && l.rawH === 1080) {
+      ctx.drawImage(img, 0, 0);
+    } else {
+      ctx.drawImage(img, 0, 0, l.rawW, l.rawH, 0, 0, 1920, 1080);
+    }
+    return;
+  }
+  // Base viewport fill, then exact Panorama UI placement for the 3 HUD zones (top bar, bottom-left, bottom-center)
+  ctx.drawImage(img, l.vx, l.vy, l.vw, l.vh, 0, 0, 1920, 1080);
+  drawTopBarZone(img, ctx, l);
+  ctx.drawImage(
+    img,
+    l.vx + l.leftHudOffsetX,
+    l.vy + l.vh - 280 * l.scaleY,
+    520 * l.scaleX,
+    280 * l.scaleY,
+    0,
+    800,
+    520,
+    280
+  );
+  ctx.drawImage(
+    img,
+    l.vx + l.vw / 2 + (520 - 960) * l.scaleX,
+    l.vy + l.vh - 280 * l.scaleY,
+    1400 * l.scaleX,
+    280 * l.scaleY,
+    520,
+    800,
+    1400,
+    280
+  );
+}
+
+function checkTopBarOn1080pCanvas(ctx: CanvasRenderingContext2D): { visible: boolean; amber: boolean } {
+  try {
+    const leftBarData = ctx.getImageData(855, 44, 50, 24).data;
+    const rightBarData = ctx.getImageData(1015, 44, 50, 24).data;
+    const sapphireLayout =
+      colorRatio(leftBarData, isSapphireBlue, 16) >= 0.35 && colorRatio(rightBarData, isAmberGold, 16) >= 0.35;
+    const amberLayout =
+      colorRatio(leftBarData, isAmberGold, 16) >= 0.35 && colorRatio(rightBarData, isSapphireBlue, 16) >= 0.35;
+    return { visible: sapphireLayout || amberLayout, amber: amberLayout };
+  } catch {
+    return { visible: false, amber: false };
+  }
+}
+
+function countSoulsMintPixelsOn1080pCanvas(ctx: CanvasRenderingContext2D, dy: number): number {
+  const data = ctx.getImageData(110, 892 + dy, 98, 32).data;
+  let mintPixels = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (isSoulsDigitPixel(data[i], data[i + 1], data[i + 2])) mintPixels++;
+  }
+  return mintPixels;
+}
+
+/**
+ * Projects any captured game frame onto a 1920x1080 canvas so the scanner and match logger work identically
+ * on 1080p, 2K (2560x1440 / 2560x1600 / 3440x1440), 4K, 720p, 16:10, 21:9, 32:9, 4:3, and windowed mode.
+ */
+export function drawNormalizedFrame(
+  img: HTMLImageElement | ImageBitmap,
+  ctx: CanvasRenderingContext2D
+): { layout: HudLayout; topBarVisible: boolean; isMyTeamAmber: boolean } {
+  const candidates = buildHudCandidates(img.width, img.height);
+  const primary = candidates[0];
+
+  // Fast check on the primary layout
+  drawHudLayout(img, ctx, primary);
+  let topBar = checkTopBarOn1080pCanvas(ctx);
+  if (topBar.visible) {
+    // On ultrawide, check if the bottom-left HUD is shifted to the 16:9 safe zone instead of the left edge
+    if (primary.name === 'ultrawide') {
+      const safe = candidates.find((c) => c.name === 'ultrawide-safe');
+      if (safe && countSoulsMintPixelsOn1080pCanvas(ctx, 0) < MIN_SOULS_DIGIT_PIXELS) {
+        drawHudLayout(img, ctx, safe);
+        if (countSoulsMintPixelsOn1080pCanvas(ctx, 0) >= MIN_SOULS_DIGIT_PIXELS) {
+          lastProvenLayout = safe;
+          return { layout: safe, topBarVisible: true, isMyTeamAmber: topBar.amber };
+        }
+        drawHudLayout(img, ctx, primary);
+      }
+    }
+    lastProvenLayout = primary;
+    return { layout: primary, topBarVisible: true, isMyTeamAmber: topBar.amber };
+  }
+
+  // Test alternative layouts (16:10 letterbox/stretched, windowed title bar) to see if the top bar sits there
+  for (let i = 1; i < candidates.length; i++) {
+    const cand = candidates[i];
+    drawTopBarZone(img, ctx, cand);
+    topBar = checkTopBarOn1080pCanvas(ctx);
+    if (topBar.visible) {
+      drawHudLayout(img, ctx, cand);
+      lastProvenLayout = cand;
+      return { layout: cand, topBarVisible: true, isMyTeamAmber: topBar.amber };
+    }
+  }
+
+  // Top bar hidden (Shop open or menus): test if an alternative layout has the Shop / HUD souls digits
+  drawHudLayout(img, ctx, primary);
+  if (
+    countSoulsMintPixelsOn1080pCanvas(ctx, 0) < MIN_SOULS_DIGIT_PIXELS &&
+    countSoulsMintPixelsOn1080pCanvas(ctx, SHOP_SOULS_DY) < MIN_SOULS_DIGIT_PIXELS
+  ) {
+    for (let i = 1; i < candidates.length; i++) {
+      const cand = candidates[i];
+      drawHudLayout(img, ctx, cand);
+      if (
+        countSoulsMintPixelsOn1080pCanvas(ctx, 0) >= MIN_SOULS_DIGIT_PIXELS ||
+        countSoulsMintPixelsOn1080pCanvas(ctx, SHOP_SOULS_DY) >= MIN_SOULS_DIGIT_PIXELS
+      ) {
+        lastProvenLayout = cand;
+        return { layout: cand, topBarVisible: false, isMyTeamAmber: false };
+      }
+    }
+    drawHudLayout(img, ctx, primary);
+  }
+
+  return { layout: primary, topBarVisible: false, isMyTeamAmber: false };
+}
 
 /** Analyses one game frame: a live capture frame (ImageBitmap) or an image data URL. */
 export async function analyzeDeadlockScreen(
@@ -598,10 +830,10 @@ export async function analyzeDeadlockScreen(
 
   return new Promise((resolve) => {
     const onFrame = (img: HTMLImageElement | ImageBitmap) => {
-      const w = img.width;
-      const h = img.height;
+      const rawW = img.width;
+      const rawH = img.height;
 
-      if (w < 400 || h < 300) {
+      if (rawW < 400 || rawH < 300) {
         resolve({
           detectedLaneEnemyIds: [],
           detectedTeamEnemyIds: [],
@@ -620,6 +852,9 @@ export async function analyzeDeadlockScreen(
         return;
       }
 
+      // All HUD analysis runs on the normalized 1920x1080 canvas so every threshold, mask and OCR box stays exact
+      const w = 1920;
+      const h = 1080;
       if (!sharedFullCanvas) sharedFullCanvas = document.createElement('canvas');
       if (sharedFullCanvas.width !== w || sharedFullCanvas.height !== h) {
         sharedFullCanvas.width = w;
@@ -646,8 +881,6 @@ export async function analyzeDeadlockScreen(
         return;
       }
 
-      fullCtx.drawImage(img, 0, 0);
-
       if (!shared20x20Canvas) {
         shared20x20Canvas = document.createElement('canvas');
         shared20x20Canvas.width = 20;
@@ -655,36 +888,12 @@ export async function analyzeDeadlockScreen(
       }
       const abCtx = shared20x20Canvas.getContext('2d', { willReadFrequently: true });
 
-      // 0. VERIFY IF DEADLOCK TOP TEAM BARS ARE VISIBLE (score boxes on each side of the timer)
-      // Prevents false-positive hero detection when the Shop (B) is open or when another window is focused.
-      // The player's team is always on the left in its own colour: Sapphire Blue | Amber Gold when playing
-      // Sapphire, Amber Gold | Sapphire Blue when playing Amber. Both layouts must be accepted.
-      let isDeadlockTopBarVisible = false;
-      let isMyTeamAmber = false;
-      try {
-        const leftBarData = fullCtx.getImageData(
-          Math.round((w * 855) / 1920),
-          Math.round((h * 44) / 1080),
-          Math.max(1, Math.round((w * 50) / 1920)),
-          Math.max(1, Math.round((h * 24) / 1080))
-        ).data;
-        const rightBarData = fullCtx.getImageData(
-          Math.round((w * 1015) / 1920),
-          Math.round((h * 44) / 1080),
-          Math.max(1, Math.round((w * 50) / 1920)),
-          Math.max(1, Math.round((h * 24) / 1080))
-        ).data;
-
-        const sapphireLayout =
-          colorRatio(leftBarData, isSapphireBlue, 16) >= 0.35 &&
-          colorRatio(rightBarData, isAmberGold, 16) >= 0.35;
-        const amberLayout =
-          colorRatio(leftBarData, isAmberGold, 16) >= 0.35 &&
-          colorRatio(rightBarData, isSapphireBlue, 16) >= 0.35;
-        isDeadlockTopBarVisible = sapphireLayout || amberLayout;
-        isMyTeamAmber = amberLayout;
-      } catch {
-        // Ignore
+      // 0. NORMALIZE ANY SCREEN SIZE / ASPECT RATIO TO 1920x1080 & VERIFY IF TOP TEAM BARS ARE VISIBLE
+      const normalized = drawNormalizedFrame(img, fullCtx);
+      const isDeadlockTopBarVisible = normalized.topBarVisible;
+      const isMyTeamAmber = normalized.isMyTeamAmber;
+      if (rawW !== 1920 || rawH !== 1080) {
+        debugLogs.push(`Format capturé : ${rawW}×${rawH} (${normalized.layout.name}) → normalisé 1920×1080`);
       }
 
       // 0B. SHOP (B) OPEN? The top bar is hidden and the souls digits (mint-cyan, x=110..208, y=892..924 in the HUD)
@@ -1436,8 +1645,8 @@ export async function analyzeDeadlockScreen(
         allySlots: isDeadlockTopBarVisible ? allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id)) : undefined,
         enemySlots: isDeadlockTopBarVisible ? enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id)) : undefined,
         mySlotIndex,
-        frameWidth: w,
-        frameHeight: h,
+        frameWidth: rawW,
+        frameHeight: rawH,
         detectedSouls: cachedDetectedSouls,
         detectedLaneColor,
         rawText: [

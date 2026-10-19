@@ -34,6 +34,7 @@ function jobsFromCases(dir) {
     parts: (c.parts || [{ file: c.image, x: 0, y: 0 }]).map((p) => ({ ...p, file: path.resolve(dir, p.file) })),
     heroId: c.heroId,
     buildItemIds: c.buildItemIds,
+    simulateLayout: c.simulateLayout,
     expect: c.expect || {},
   }));
 }

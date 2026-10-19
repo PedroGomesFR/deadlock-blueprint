@@ -77,19 +77,24 @@ function run(frames: VisionDetectionResult[], start: MatchSnapshot = snapshot(),
 const times = <T,>(n: number, value: T): T[] => Array.from({ length: n }, () => value);
 
 describe('screen format', () => {
-  it('accepts 16:9 at any size, refuses ultrawide and 16:10', () => {
+  it('accepts 16:9, 2K, 4K, 16:10, 21:9, 32:9, 4:3 and windowed, refuses portrait or tiny captures', () => {
     expect(isSupportedFormat(1920, 1080)).toBe(true);
     expect(isSupportedFormat(1280, 720)).toBe(true);
-    expect(isSupportedFormat(1920, 804)).toBe(false); // 21:9 shrunk by the capture
-    expect(isSupportedFormat(1728, 1080)).toBe(false); // 16:10
-    expect(isSupportedFormat(1936, 1119)).toBe(false); // windowed with borders
+    expect(isSupportedFormat(2560, 1440)).toBe(true); // 2K 16:9
+    expect(isSupportedFormat(2560, 1600)).toBe(true); // 2K 16:10
+    expect(isSupportedFormat(3440, 1440)).toBe(true); // 2K 21:9 ultrawide
+    expect(isSupportedFormat(5120, 1440)).toBe(true); // 32:9 super-ultrawide
+    expect(isSupportedFormat(3840, 2160)).toBe(true); // 4K
+    expect(isSupportedFormat(1936, 1119)).toBe(true); // windowed with borders
+    expect(isSupportedFormat(1080, 1920)).toBe(false); // vertical monitor
+    expect(isSupportedFormat(320, 240)).toBe(false); // minimized / tiny
   });
 
   it('pauses everything on an unsupported capture, after 3 scans', () => {
-    const wide = hud(['extra_regen'], { frameWidth: 2560, frameHeight: 1080 });
-    const { state, updates } = run(times(10, wide));
+    const vertical = hud(['extra_regen'], { frameWidth: 1080, frameHeight: 1920 });
+    const { state, updates } = run(times(10, vertical));
     expect(updates[1].formatIssue).toBeUndefined();
-    expect(updates[2].formatIssue).toEqual({ width: 2560, height: 1080 });
+    expect(updates[2].formatIssue).toEqual({ width: 1080, height: 1920 });
     expect(state.ownedItems).toEqual([]);
   });
 });

@@ -56,8 +56,8 @@ async function openStream(source: CaptureSourceInfo): Promise<void> {
       mandatory: {
         chromeMediaSource: 'desktop',
         chromeMediaSourceId: source.id,
-        maxWidth: 1920,
-        maxHeight: 1080,
+        maxWidth: 5120,
+        maxHeight: 2880,
         maxFrameRate: 5,
       },
     },
