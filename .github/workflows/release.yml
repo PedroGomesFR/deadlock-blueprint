@@ -71,6 +71,3 @@ jobs:
           body_path: release/notes.md
           files: |
             release/Deadlock-Blueprint-*.exe
-            release/Deadlock-Blueprint-Setup-*.exe.blockmap
-            release/latest.yml
-            release/SHA256SUMS.txt

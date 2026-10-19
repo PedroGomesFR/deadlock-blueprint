@@ -31,8 +31,7 @@ const checksums = fs.existsSync(sums)
       .map(([hash, file]) => ({ hash, file }))
   : [];
 
-const describe = (file) =>
-  /Setup/.test(file) ? 'Installer — **recommended**, updates itself' : 'Portable — one file, no install, no automatic update';
+const describe = () => 'Portable — one file (`.exe`), no install';
 
 const lines = [];
 if (section) lines.push(section, '');
@@ -45,7 +44,7 @@ lines.push(
   `Built from this tag by [GitHub Actions](${REPO}/actions/workflows/release.yml): anyone can check what went into it.`,
   '',
   '> [!NOTE]',
-  '> The executables are not code-signed: Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**. To check your download, compare its SHA-256 (`Get-FileHash .\\<file>.exe` in PowerShell) with the table above. If VirusTotal shows "not found", upload the file there yourself: the checksum must match.',
+  '> The executable is not code-signed: Windows SmartScreen may say "Windows protected your PC". Click **More info**, then **Run anyway**. To check your download, compare its SHA-256 (`Get-FileHash .\\<file>.exe` in PowerShell) with the table above. If VirusTotal shows "not found", upload the file there yourself: the checksum must match.',
   '',
   `The app only reads the image of the game window (like OBS): no memory reading, no injection, no simulated input. See [Can I get banned?](${REPO}#can-i-get-banned).`
 );
