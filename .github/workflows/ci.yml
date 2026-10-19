@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit and replay tests (recommendations, match rules, recorded games, translations)
+        run: npm test
+      - name: Generated data is valid
+        run: npm run check-data
+      - name: Build
+        run: npm run build
+      - name: Vision regression (the real scanner on saved game frames, in Electron)
+        run: npx electron scripts/vision-replay.cjs --check tests/vision

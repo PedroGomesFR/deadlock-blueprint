@@ -1,8 +1,22 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, screen, shell, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const v8 = require('v8');
 const vm = require('vm');
+const { writeZip } = require('./zip.cjs');
+
+const REPO_URL = 'https://github.com/PedroGomesFR/deadlock-blueprint';
+const RELEASES_API = 'https://api.github.com/repos/PedroGomesFR/deadlock-blueprint/releases/latest';
+// The portable exe can't update itself (electron-updater needs the installer): it only offers the download
+const isPortable = Boolean(process.env.PORTABLE_EXECUTABLE_DIR);
+let autoUpdater = null;
+try {
+  ({ autoUpdater } = require('electron-updater'));
+} catch {
+  // Not installed (development checkout): update notices through the GitHub API only
+}
+const canAutoUpdate = () => app.isPackaged && !isPortable && autoUpdater !== null;
 
 // Explicit GC for the fallback thumbnail capture: thumbnails are native memory that V8 does not see, so
 // without it they pile up between collections (several GB with many windows open)
@@ -191,10 +205,15 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
+  setupAutoUpdater();
+  setTimeout(() => checkForUpdates(false), 10000);
+  setInterval(() => checkForUpdates(false), 6 * 3600 * 1000);
 });
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  endMatchLog();
 });
 
 app.on('window-all-closed', () => {
@@ -214,11 +233,12 @@ ipcMain.handle('find-capture-source', async (_event, preferredSourceId) => {
       thumbnailSize: { width: 0, height: 0 },
       fetchWindowIcons: false,
     });
+    // Raw names: the interface adds its own (translated) labels
     const describe = (s, isDeadlockWindow) => ({
       id: s.id,
       isDeadlockWindow,
       sourceName: isDeadlockWindow
-        ? `Jeu : ${s.name}`
+        ? s.name
         : `${s.name} (${gamingDisplay.bounds.width}x${gamingDisplay.bounds.height})`,
     });
 
@@ -289,7 +309,7 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
     }
 
     if (!targetSource) {
-      return { success: false, error: 'Aucune source vidéo détectée.' };
+      return { success: false, error: 'No video source found.' };
     }
 
     const jpegBuf = targetSource.thumbnail.toJPEG(92);
@@ -299,7 +319,7 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
     return {
       success: true,
       sourceName: isDeadlockWindow
-        ? `Jeu : ${targetSource.name}`
+        ? targetSource.name
         : `${targetSource.name} (${gamingDisplay.bounds.width}x${gamingDisplay.bounds.height})`,
       sourceId: targetSource.id,
       isDeadlockWindow,
@@ -317,7 +337,7 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
   } catch (err) {
     return {
       success: false,
-      error: err.message || 'Erreur lors de la capture décran.',
+      error: err.message || 'Screen capture failed.',
     };
   } finally {
     // Free this call's thumbnails once they are out of scope (at most every 2 s: a full GC costs a few ms)
@@ -337,13 +357,12 @@ ipcMain.handle('get-sources', async () => {
     });
     return sources.map((s) => {
       const disp = displays.find((d) => String(d.id) === String(s.display_id));
-      const resLabel = disp
-        ? `${disp.bounds.width}x${disp.bounds.height} ${disp.bounds.width > disp.bounds.height ? '(Jeu / Paysage)' : '(Vertical)'}`
-        : '';
       return {
         id: s.id,
-        name: `${s.name} — ${resLabel}`,
+        name: s.name,
         type: 'screen',
+        width: disp ? disp.bounds.width : 0,
+        height: disp ? disp.bounds.height : 0,
         preview: s.thumbnail.toDataURL(),
       };
     });
@@ -360,6 +379,235 @@ ipcMain.handle('set-overlay-mode', (_event, enable) => {
 ipcMain.handle('set-click-through', (_event, enable) => {
   toggleClickThrough(enable);
   return { isOverlayMode, isClickThrough };
+});
+
+// Match logs (src/services/matchLogger.ts): one folder per game under %APPDATA%\deadlock-tactical-autobuild\
+// match-logs\, with journal.log (what the scanner saw and what the app decided) and images\ (HUD crops
+// every 2 s, full frame every minute) so that a game can be replayed and the scanner re-calibrated afterwards.
+const MATCH_LOGS_KEPT = 5;
+let matchLogDir = null;
+let matchLogStream = null;
+
+function matchLogsRoot() {
+  return path.join(app.getPath('userData'), 'match-logs');
+}
+
+function endMatchLog() {
+  if (matchLogStream) matchLogStream.end();
+  matchLogStream = null;
+  matchLogDir = null;
+}
+
+ipcMain.on('match-log-start', () => {
+  try {
+    endMatchLog();
+    const root = matchLogsRoot();
+    fs.mkdirSync(root, { recursive: true });
+    const previous = fs
+      .readdirSync(root)
+      .filter((name) => name.startsWith('partie_'))
+      .sort();
+    for (const name of previous.slice(0, Math.max(0, previous.length - (MATCH_LOGS_KEPT - 1)))) {
+      fs.rmSync(path.join(root, name), { recursive: true, force: true });
+    }
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(
+      now.getMinutes()
+    )}-${pad(now.getSeconds())}`;
+    matchLogDir = path.join(root, `partie_${stamp}`);
+    fs.mkdirSync(path.join(matchLogDir, 'images'), { recursive: true });
+    matchLogStream = fs.createWriteStream(path.join(matchLogDir, 'journal.log'), { flags: 'a' });
+    matchLogStream.write(`Deadlock Blueprint ${app.getVersion()} — journal de partie du ${now.toLocaleString('fr-FR')}\n`);
+  } catch (error) {
+    console.error('match-log-start', error);
+    endMatchLog();
+  }
+});
+
+ipcMain.on('match-log-write', (_event, text) => {
+  if (matchLogStream && typeof text === 'string') matchLogStream.write(text);
+});
+
+ipcMain.on('match-log-image', (_event, name, data) => {
+  if (!matchLogDir || typeof name !== 'string' || !data) return;
+  fs.writeFile(path.join(matchLogDir, 'images', path.basename(name)), Buffer.from(data), () => {});
+});
+
+ipcMain.on('match-log-end', () => endMatchLog());
+
+ipcMain.handle('open-match-logs', () => {
+  const root = matchLogsRoot();
+  fs.mkdirSync(root, { recursive: true });
+  return shell.openPath(matchLogDir || root);
+});
+
+/** Newest match log folder (the current one if a match is being logged). */
+function latestMatchLogDir() {
+  if (matchLogDir) return matchLogDir;
+  const root = matchLogsRoot();
+  if (!fs.existsSync(root)) return null;
+  const folders = fs
+    .readdirSync(root)
+    .filter((name) => name.startsWith('partie_'))
+    .sort();
+  return folders.length > 0 ? path.join(root, folders[folders.length - 1]) : null;
+}
+
+ipcMain.handle('match-logs-info', () => {
+  const dir = latestMatchLogDir();
+  return { latest: dir ? path.basename(dir) : null };
+});
+
+// Game logs turned off or deleted from Settings: nothing is left on disk
+ipcMain.handle('delete-match-logs', () => {
+  endMatchLog();
+  fs.rmSync(matchLogsRoot(), { recursive: true, force: true });
+  return true;
+});
+
+// Problem report (Diagnostics › Report a problem): a .zip in the Downloads folder with the system info, the
+// app state and, if the player wants, the last match log. GitHub can't receive files through a URL: the
+// player drags the .zip into the pre-filled issue page opened next.
+const REPORT_MAX_BYTES = 20 * 1024 * 1024; // GitHub attachments are limited to 25 MB
+
+function reportImages(dir) {
+  const imagesDir = path.join(dir, 'images');
+  if (!fs.existsSync(imagesDir)) return [];
+  const names = fs.readdirSync(imagesDir).sort().reverse(); // newest first
+  // Full frames (1 per minute) first: they show everything; then the most recent HUD crops
+  return [...names.filter((n) => n.startsWith('full_')), ...names.filter((n) => !n.startsWith('full_'))].map((n) =>
+    path.join(imagesDir, n)
+  );
+}
+
+ipcMain.handle('create-problem-report', (_event, payload) => {
+  const { info = '', state = '', includeLog = false } = payload || {};
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(
+    now.getMinutes()
+  )}`;
+  const system = [
+    `Deadlock Blueprint ${app.getVersion()}${isPortable ? ' (portable)' : app.isPackaged ? ' (installed)' : ' (dev)'}`,
+    `Windows ${os.release()} ${os.arch()} — Electron ${process.versions.electron}, Chrome ${process.versions.chrome}`,
+    `Displays: ${screen
+      .getAllDisplays()
+      .map((d) => `${d.size.width}x${d.size.height} @${d.scaleFactor}x${d.id === screen.getPrimaryDisplay().id ? ' (primary)' : ''}`)
+      .join(', ')}`,
+  ].join('\n');
+  const entries = [
+    { name: 'info.txt', data: Buffer.from(`${system}\n\n${info}\n`, 'utf8') },
+    { name: 'state.json', data: Buffer.from(String(state), 'utf8') },
+  ];
+
+  let logFolder = null;
+  const dir = includeLog ? latestMatchLogDir() : null;
+  if (dir && fs.existsSync(path.join(dir, 'journal.log'))) {
+    logFolder = path.basename(dir);
+    const journal = fs.readFileSync(path.join(dir, 'journal.log'));
+    entries.push({ name: `${logFolder}/journal.log`, data: journal });
+    let total = journal.length;
+    for (const file of reportImages(dir)) {
+      const data = fs.readFileSync(file);
+      if (total + data.length > REPORT_MAX_BYTES) continue;
+      total += data.length;
+      entries.push({ name: `${logFolder}/images/${path.basename(file)}`, data, compress: false });
+    }
+  }
+
+  let outDir = app.getPath('downloads');
+  if (!fs.existsSync(outDir)) outDir = app.getPath('userData');
+  const zipPath = path.join(outDir, `Deadlock-Blueprint-report-${stamp}.zip`);
+  writeZip(zipPath, entries);
+  shell.showItemInFolder(zipPath);
+  return { path: zipPath, fileName: path.basename(zipPath), logFolder };
+});
+
+// Links opened in the browser: only the project's GitHub pages and the data source
+ipcMain.handle('open-external', (_event, url) => {
+  if (typeof url !== 'string') return false;
+  if (!url.startsWith(`${REPO_URL}/`) && url !== REPO_URL && !url.startsWith('https://deadlock-api.com')) return false;
+  shell.openExternal(url);
+  return true;
+});
+
+ipcMain.handle('get-app-info', () => ({
+  version: app.getVersion(),
+  isPortable,
+  isPackaged: app.isPackaged,
+  canAutoUpdate: canAutoUpdate(),
+  repoUrl: REPO_URL,
+}));
+
+// Updates. Installed version: electron-updater downloads the new version from the GitHub release and installs
+// it on restart. Portable version and development: only a notice with a link to the release page.
+let updateStatus = { state: 'idle' };
+
+function sendUpdateStatus(status) {
+  updateStatus = status;
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-status', status);
+}
+
+/** -1, 0 or 1, comparing "1.4.0" style versions (a "v" prefix and pre-release tags are ignored). */
+function compareVersions(a, b) {
+  const parse = (v) =>
+    String(v)
+      .replace(/^v/, '')
+      .split(/[.-]/)
+      .slice(0, 3)
+      .map((n) => parseInt(n, 10) || 0);
+  const [x, y] = [parse(a), parse(b)];
+  for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i] ? 1 : -1;
+  return 0;
+}
+
+function setupAutoUpdater() {
+  if (!canAutoUpdate()) return;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on('checking-for-update', () => sendUpdateStatus({ state: 'checking' }));
+  autoUpdater.on('update-available', (info) => sendUpdateStatus({ state: 'downloading', version: info.version }));
+  autoUpdater.on('update-not-available', () => sendUpdateStatus({ state: 'none' }));
+  autoUpdater.on('update-downloaded', (info) => sendUpdateStatus({ state: 'ready', version: info.version }));
+  autoUpdater.on('error', (err) => sendUpdateStatus({ state: 'error', message: String(err && err.message) }));
+}
+
+async function checkForUpdates(manual) {
+  if (['checking', 'downloading', 'ready'].includes(updateStatus.state)) return updateStatus;
+  if (canAutoUpdate()) {
+    try {
+      await autoUpdater.checkForUpdates();
+    } catch (err) {
+      sendUpdateStatus({ state: 'error', message: String(err && err.message) });
+    }
+    return updateStatus;
+  }
+  if (!app.isPackaged && !manual) return updateStatus; // no automatic check from a development checkout
+  sendUpdateStatus({ state: 'checking' });
+  try {
+    const res = await net.fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const release = await res.json();
+    if (release.tag_name && compareVersions(release.tag_name, app.getVersion()) > 0) {
+      sendUpdateStatus({
+        state: 'available',
+        version: String(release.tag_name).replace(/^v/, ''),
+        url: release.html_url || `${REPO_URL}/releases/latest`,
+      });
+    } else {
+      sendUpdateStatus({ state: 'none' });
+    }
+  } catch (err) {
+    sendUpdateStatus({ state: 'error', message: String(err && err.message) });
+  }
+  return updateStatus;
+}
+
+ipcMain.handle('check-for-updates', () => checkForUpdates(true));
+ipcMain.handle('get-update-status', () => updateStatus);
+ipcMain.handle('install-update', () => {
+  if (canAutoUpdate() && updateStatus.state === 'ready') autoUpdater.quitAndInstall();
 });
 
 ipcMain.handle('window-control', (_event, action) => {

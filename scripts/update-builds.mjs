@@ -3,10 +3,17 @@
 // à partir de https://api.deadlock-api.com. À relancer après chaque patch : `npm run update-builds`.
 //
 // Sorties :
-//   src/data/generated/itemsCatalog.json  — tous les objets de la boutique (noms FR/EN, prix, palier, composants, icône)
+//   src/data/generated/itemsCatalog.json  — tous les objets de la boutique (noms, descriptions et stats FR/EN, prix,
+//                                           palier, composants, icône)
 //   src/data/generated/metaBuilds.json    — par héros : build « Méta » (objets les plus achetés en haut rang),
-//                                           meilleur build publié (meilleur taux de victoire), ordre des sorts
+//                                           meilleur build publié (meilleur taux de victoire), ordre des sorts, et
+//                                           stats de chaque objet (taux d'achat, de victoire, moment d'achat)
 //   public/icons/items/api/<id>.png       — icônes officielles (jamais d'écrasement des PNG existants)
+//   public/icons/abilities/api/<héros>_<touche>.png — icônes officielles des sorts (idem)
+//
+// Les deux JSON sont aussi téléchargés par l'application au démarrage (src/data/dataSource.ts) depuis la branche
+// main : SCHEMA_VERSION doit changer dès que leur forme change, sinon les versions déjà installées les refusent.
+// `--check` valide les fichiers existants sans rien télécharger (CI).
 
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -17,8 +24,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const API = 'https://api.deadlock-api.com';
 const OUT_DIR = path.join(ROOT, 'src', 'data', 'generated');
 const API_ICON_DIR = path.join(ROOT, 'public', 'icons', 'items', 'api');
+const ABILITY_ICON_DIR = path.join(ROOT, 'public', 'icons', 'abilities', 'api');
 const LEGACY_ICON_DIR = path.join(ROOT, 'public', 'icons', 'items');
 
+// Must match DATA_SCHEMA_VERSION in src/data/dataSource.ts
+const SCHEMA_VERSION = 2;
 const WINDOW_DAYS = 30;
 // Badge moyen des deux équipes (dizaine = rang) : 81 = Oracle+, 71 = Archon+, 51 = Ritualist+, 0 = tous.
 const BADGE_LADDER = [81, 71, 51, 0];
@@ -117,11 +127,32 @@ const stripHtml = (s) =>
   (s || '')
     .replace(/<svg[\s\S]*?<\/svg>/g, '')
     .replace(/<[^>]+>/g, '')
+    .replace(/\{[^}]*\}/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
 // La description d'un objet/sort est rangée sous `desc`, `active` ou `passive` selon son type
 const describe = (d) => stripHtml(d?.desc || d?.active || d?.passive);
+
+const formatStatValue = (v) => (Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100));
+
+/** Stat lines of the shop tooltip ("+30% Max Ammo", "24s Cooldown"), in the language of `it`. */
+function statLines(it) {
+  const lines = [];
+  for (const section of it.tooltip_sections || []) {
+    for (const attr of section.section_attributes || []) {
+      for (const name of [...(attr.elevated_properties || []), ...(attr.properties || [])]) {
+        const p = it.properties?.[name];
+        const label = stripHtml(p?.label);
+        const value = Number(p?.value);
+        if (!label || !Number.isFinite(value) || value === 0) continue;
+        const sign = String(p.prefix || '').includes('{s:sign}') && value > 0 ? '+' : '';
+        lines.push(`${sign}${formatStatValue(value)}${stripHtml(p.postfix)} ${label}`);
+      }
+    }
+  }
+  return [...new Set(lines)].slice(0, 5);
+}
 
 let lastAnalyticsCall = 0;
 
@@ -201,6 +232,9 @@ function buildCatalog(itemsFr, itemsEn) {
       isActive: Boolean(it.is_active_item),
       upgradesFrom: (it.component_items || []).map((c) => idByClass.get(c)).filter(Boolean),
       descriptionFr: describe(fr.description).slice(0, 220),
+      descriptionEn: describe(it.description).slice(0, 220),
+      statsFr: statLines(fr),
+      statsEn: statLines(it),
       shopImage: it.shop_image,
       icon: `./icons/items/api/${id}.png`,
       legacyIcon: existsSync(path.join(LEGACY_ICON_DIR, legacyFile)) ? `./icons/items/${legacyFile}` : undefined,
@@ -239,15 +273,39 @@ async function downloadIcons(items) {
   return { downloaded, failed };
 }
 
+/** Downloads the missing ability icons ({ file, url }); returns the files that could not be downloaded. */
+async function downloadAbilityIcons(icons) {
+  await fs.mkdir(ABILITY_ICON_DIR, { recursive: true });
+  const queue = [...icons];
+  const failed = new Set();
+  const worker = async () => {
+    while (queue.length > 0) {
+      const { file, url } = queue.shift();
+      if (existsSync(file)) continue;
+      try {
+        const res = await fetch(url);
+        const type = res.headers.get('content-type') || '';
+        if (!res.ok || !type.includes('image')) throw new Error(`HTTP ${res.status} ${type}`);
+        await fs.writeFile(file, Buffer.from(await res.arrayBuffer()));
+      } catch (err) {
+        failed.add(file);
+        console.warn(`  ⚠ Icône de sort introuvable (${url}) : ${err.message}`);
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: 8 }, worker));
+  return failed;
+}
+
 // ---------------------------------------------------------------------------
 // 2. Builds par héros
 // ---------------------------------------------------------------------------
 
 const tierPhase = (tier) => (tier === 1 ? 'early' : tier === 2 ? 'mid' : 'late');
 
-/** Build « Méta » : objets les plus achetés par les joueurs du rang choisi, triés par moment d'achat moyen. */
-function buildFromItemStats(itemStats, catalog, heroMatches, heroWinRate) {
-  const rows = itemStats
+/** Per-item rows of the hero: share of matches where it was bought, smoothed win rate, average buy time. */
+function itemRows(itemStats, catalog, heroMatches, heroWinRate) {
+  return itemStats
     .map((s) => ({ s, item: catalog.byApiId.get(s.item_id) }))
     .filter((r) => r.item && r.s.matches > 0)
     .map((r) => ({
@@ -257,6 +315,23 @@ function buildFromItemStats(itemStats, catalog, heroMatches, heroWinRate) {
       wr: (r.s.wins + 300 * heroWinRate) / (r.s.matches + 300),
       buy: r.s.avg_buy_time_s ?? 0,
     }));
+}
+
+/**
+ * Stats shown to explain a recommendation ("bought in 82 % of the games, 51 % wins"): itemId ->
+ * [pick rate, smoothed win rate, average buy time in s], for the items bought in at least 2 % of the games.
+ */
+function compactItemStats(rows) {
+  const out = {};
+  for (const r of [...rows].sort((a, b) => b.pick - a.pick)) {
+    if (r.pick < 0.02) continue;
+    out[r.item.id] = [Math.round(r.pick * 1000) / 1000, Math.round(r.wr * 1000) / 1000, Math.round(r.buy)];
+  }
+  return out;
+}
+
+/** Build « Méta » : objets les plus achetés par les joueurs du rang choisi, triés par moment d'achat moyen. */
+function buildFromItemStats(rows, heroWinRate) {
 
   const pickPhase = (tiers, minPick, max) => {
     const candidates = rows.filter((r) => tiers.includes(r.item.tier)).sort((a, b) => b.pick - a.pick);
@@ -359,6 +434,11 @@ function abilityOrderFromBuild(heroBuild, slotByAbilityId) {
   return [...order, ...rest];
 }
 
+/** Indented JSON with the arrays of plain values (item ids, stats) on one line: smaller file, readable diffs. */
+const stringifyCompact = (obj) =>
+  JSON.stringify(obj, null, 2).replace(/\[\n\s+([^[\]{}]*?)\n\s*\]/g, (_, inner) => `[${inner.split(/,\n\s+/).join(', ')}]`) +
+  '\n';
+
 const pct = (x) => `${(x * 100).toFixed(1).replace('.', ',')} %`;
 const fmtInt = (n) => n.toLocaleString('fr-FR');
 
@@ -419,6 +499,7 @@ async function main() {
 
   const heroes = {};
   const unmappedHeroes = [];
+  const abilityIcons = [];
   const playable = heroesEn.filter((h) => h.player_selectable !== false && !h.disabled);
 
   for (const hero of playable) {
@@ -441,11 +522,15 @@ async function main() {
       if (!ab) continue;
       slotByAbilityId.set(ab.id, key);
       const abFr = abilityFrById.get(ab.id);
+      const iconFile = `${localId}_${key}.png`;
+      if (ab.image) abilityIcons.push({ file: path.join(ABILITY_ICON_DIR, iconFile), url: ab.image });
       abilities.push({
         key,
         nameEn: ab.name,
         nameFr: abFr?.name || ab.name,
         descriptionFr: describe(abFr?.description).slice(0, 260),
+        descriptionEn: describe(ab.description).slice(0, 260),
+        icon: ab.image ? `./icons/abilities/api/${iconFile}` : undefined,
       });
     }
 
@@ -465,17 +550,17 @@ async function main() {
     ];
 
     const statsOrder = abilityOrderFromStats(orderStats, slotByAbilityId);
+    const rows = itemRows(itemStats, catalog, heroStats.matches, heroWinRate);
     const builds = [];
 
+    // Titles are formatted by the application, in the player's language, from these fields
     builds.push({
       kind: 'stats',
-      title: `Méta ${BADGE_LABELS[badge]} — objets les plus achetés`,
-      subtitle: `${fmtInt(heroStats.matches)} parties ${BADGE_LABELS[badge]} sur ${WINDOW_DAYS} jours • ${pct(heroWinRate)} de victoires pour le héros`,
       winRate: heroWinRate,
       matches: heroStats.matches,
       badgeMin: badge,
       abilitiesOrder: statsOrder,
-      phases: buildFromItemStats(itemStats, catalog, heroStats.matches, heroWinRate),
+      phases: buildFromItemStats(rows, heroWinRate),
     });
 
     // Meilleur build publié : taux de victoire bayésien (lissé vers 50 %) parmi les builds assez joués
@@ -493,8 +578,7 @@ async function main() {
           builds.push({
             kind: 'published',
             sourceBuildId: bestPublished.hero_build_id,
-            title: `Meilleur build publié — ${pct(bestPublished.wins / bestPublished.matches)} de victoires`,
-            subtitle: `« ${heroBuild.name.trim().slice(0, 80)} » • ${fmtInt(bestPublished.matches)} parties ${BADGE_LABELS[badge]}`,
+            sourceName: heroBuild.name.trim().slice(0, 80),
             winRate: bestPublished.wins / bestPublished.matches,
             matches: bestPublished.matches,
             badgeMin: badge,
@@ -508,11 +592,13 @@ async function main() {
     heroes[localId] = {
       apiHeroId: hero.id,
       nameFr: heroFrById.get(hero.id)?.name || hero.name,
+      nameEn: hero.name,
       matches: heroStats.matches,
       winRate: heroWinRate,
       badgeMin: badge,
       abilities,
       builds,
+      itemStats: compactItemStats(rows),
     };
     const b0 = builds[0].phases;
     console.log(
@@ -521,16 +607,23 @@ async function main() {
     );
   }
 
-  await fs.mkdir(OUT_DIR, { recursive: true });
+  console.log('▶ Icônes des sorts…');
+  const failedAbilityIcons = await downloadAbilityIcons(abilityIcons);
+  for (const hero of Object.values(heroes)) {
+    for (const a of hero.abilities) {
+      if (a.icon && failedAbilityIcons.has(path.join(ABILITY_ICON_DIR, path.basename(a.icon)))) delete a.icon;
+    }
+  }
+
   const generatedAt = new Date().toISOString();
-  await fs.writeFile(
-    path.join(OUT_DIR, 'itemsCatalog.json'),
-    JSON.stringify({ generatedAt, items: catalog.items }, null, 2) + '\n'
-  );
-  await fs.writeFile(
-    path.join(OUT_DIR, 'metaBuilds.json'),
-    JSON.stringify({ generatedAt, windowDays: WINDOW_DAYS, heroes }, null, 2) + '\n'
-  );
+  const catalogJson = { schemaVersion: SCHEMA_VERSION, generatedAt, items: catalog.items };
+  const metaJson = { schemaVersion: SCHEMA_VERSION, generatedAt, windowDays: WINDOW_DAYS, heroes };
+  // Never write (and so never publish to every installed app) a broken or truncated API answer
+  validateGenerated(catalogJson, metaJson);
+
+  await fs.mkdir(OUT_DIR, { recursive: true });
+  await fs.writeFile(path.join(OUT_DIR, 'itemsCatalog.json'), stringifyCompact(catalogJson));
+  await fs.writeFile(path.join(OUT_DIR, 'metaBuilds.json'), stringifyCompact(metaJson));
 
   console.log('');
   console.log(`✔ ${Object.keys(heroes).length} héros mis à jour en ${Math.round((Date.now() - t0) / 1000)} s.`);
@@ -539,7 +632,48 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+/**
+ * Sanity checks of the generated data, also run by CI (`--check`) on the committed files: the application
+ * downloads them from the main branch, so a bad file would reach every player at their next launch.
+ */
+function validateGenerated(catalogJson, metaJson) {
+  const errors = [];
+  const items = catalogJson.items || {};
+  const heroes = metaJson.heroes || {};
+  if (catalogJson.schemaVersion !== SCHEMA_VERSION) errors.push(`itemsCatalog schemaVersion ${catalogJson.schemaVersion}`);
+  if (metaJson.schemaVersion !== SCHEMA_VERSION) errors.push(`metaBuilds schemaVersion ${metaJson.schemaVersion}`);
+  const itemList = Object.values(items);
+  if (itemList.length < 120) errors.push(`seulement ${itemList.length} objets`);
+  for (const it of itemList) {
+    if (!it.nameFr || !it.nameEn) errors.push(`${it.id} : nom manquant`);
+    if (![1, 2, 3, 4].includes(it.tier)) errors.push(`${it.id} : palier ${it.tier}`);
+    if (!['weapon', 'vitality', 'spirit'].includes(it.category)) errors.push(`${it.id} : catégorie ${it.category}`);
+    if (!(it.cost > 0)) errors.push(`${it.id} : prix ${it.cost}`);
+    for (const c of it.upgradesFrom || []) if (!items[c]) errors.push(`${it.id} : composant inconnu ${c}`);
+  }
+  const heroList = Object.entries(heroes);
+  if (heroList.length < 35) errors.push(`seulement ${heroList.length} héros`);
+  for (const [id, h] of heroList) {
+    if (!h.builds?.length) errors.push(`${id} : aucun build`);
+    if (h.abilities?.length !== 4) errors.push(`${id} : ${h.abilities?.length ?? 0} sorts`);
+    for (const b of h.builds || []) {
+      const n = b.phases.early.length + b.phases.mid.length + b.phases.late.length;
+      if (n < 6) errors.push(`${id}/${b.kind} : ${n} objets`);
+      for (const phase of Object.values(b.phases)) for (const itemId of phase) if (!items[itemId]) errors.push(`${id} : objet inconnu ${itemId}`);
+    }
+  }
+  if (errors.length > 0) {
+    throw new Error(`Données générées invalides :\n  - ${errors.slice(0, 30).join('\n  - ')}`);
+  }
+}
+
+async function checkExisting() {
+  const read = async (name) => JSON.parse(await fs.readFile(path.join(OUT_DIR, name), 'utf8'));
+  validateGenerated(await read('itemsCatalog.json'), await read('metaBuilds.json'));
+  console.log('✔ Données générées valides.');
+}
+
+(process.argv.includes('--check') ? checkExisting() : main()).catch((err) => {
   console.error(`✖ ${err.message}`);
   process.exit(1);
 });

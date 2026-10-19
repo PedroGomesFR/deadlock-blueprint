@@ -1,5 +1,5 @@
 import React from 'react';
-import { HEROES_DB, ITEMS_DB, ItemCategory } from '../data/deadlockData';
+import { HEROES_DB, ITEMS_DB, ItemCategory, getAbilityIcon } from '../data/deadlockData';
 import officialIconsMap from '../data/officialIconsMap.json';
 
 const HERO_ICONS = officialIconsMap.heroes as Record<string, string>;
@@ -114,11 +114,12 @@ export const PowerIcon: React.FC<{
   abilityKey: '1' | '2' | '3' | '4';
   abilityName: string;
   size?: number;
-}> = ({ abilityKey, abilityName, size = 44 }) => {
+}> = ({ heroId, abilityKey, abilityName, size = 44 }) => {
   // Supports both "Nuée de corneilles (Crow Familiar)" and "Crow Familiar"
   const matchParen = abilityName.match(/\(([^)]+)\)/);
   const candidateEn = matchParen ? matchParen[1].trim() : abilityName.split('(')[0].trim();
   const iconSrc =
+    getAbilityIcon(heroId, abilityKey) ||
     ABILITY_ICONS[candidateEn] ||
     ABILITY_ICONS[abilityName.split('(')[0].trim()] ||
     (candidateEn === 'Spirit Snare' ? ABILITY_ICONS['Immobilizing Trap'] : undefined);

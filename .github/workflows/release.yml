@@ -1,0 +1,76 @@
+name: Release
+
+# Push a tag matching the package.json version (git tag v1.4.0 && git push origin v1.4.0): the installer and the
+# portable exe are built here, from the tagged sources, and published with their SHA-256 and VirusTotal links.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      # Optional repository secret (free account on virustotal.com): uploads both executables for scanning
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: The tag matches package.json
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+
+      - run: npm test
+      - run: npm run check-data
+
+      - name: Build the installer and the portable exe
+        run: npm run dist
+
+      - name: Vision regression
+        run: npx electron scripts/vision-replay.cjs --check tests/vision
+
+      - name: SHA-256 checksums
+        shell: bash
+        working-directory: release
+        run: |
+          sha256sum Deadlock-Blueprint-*.exe > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: VirusTotal upload
+        if: ${{ env.VT_API_KEY != '' }}
+        shell: bash
+        working-directory: release
+        run: |
+          for file in Deadlock-Blueprint-*.exe; do
+            # Files over 32 MB go through a one-time upload URL
+            url=$(curl -s -H "x-apikey: $VT_API_KEY" https://www.virustotal.com/api/v3/files/upload_url \
+              | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0, 'utf8')).data)")
+            curl -s --fail -H "x-apikey: $VT_API_KEY" -F "file=@$file" "$url" > /dev/null
+            echo "Uploaded $file to VirusTotal"
+          done
+
+      - name: Release notes
+        shell: bash
+        run: node scripts/release-notes.mjs "$GITHUB_REF_NAME" > release/notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Deadlock Blueprint ${{ github.ref_name }}
+          body_path: release/notes.md
+          files: |
+            release/Deadlock-Blueprint-*.exe
+            release/Deadlock-Blueprint-Setup-*.exe.blockmap
+            release/latest.yml
+            release/SHA256SUMS.txt

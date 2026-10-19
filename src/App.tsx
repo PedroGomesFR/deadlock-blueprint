@@ -1,43 +1,70 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Camera,
-  Check,
   ChevronDown,
-  Eye,
   Flame,
+  Info,
   LayoutGrid,
   Layers,
   Lock,
+  MonitorX,
   Package,
   Radio,
   RotateCcw,
+  Settings,
   ShoppingCart,
   Swords,
   Terminal,
   Unlock,
   UserPlus,
+  X,
   Zap,
 } from 'lucide-react';
 import {
-  DEADLOCK_LANES,
   DeadlockItem,
-  HEROES_DB,
-  ITEMS_DB,
   LaneColor,
   LaneMode,
+  formatPercent,
   generateTacticalPlan,
+  getHeroItemStat,
+  getHeroMetaInfo,
+  getHeroesDb,
+  getItemsDb,
+  getLanes,
+  rankLabel,
 } from './data/deadlockData';
+import { getDataInfo } from './data/dataSource';
+import { analyzeDeadlockScreen, VisionDetectionResult } from './services/visionScanner';
+import { MatchSnapshot, MatchTracker, MatchUpdate } from './services/matchTracker';
 import {
-  ABILITY_TEMPLATE_HERO_IDS,
-  analyzeDeadlockScreen,
-  VisionDetectionResult,
-} from './services/visionScanner';
-import { ItemAbsence, ItemConfirmation, StableValue } from './services/detectionStabilizer';
+  INVENTORY_SLOTS,
+  InventoryStatus,
+  QueueEntry,
+  buildPurchaseOrder,
+  getNextPurchases,
+  getSellCandidates,
+  getSlotPlans,
+  isInventoryFull,
+  withLockedFirst,
+} from './services/recommendations';
+import {
+  isMatchLogEnabled,
+  logEvent,
+  logScan,
+  logState,
+  restartMatchLog,
+  setMatchLogEnabled,
+} from './services/matchLogger';
 import { grabGameFrame, releaseGameFrame } from './services/screenCapture';
-import { ElectronSourceInfo } from './electron';
+import type { AppInfo, ElectronSourceInfo, UpdateStatus } from './electron';
 import { ItemCard } from './components/ItemCard';
-import { ScreenScannerModal } from './components/ScreenScannerModal';
 import { HeroPortraitIcon, ItemArtworkIcon, PowerIcon } from './components/DeadlockIcons';
+import { SettingsModal } from './components/SettingsModal';
+import { OnboardingModal } from './components/OnboardingModal';
+import { ReportContent, ReportDialog } from './components/ReportDialog';
+import { DiagnosticsTab } from './components/DiagnosticsTab';
+import { I18nContext, Translate, makeI18n } from './i18n';
+import { Lang, detectLang, readStoredLang, storeLang } from './i18n/lang';
 
 type MainTab = 'essential' | 'builds' | 'powers' | 'matchups' | 'logs';
 
@@ -46,33 +73,17 @@ interface LockedNextPurchase {
   itemId: string;
 }
 
-interface QueueEntry {
-  item: DeadlockItem;
-  reason?: string;
-  isCounter?: boolean;
-}
-
-export interface ScanLogEntry {
-  id: number;
-  time: string;
-  sourceName: string;
-  summary: string;
-  details: string[];
-  hasDetection: boolean;
-}
-
-function getShopLocationBadge(item: DeadlockItem): {
-  tabLabel: string;
-  tierLabel: string;
-  badgeClass: string;
-  dotColor: string;
-} {
+function getShopLocationBadge(
+  item: DeadlockItem,
+  t: Translate,
+  formatNumber: (n: number) => string
+): { tab: string; tierLabel: string; badgeClass: string; dotColor: string } {
   const tierRoman = item.tier === 1 ? 'I' : item.tier === 2 ? 'II' : item.tier === 3 ? 'III' : 'IV';
-  const tierLabel = `Palier ${tierRoman} (${item.cost.toLocaleString('fr-FR')} Âmes)`;
+  const tierLabel = t('shop.tier', tierRoman, formatNumber(item.cost));
 
   if (item.category === 'weapon') {
     return {
-      tabLabel: 'BOUTIQUE : ONGLET ARME (Orange)',
+      tab: t('shop.tab.weapon'),
       tierLabel,
       badgeClass: 'bg-orange-500/20 border-orange-500/50 text-orange-200',
       dotColor: '#f97316',
@@ -80,21 +91,21 @@ function getShopLocationBadge(item: DeadlockItem): {
   }
   if (item.category === 'vitality') {
     return {
-      tabLabel: 'BOUTIQUE : ONGLET VITALITÉ (Vert)',
+      tab: t('shop.tab.vitality'),
       tierLabel,
       badgeClass: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-200',
       dotColor: '#22c55e',
     };
   }
   return {
-    tabLabel: 'BOUTIQUE : ONGLET ESPRIT (Violet)',
+    tab: t('shop.tab.spirit'),
     tierLabel,
     badgeClass: 'bg-purple-500/20 border-purple-500/50 text-purple-200',
     dotColor: '#a855f7',
   };
 }
 
-// Items marked as owned by hand ("Passer" / click), shared with the overlay window: the scanner never
+// Items marked as owned by hand ("Skip" / click), shared with the overlay window: the scanner never
 // removes them, since they are usually not (yet) in the inventory
 const MANUAL_OWNED_KEY = 'dl_manualOwned';
 
@@ -110,7 +121,7 @@ function writeManualOwned(ids: Set<string>): void {
   localStorage.setItem(MANUAL_OWNED_KEY, JSON.stringify([...ids]));
 }
 
-/** Data URL of a captured frame for the scanner window preview (only built while that window is open). */
+/** Data URL of a captured frame for the Diagnostics preview (only built while that tab is open). */
 function frameToPreviewUrl(image: ImageBitmap | string): string {
   if (typeof image === 'string') return image;
   const canvas = document.createElement('canvas');
@@ -120,57 +131,32 @@ function frameToPreviewUrl(image: ImageBitmap | string): string {
   return canvas.toDataURL('image/jpeg', 0.85);
 }
 
+const DANGER_KEYS = {
+  Low: 'danger.Low',
+  Medium: 'danger.Medium',
+  High: 'danger.High',
+  Extreme: 'danger.Extreme',
+} as const;
+
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
 const HERO_LOCKED_KEY = 'dl_heroLocked';
+// First launch done (language and game logs chosen)
+const ONBOARDED_KEY = 'dl_onboarded';
 
-/** Components consumed (recursively) when buying this item: Titanic Magazine -> Extended Magazine... */
-function getComponentIds(itemId: string): Set<string> {
-  const components = new Set<string>();
-  const stack = [...(ITEMS_DB[itemId]?.upgradesFrom ?? [])];
-  while (stack.length > 0) {
-    const id = stack.pop()!;
-    if (components.has(id)) continue;
-    components.add(id);
-    stack.push(...(ITEMS_DB[id]?.upgradesFrom ?? []));
-  }
-  return components;
+/** "16:9", "21:9"... for the unsupported format message. */
+function aspectLabel(width: number, height: number): string {
+  const ratio = width / height;
+  const known: [string, number][] = [
+    ['16:9', 16 / 9],
+    ['16:10', 16 / 10],
+    ['21:9', 64 / 27],
+    ['32:9', 32 / 9],
+    ['4:3', 4 / 3],
+    ['5:4', 5 / 4],
+  ];
+  const [label, value] = known.reduce((best, k) => (Math.abs(k[1] - ratio) < Math.abs(best[1] - ratio) ? k : best));
+  return Math.abs(value - ratio) < 0.02 ? label : `${ratio.toFixed(2)}:1`;
 }
-
-/**
- * An inventory that cannot be mine (spectated teammate while dead): in the same frame, at least 2 of my items
- * are gone and 2 unknown items appeared. Upgrades don't count (the new item replaces its component), nor do
- * items that unrecognized slots may be hiding (active item on cooldown).
- */
-function isForeignInventory(ownedIds: string[], seenIds: string[], unmatchedSlots: number): boolean {
-  const owned = new Set(ownedIds);
-  const seen = new Set(seenIds);
-  const appeared = seenIds.filter((id) => !owned.has(id));
-  const replacedComponents = new Set<string>();
-  const unexplainedNew = appeared.filter((id) => {
-    const components = [...getComponentIds(id)].filter((c) => owned.has(c));
-    components.forEach((c) => replacedComponents.add(c));
-    return components.length === 0;
-  });
-  const missing = ownedIds.filter((id) => !seen.has(id) && !replacedComponents.has(id));
-  return missing.length - unmatchedSlots >= 2 && unexplainedNew.length >= 2;
-}
-
-// Above any respawn timer: a "foreign" inventory still on screen after that really is mine (sold + bought)
-const FOREIGN_INVENTORY_MAX_SCANS = 250; // ~90 s
-
-const INVENTORY_SLOTS = 12;
-
-interface InventoryStatus {
-  itemIds: string[]; // items currently in the inventory (confirmed by the scanner)
-  occupied: number;
-  locked: number;
-  unmatched: number;
-}
-
-type SlotPlan =
-  | { kind: 'upgrade'; itemId: string } // takes the slot of this owned component
-  | { kind: 'sell'; itemId: string } // inventory full: sell this owned item first
-  | { kind: 'full' }; // inventory full, no recognized item to suggest
 
 export function App() {
   const isDedicatedOverlayWindow = window.location.hash === '#overlay';
@@ -181,6 +167,21 @@ export function App() {
     localStorage.removeItem('dl_selectedBuildId');
     localStorage.removeItem('dl_lockedNext');
   }
+
+  // Interface language (shared with the overlay through localStorage)
+  const [lang, setLang] = useState<Lang>(detectLang);
+  const i18n = useMemo(() => makeI18n(lang), [lang]);
+  const { t, formatNumber, formatDuration } = i18n;
+  const HEROES = useMemo(() => getHeroesDb(lang), [lang]);
+  const ITEMS = useMemo(() => getItemsDb(lang), [lang]);
+  const LANES = useMemo(() => getLanes(lang), [lang]);
+  const changeLang = useCallback((next: Lang) => {
+    storeLang(next);
+    setLang(next);
+  }, []);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   // Core Match State
   const [myHeroId, setMyHeroId] = useState<string>(
@@ -277,6 +278,8 @@ export function App() {
 
   useEffect(() => {
     const onStorage = () => {
+      const l = readStoredLang();
+      if (l) setLang(l);
       const h = localStorage.getItem('dl_myHeroId');
       if (h) setMyHeroId(h);
       const b = localStorage.getItem('dl_selectedBuildId');
@@ -310,19 +313,28 @@ export function App() {
   // Screen Vision & Overlay State (100% Silent, Zero Distraction)
   const [isOverlayMode, setIsOverlayMode] = useState<boolean>(isDedicatedOverlayWindow);
   const [isClickThrough, setIsClickThrough] = useState<boolean>(false);
-  const [isScannerModalOpen, setIsScannerModalOpen] = useState<boolean>(false);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
   const [autoScanEnabled, setAutoScanEnabled] = useState<boolean>(!isDedicatedOverlayWindow);
   const [lastCaptureUrl, setLastCaptureUrl] = useState<string | null>(null);
   const [lastDetection, setLastDetection] = useState<VisionDetectionResult | null>(null);
   const [sources, setSources] = useState<ElectronSourceInfo[]>([]);
   const [selectedSourceId, setSelectedSourceId] = useState<string>('');
-  const [scanLogs, setScanLogs] = useState<ScanLogEntry[]>([]);
+  // Capture the scanner is not calibrated for (paused), or Deadlock captured without any HUD for a long time
+  const [formatIssue, setFormatIssue] = useState<{ width: number; height: number } | null>(null);
+  const [hudMissing, setHudMissing] = useState(false);
 
-  const myHero = useMemo(
-    () => HEROES_DB.find((h) => h.id === myHeroId) || HEROES_DB[0],
-    [myHeroId]
+  // Settings, first launch, problem report, updates
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => !isDedicatedOverlayWindow && localStorage.getItem(ONBOARDED_KEY) !== '1'
   );
+  const [logsEnabled, setLogsEnabled] = useState(isMatchLogEnabled);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' });
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const isDiagnosticsOpen = activeTab === 'logs' && !isDedicatedOverlayWindow;
+
+  const myHero = useMemo(() => HEROES.find((h) => h.id === myHeroId) || HEROES[0], [HEROES, myHeroId]);
 
   useEffect(() => {
     if (!myHero.builds.some((b) => b.id === selectedBuildId)) {
@@ -344,130 +356,34 @@ export function App() {
         laneMode,
         laneEnemyIds,
         teamEnemyIds,
-        laneMode === 'duo' ? allyPartnerId : null
+        laneMode === 'duo' ? allyPartnerId : null,
+        lang
       ),
-    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId]
+    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId, lang]
   );
 
   /**
-   * Smart Next-To-Buy Queue:
-   * Automatically orders what the player should buy RIGHT NOW based on:
-   * 1. Unowned Early Lane items (Tier 1, 800 Souls)
-   * 2. Urgent Counter-Items against the detected lane opponents (Tier 1-2)
-   * 3. Unowned Mid Game (Tier 2, 1600) and Late Game (Tier 3-4, 3200-6400) items
-   * Every item already in `ownedItems` (auto-detected or manually checked) is automatically skipped!
+   * Smart Next-To-Buy Queue (services/recommendations.ts): early lane items, urgent counters against the lane
+   * opponents, then mid and late game items. Every item already owned (detected or marked by hand), and every
+   * component consumed by an owned upgrade, is skipped.
    */
-  const fullOrderedBuildQueue = useMemo(() => {
-    const queue: QueueEntry[] = [];
-    const seen = new Set<string>();
-
-    const pushItem = (id: string, reason?: string, isCounter = false) => {
-      if (seen.has(id)) return;
-      const item = ITEMS_DB[id];
-      if (!item) return;
-      seen.add(id);
-      queue.push({ item, reason, isCounter });
-    };
-
-    // 1. First two Tier-1 core lane items so the player has immediate early stats
-    activeBuild.phases.early.slice(0, 2).forEach((id) => pushItem(id, 'Priorité Début de Lane'));
-
-    // 2. Urgent Tier 1 / Tier 2 Counter-Item against lane opponents
-    tacticalPlan.priorityItems
-      .filter((r) => r.item.tier <= 2)
-      .slice(0, 2)
-      .forEach((r) => pushItem(r.item.id, r.reasons[0] || 'Contre Prioritaire Lane', true));
-
-    // 3. Remaining Tier-1 early items
-    activeBuild.phases.early.slice(2).forEach((id) => pushItem(id, 'Fin de phase Début de Lane'));
-
-    // 4. First two Mid-Game core items (Tier 2)
-    activeBuild.phases.mid.slice(0, 2).forEach((id) => pushItem(id, 'Pic de puissance Mid Game'));
-
-    // 5. Higher-tier Counter-Items (Tier 3-4)
-    tacticalPlan.priorityItems
-      .filter((r) => r.item.tier >= 3)
-      .slice(0, 2)
-      .forEach((r) => pushItem(r.item.id, r.reasons[0] || 'Contre Teamfight', true));
-
-    // 6. Remaining Mid & Late Game items
-    activeBuild.phases.mid.slice(2).forEach((id) => pushItem(id, 'Core Mid Game'));
-    activeBuild.phases.late.forEach((id) => pushItem(id, 'Core Fin de Partie'));
-
-    return queue;
-  }, [activeBuild, tacticalPlan.priorityItems]);
-
-  // Owned items + the components they consumed (owning Titanic Magazine means Extended Magazine is done)
-  const effectiveOwnedSet = useMemo(() => {
-    const owned = new Set<string>(ownedItems);
-    const stack = [...ownedItems];
-    while (stack.length > 0) {
-      for (const componentId of ITEMS_DB[stack.pop()!]?.upgradesFrom ?? []) {
-        if (!owned.has(componentId)) {
-          owned.add(componentId);
-          stack.push(componentId);
-        }
-      }
-    }
-    return owned;
-  }, [ownedItems]);
-
-  const isInventoryFull =
-    inventoryStatus !== null &&
-    inventoryStatus.occupied > 0 &&
-    inventoryStatus.occupied + inventoryStatus.locked >= INVENTORY_SLOTS;
-
-  // Items of the inventory to sell when it is full, weakest first: outside the active build and the
-  // counters, then lowest tier, then earliest build phase, then cheapest
-  const sellCandidates = useMemo(() => {
-    if (!inventoryStatus) return [];
-    const { early, mid, late, situational } = activeBuild.phases;
-    const counterIds = new Set(tacticalPlan.priorityItems.map((r) => r.item.id));
-    const phaseRank = (id: string) =>
-      late.includes(id) ? 3 : mid.includes(id) || situational.includes(id) ? 2 : early.includes(id) ? 1 : 0;
-    const isWanted = (id: string) => phaseRank(id) > 0 || counterIds.has(id);
-    return inventoryStatus.itemIds
-      .filter((id) => ITEMS_DB[id])
-      .sort(
-        (a, b) =>
-          Number(isWanted(a)) - Number(isWanted(b)) ||
-          ITEMS_DB[a].tier - ITEMS_DB[b].tier ||
-          phaseRank(a) - phaseRank(b) ||
-          ITEMS_DB[a].cost - ITEMS_DB[b].cost
-      );
-  }, [inventoryStatus, activeBuild, tacticalPlan.priorityItems]);
-
-  /** Owned component this item upgrades (buying it then takes that component's slot). */
-  const getUpgradedComponent = useCallback(
-    (itemId: string) => [...getComponentIds(itemId)].find((id) => ownedItems.includes(id)),
-    [ownedItems]
+  const purchaseOrder = useMemo(
+    () => buildPurchaseOrder(activeBuild, tacticalPlan.priorityItems, ITEMS),
+    [activeBuild, tacticalPlan.priorityItems, ITEMS]
   );
 
-  const rawNextToBuyQueue = useMemo(() => {
-    let unowned = fullOrderedBuildQueue.filter((entry) => !effectiveOwnedSet.has(entry.item.id));
+  const isFull = isInventoryFull(inventoryStatus);
 
-    // Inventory full: an item needing a free slot must be worth at least the weakest item it replaces
-    // (late game, never suggest selling a Tier 3 to buy a leftover Tier 1)
-    if (isInventoryFull && sellCandidates.length > 0) {
-      const weakestTier = ITEMS_DB[sellCandidates[0]].tier;
-      unowned = unowned.filter(
-        (entry) => getUpgradedComponent(entry.item.id) !== undefined || entry.item.tier >= weakestTier
-      );
-    }
+  const sellCandidates = useMemo(
+    () =>
+      getSellCandidates(inventoryStatus, activeBuild, new Set(tacticalPlan.priorityItems.map((r) => r.item.id))),
+    [inventoryStatus, activeBuild, tacticalPlan.priorityItems]
+  );
 
-    // Count how many Tier 1 (early lane) items the player already owns
-    const ownedTier1Count = ownedItems.filter((id) => ITEMS_DB[id]?.tier === 1).length;
-
-    // Once the player owns 4+ items total (or 3+ Tier-1 items), they have completed the Early Lane phase:
-    // Automatically show "la suite" (Mid Game Tier 2 & Late Game Tier 3-4 items first!) instead of leftover starters
-    if (ownedItems.length >= 4 || ownedTier1Count >= 3) {
-      const midAndLate = unowned.filter((entry) => entry.item.tier >= 2);
-      const leftoverEarly = unowned.filter((entry) => entry.item.tier === 1);
-      return [...midAndLate, ...leftoverEarly];
-    }
-
-    return unowned;
-  }, [fullOrderedBuildQueue, effectiveOwnedSet, ownedItems, isInventoryFull, sellCandidates, getUpgradedComponent]);
+  const rawNextToBuyQueue = useMemo(
+    () => getNextPurchases(purchaseOrder, ownedItems, inventoryStatus, sellCandidates),
+    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates]
+  );
 
   // The #1 stays locked until it is bought or skipped (or the hero/build changes):
   // new counters or a re-ordering of the queue only affect #2 and beyond.
@@ -486,43 +402,17 @@ export function App() {
     else localStorage.removeItem('dl_lockedNext');
   }, [isDedicatedOverlayWindow, lockKey, lockedItemId, rawNextToBuyQueue]);
 
-  const nextToBuyQueue = useMemo(() => {
-    const lockedIdx = lockedItemId
-      ? rawNextToBuyQueue.findIndex((entry) => entry.item.id === lockedItemId)
-      : -1;
-    if (lockedIdx <= 0) return rawNextToBuyQueue;
-    return [
-      rawNextToBuyQueue[lockedIdx],
-      ...rawNextToBuyQueue.slice(0, lockedIdx),
-      ...rawNextToBuyQueue.slice(lockedIdx + 1),
-    ];
-  }, [rawNextToBuyQueue, lockedItemId]);
+  const nextToBuyQueue = useMemo(
+    () => withLockedFirst(rawNextToBuyQueue, lockedItemId),
+    [rawNextToBuyQueue, lockedItemId]
+  );
 
   // What each displayed recommendation does to the inventory: an upgrade replaces its component; with a full
   // inventory, the other ones each need an owned item sold first (the weakest for #1, the next one for #2...)
-  const slotPlans = useMemo(() => {
-    const plans = new Map<string, SlotPlan>();
-    const shown = nextToBuyQueue.slice(0, 6);
-    const upgradedComponents = new Set<string>();
-    for (const entry of shown) {
-      const component = getUpgradedComponent(entry.item.id);
-      if (component) {
-        plans.set(entry.item.id, { kind: 'upgrade', itemId: component });
-        upgradedComponents.add(component);
-      }
-    }
-    if (isInventoryFull) {
-      // Never sell a component that one of the shown upgrades is about to consume
-      const toSell = sellCandidates.filter((id) => !upgradedComponents.has(id));
-      let nextSell = 0;
-      for (const entry of shown) {
-        if (plans.has(entry.item.id)) continue;
-        const sellId = toSell[nextSell++];
-        plans.set(entry.item.id, sellId ? { kind: 'sell', itemId: sellId } : { kind: 'full' });
-      }
-    }
-    return plans;
-  }, [nextToBuyQueue, getUpgradedComponent, isInventoryFull, sellCandidates]);
+  const slotPlans = useMemo(
+    () => getSlotPlans(nextToBuyQueue.slice(0, 6), ownedItems, inventoryStatus, sellCandidates),
+    [nextToBuyQueue, ownedItems, inventoryStatus, sellCandidates]
+  );
 
   // Static list of the active build's items: a tie-breaker for the inventory scanner that does not
   // depend on the buy queue (feeding the queue back into the scanner made the list cascade)
@@ -536,33 +426,79 @@ export function App() {
     [activeBuild]
   );
 
+  // Game log (services/matchLogger.ts): the application's state, written whenever it changes
+  useEffect(() => {
+    logState(
+      'ÉTAT héros',
+      `${myHeroId}${isHeroLocked ? ' 🔒' : ''} build=${activeBuild.id} lane=${laneColor}/${laneMode} partenaire=${
+        allyPartnerId ?? '-'
+      } ennemis lane=[${laneEnemyIds.join(',')}] équipe=[${teamEnemyIds.join(',')}]`
+    );
+  }, [myHeroId, isHeroLocked, activeBuild.id, laneColor, laneMode, allyPartnerId, laneEnemyIds, teamEnemyIds]);
+
+  const previousOwnedRef = useRef<string[]>(ownedItems);
+  useEffect(() => {
+    const added = ownedItems.filter((id) => !previousOwnedRef.current.includes(id));
+    const removed = previousOwnedRef.current.filter((id) => !ownedItems.includes(id));
+    previousOwnedRef.current = ownedItems;
+    if (added.length > 0 || removed.length > 0) {
+      logEvent(
+        `Objets possédés${added.length ? ` + [${added.join(', ')}]` : ''}${
+          removed.length ? ` − [${removed.join(', ')}]` : ''
+        } → ${ownedItems.length} objet(s)`
+      );
+    }
+    logState('ÉTAT possédés', `[${ownedItems.join(', ')}] dont marqués à la main [${[...readManualOwned()].join(', ')}]`);
+  }, [ownedItems]);
+
+  useEffect(() => {
+    logState(
+      'ÉTAT inventaire',
+      inventoryStatus
+        ? `occupés=${inventoryStatus.occupied} cadenas=${inventoryStatus.locked} inconnus=${inventoryStatus.unmatched} plein=${
+            isFull ? 'oui' : 'non'
+          } objets=[${inventoryStatus.itemIds.join(', ')}]`
+        : 'aucun inventaire lu'
+    );
+  }, [inventoryStatus, isFull]);
+
+  useEffect(() => {
+    const describePlan = (itemId: string) => {
+      const plan = slotPlans.get(itemId);
+      if (!plan) return '';
+      if (plan.kind === 'full') return ' (⇄ inventaire plein)';
+      return plan.kind === 'upgrade' ? ` (⬆ remplace ${plan.itemId})` : ` (⇄ vendre ${plan.itemId})`;
+    };
+    logState(
+      'RECO',
+      `âmes=${currentSouls ?? '?'} ${nextToBuyQueue
+        .slice(0, 3)
+        .map((entry, i) => `#${i + 1} ${entry.item.id} ${entry.item.cost}${describePlan(entry.item.id)}`)
+        .join(' • ')}`
+    );
+  }, [nextToBuyQueue, slotPlans, currentSouls]);
+
   const manuallyExcludedRef = useRef<Set<string>>(new Set());
   const isScanningRef = useRef<boolean>(false);
-  // Latest state for the scan loop (performScreenScan does not re-subscribe on every change)
-  const ownedItemsRef = useRef(ownedItems);
-  ownedItemsRef.current = ownedItems;
-  const enemyLineupRef = useRef<string[]>([]);
-  enemyLineupRef.current = [...laneEnemyIds, ...teamEnemyIds];
-
-  // Anti-flicker: a detection is applied only once it has been seen several scans in a row (350 ms each)
-  const heroStabilizerRef = useRef(new StableValue<string>(3, (id) => id));
-  const enemyStabilizerRef = useRef(
-    new StableValue<{ lane: string[]; team: string[] }>(4, (l) => `${l.lane.join(',')}|${l.team.join(',')}`)
-  );
-  const allyStabilizerRef = useRef(
-    new StableValue<{ partnerId?: string; laneColor?: LaneColor }>(
-      4,
-      (a) => `${a.partnerId ?? ''}|${a.laneColor ?? ''}`
-    )
-  );
-  const itemConfirmationRef = useRef(new ItemConfirmation(3));
-  // ~2 s missing from a readable inventory before an item is dropped (sold, upgraded, previous match)
-  const itemAbsenceRef = useRef(new ItemAbsence(6));
-  const foreignInventoryStreakRef = useRef(0);
-  const heroLockedRef = useRef(isHeroLocked);
+  // Decisions taken from each scan (services/matchTracker.ts), and the latest state it reads: the scan loop
+  // does not re-subscribe on every change, and a scan right after another must see its result
+  const trackerRef = useRef(new MatchTracker());
+  const snapshotRef = useRef<Omit<MatchSnapshot, 'manualOwned' | 'manuallyExcluded'>>(null!);
+  snapshotRef.current = {
+    myHeroId,
+    heroLocked: isHeroLocked,
+    ownedItems,
+    laneColor,
+    laneMode,
+    allyPartnerId,
+    laneEnemyIds,
+    teamEnemyIds,
+    currentSouls,
+    inventoryStatus,
+  };
 
   const lockHero = useCallback((locked: boolean) => {
-    heroLockedRef.current = locked;
+    snapshotRef.current = { ...snapshotRef.current, heroLocked: locked };
     setIsHeroLocked(locked);
     if (locked) localStorage.setItem(HERO_LOCKED_KEY, '1');
     else localStorage.removeItem(HERO_LOCKED_KEY);
@@ -572,25 +508,47 @@ export function App() {
   const clearOwnedItems = useCallback(() => {
     manuallyExcludedRef.current.clear();
     writeManualOwned(new Set());
-    itemConfirmationRef.current.reset();
-    itemAbsenceRef.current.reset();
-    foreignInventoryStreakRef.current = 0;
+    trackerRef.current.resetOwned();
+    snapshotRef.current = { ...snapshotRef.current, ownedItems: [], inventoryStatus: null };
     setOwnedItems([]);
     setInventoryStatus(null);
   }, []);
 
-  const handleSelectLane = (color: LaneColor) => {
-    setLaneColor(color);
-    const laneObj = DEADLOCK_LANES.find((l) => l.id === color);
-    if (laneObj) {
-      setLaneMode(laneObj.defaultMode);
-      if (laneObj.defaultMode === 'solo' && laneEnemyIds.length > 1) {
-        const movedToTeam = laneEnemyIds.slice(1);
-        setLaneEnemyIds([laneEnemyIds[0]]);
-        setTeamEnemyIds((prev) => Array.from(new Set([...prev, ...movedToTeam])).slice(0, 5));
+  /** Applies what the tracker concluded from a scan. */
+  const applyMatchUpdate = useCallback(
+    (update: MatchUpdate) => {
+      for (const entry of update.log) {
+        if (entry.kind === 'restart') restartMatchLog(entry.text);
+        else logEvent(entry.text);
       }
-    }
-  };
+      if (update.clearOwned) clearOwnedItems();
+      if (update.heroLocked !== undefined) lockHero(update.heroLocked);
+      const p = update.patch;
+      snapshotRef.current = { ...snapshotRef.current, ...p };
+      if (p.myHeroId !== undefined) setMyHeroId(p.myHeroId);
+      if (p.laneColor !== undefined) setLaneColor(p.laneColor);
+      if (p.laneMode !== undefined) setLaneMode(p.laneMode);
+      if (p.allyPartnerId !== undefined) setAllyPartnerId(p.allyPartnerId);
+      if (p.laneEnemyIds !== undefined) setLaneEnemyIds(p.laneEnemyIds);
+      if (p.teamEnemyIds !== undefined) setTeamEnemyIds(p.teamEnemyIds);
+      if (p.currentSouls !== undefined) setCurrentSouls(p.currentSouls);
+      if (p.inventoryStatus !== undefined) setInventoryStatus(p.inventoryStatus);
+      if (p.ownedItems !== undefined) {
+        setOwnedItems(p.ownedItems);
+        localStorage.setItem('dl_ownedItems', JSON.stringify(p.ownedItems));
+      }
+      setFormatIssue((prev) =>
+        update.formatIssue
+          ? prev && prev.width === update.formatIssue.width && prev.height === update.formatIssue.height
+            ? prev
+            : update.formatIssue
+          : null
+      );
+      setHudMissing(update.hudMissing);
+    },
+    [clearOwnedItems, lockHero]
+  );
+
 
   const handleSelectEnemyHero = (heroId: string) => {
     if (heroId === myHeroId || heroId === allyPartnerId) return;
@@ -645,6 +603,7 @@ export function App() {
       writeManualOwned(manualOwned);
       const next = isCurrentlyOwned ? prev.filter((id) => id !== itemId) : [...prev, itemId];
       localStorage.setItem('dl_ownedItems', JSON.stringify(next));
+      snapshotRef.current = { ...snapshotRef.current, ownedItems: next };
       return next;
     });
   };
@@ -658,223 +617,41 @@ export function App() {
   const performScreenScan = useCallback(async () => {
     if (isScanningRef.current) return;
     isScanningRef.current = true;
-    if (isScannerModalOpen) setIsScanning(true);
     try {
-      if (window.electronAPI) {
-        const frame = await grabGameFrame(selectedSourceId);
-        if (frame) {
-          if (isScannerModalOpen) {
-            setLastCaptureUrl(frameToPreviewUrl(frame.image));
-          }
-          let detection: VisionDetectionResult;
-          try {
-            detection = await analyzeDeadlockScreen(
-              frame.image,
-              frame.sourceName,
-              frame.isDeadlockWindow,
-              myHeroId,
-              buildItemIds,
-              isScannerModalOpen
-            );
-          } finally {
-            releaseGameFrame(frame);
-          }
-          if (isScannerModalOpen) {
-            setLastDetection(detection);
-          }
-
-          let hasStateChange = false;
-          const updatedParts: string[] = [];
-
-          // My hero: auto-detected once per match, then locked. While dead (death cam, spectating a teammate)
-          // the screen shows other heroes; once locked, the hero only changes at the next match (new enemy
-          // lineup) or when picked by hand.
-          let activeHeroId = myHeroId;
-          const heroEvidence = detection.highlightedHeroId ?? detection.abilityHeroId;
-          const stableHeroId = heroEvidence ? heroStabilizerRef.current.push(heroEvidence) : undefined;
-          if (stableHeroId && !heroLockedRef.current) {
-            // Only the highlighted portrait is trusted enough to lock (cooldown numbers fool the abilities)
-            if (stableHeroId === detection.highlightedHeroId) lockHero(true);
-            if (stableHeroId !== myHeroId) {
-              // Another hero = another match: the previous match's items no longer apply
-              activeHeroId = stableHeroId;
-              setMyHeroId(stableHeroId);
-              enemyStabilizerRef.current.reset();
-              allyStabilizerRef.current.reset();
-              clearOwnedItems();
-              hasStateChange = true;
-              const h = HEROES_DB.find((x) => x.id === stableHeroId);
-              if (h) updatedParts.push(`Moi: ${h.name}`);
-            }
-          }
-
-          // Another hero on screen than my locked one (dead / spectating): the highlighted portrait, or the
-          // abilities when the portrait is not readable - only if my hero's abilities can be recognized at all
-          // (otherwise any hero they happen to resemble would freeze my inventory while I am alive).
-          // Inventory, souls and lane are then left untouched.
-          const heroOnScreen =
-            detection.highlightedHeroId ??
-            (ABILITY_TEMPLATE_HERO_IDS.has(activeHeroId) ? detection.abilityHeroId : undefined);
-          const isWatchingOtherHero =
-            heroLockedRef.current && heroOnScreen !== undefined && heroOnScreen !== activeHeroId;
-
-          const detectedPartnerId = detection.detectedPartnerId ?? detection.detectedAllyIds[0];
-          if (!isWatchingOtherHero && (detectedPartnerId || detection.detectedLaneColor)) {
-            const stableAlly = allyStabilizerRef.current.push({
-              partnerId: detectedPartnerId,
-              laneColor: detection.detectedLaneColor,
-            });
-            if (stableAlly?.laneColor) {
-              setLaneColor((prev) => (prev !== stableAlly.laneColor ? stableAlly.laneColor! : prev));
-            }
-            if (stableAlly?.partnerId) {
-              setLaneMode((prev) => (prev !== 'duo' ? 'duo' : prev));
-              setAllyPartnerId((prev) => {
-                if (prev !== stableAlly.partnerId) {
-                  hasStateChange = true;
-                  return stableAlly.partnerId!;
-                }
-                return prev;
-              });
-            }
-          }
-
-          if (detection.detectedEnemyIds.length > 0) {
-            // Sorted so that a mere change of order is not a change of lineup
-            const lineup =
-              detection.detectedLaneEnemyIds.length > 0
-                ? { lane: detection.detectedLaneEnemyIds, team: detection.detectedTeamEnemyIds }
-                : {
-                    lane: detection.detectedEnemyIds.slice(0, 2),
-                    team: detection.detectedEnemyIds.slice(2, 6),
-                  };
-            const stableEnemies = enemyStabilizerRef.current.push({
-              lane: [...lineup.lane].sort(),
-              team: [...lineup.team].sort(),
-            });
-            if (stableEnemies) {
-              // Mostly different enemies (same hero picked again) = new match: drop last match's items
-              const previousLineup = new Set(enemyLineupRef.current);
-              const lineup = [...stableEnemies.lane, ...stableEnemies.team];
-              const common = lineup.filter((id) => previousLineup.has(id)).length;
-              if (previousLineup.size > 0 && lineup.length >= 4 && common * 2 < lineup.length) {
-                clearOwnedItems();
-                lockHero(false); // my hero is re-detected (and re-locked) for this new match
-                heroStabilizerRef.current.reset();
-                hasStateChange = true;
-                updatedParts.push('Nouvelle partie');
-              }
-              enemyLineupRef.current = lineup;
-              setLaneEnemyIds((prev) =>
-                prev.join(',') !== stableEnemies.lane.join(',') ? stableEnemies.lane : prev
-              );
-              setTeamEnemyIds((prev) =>
-                prev.join(',') !== stableEnemies.team.join(',') ? stableEnemies.team : prev
-              );
-            }
-          }
-
-          if (!isWatchingOtherHero && detection.detectedSouls !== undefined) {
-            setCurrentSouls((prev) =>
-              prev !== detection.detectedSouls ? detection.detectedSouls! : prev
-            );
-          }
-
-          // Inventory Sync: the owned list mirrors the inventory on screen.
-          // - an item seen 3 consecutive scans (~1 s) is added;
-          // - an item missing for ~2 s is removed, but only from a readable inventory: the game window or HUD
-          //   must be visible with at least one occupied slot (hidden HUD, menus, Alt-Tab and black frames all
-          //   read as an empty inventory). Items marked by hand are never removed by the scanner.
-          // - frames showing someone else's inventory (another hero on screen, or an inventory that cannot be
-          //   mine) are ignored altogether.
-          const canReadInventory =
-            detection.occupiedSlotsCount > 0 &&
-            (detection.isDeadlockWindow || Boolean(detection.hudVisible));
-          const manualOwned = readManualOwned();
-          const scannedOwned = ownedItemsRef.current.filter((id) => !manualOwned.has(id));
-          const looksForeign =
-            canReadInventory &&
-            isForeignInventory(
-              scannedOwned,
-              detection.detectedOwnedItemIds,
-              detection.unmatchedSlotsCount ?? 0
-            );
-          foreignInventoryStreakRef.current = looksForeign ? foreignInventoryStreakRef.current + 1 : 0;
-          const ignoreInventory =
-            isWatchingOtherHero ||
-            (looksForeign && foreignInventoryStreakRef.current < FOREIGN_INVENTORY_MAX_SCANS);
-
-          const confirmedItemIds = ignoreInventory
-            ? []
-            : itemConfirmationRef.current.push(detection.detectedOwnedItemIds);
-          const goneItemIds =
-            canReadInventory && !ignoreInventory
-              ? itemAbsenceRef.current.push(
-                  scannedOwned,
-                  detection.detectedOwnedItemIds,
-                  detection.unmatchedSlotsCount ?? 0
-                )
-              : [];
-
-          if (canReadInventory && !ignoreInventory) {
-            const status: InventoryStatus = {
-              itemIds: [...confirmedItemIds].sort(),
-              occupied: detection.occupiedSlotsCount,
-              locked: detection.lockedSlotsCount ?? 0,
-              unmatched: detection.unmatchedSlotsCount ?? 0,
-            };
-            setInventoryStatus((prev) =>
-              prev && JSON.stringify(prev) === JSON.stringify(status) ? prev : status
-            );
-          }
-
-          if (confirmedItemIds.length > 0 || goneItemIds.length > 0) {
-            setOwnedItems((prev) => {
-              const gone = new Set(goneItemIds);
-              const filteredNew = confirmedItemIds.filter(
-                (id) => !manuallyExcludedRef.current.has(id)
-              );
-              const merged = Array.from(
-                new Set([...prev.filter((id) => !gone.has(id)), ...filteredNew])
-              );
-              if (merged.length === prev.length && merged.every((id, i) => id === prev[i])) {
-                return prev;
-              }
-              hasStateChange = true;
-              updatedParts.push(`Items: ${merged.length}`);
-              localStorage.setItem('dl_ownedItems', JSON.stringify(merged));
-              return merged;
-            });
-          }
-
-          if (hasStateChange || isScannerModalOpen) {
-            const hasAnyDetection =
-              Boolean(detection.detectedHeroId) ||
-              detection.detectedEnemyIds.length > 0 ||
-              detection.detectedOwnedItemIds.length > 0;
-
-            setScanLogs((prev) => [
-              {
-                id: Date.now(),
-                time: detection.timestamp,
-                sourceName: detection.sourceName,
-                summary:
-                  updatedParts.length > 0
-                    ? `Mise à jour instantanée : ${updatedParts.join(' • ')}`
-                    : `Scan terminé`,
-                details: detection.debugLogs,
-                hasDetection: hasAnyDetection,
-              },
-              ...prev.slice(0, 29),
-            ]);
-          }
-        }
+      if (!window.electronAPI) return;
+      const frame = await grabGameFrame(selectedSourceId);
+      if (!frame) return;
+      if (isDiagnosticsOpen) setLastCaptureUrl(frameToPreviewUrl(frame.image));
+      let detection: VisionDetectionResult;
+      try {
+        detection = await analyzeDeadlockScreen(
+          frame.image,
+          frame.sourceName,
+          frame.isDeadlockWindow,
+          snapshotRef.current.myHeroId,
+          buildItemIds,
+          isDiagnosticsOpen
+        );
+        logScan(detection, frame.image);
+      } finally {
+        releaseGameFrame(frame);
       }
+      if (isDiagnosticsOpen) setLastDetection(detection);
+
+      const update = trackerRef.current.push(
+        detection,
+        {
+          ...snapshotRef.current,
+          manualOwned: readManualOwned(),
+          manuallyExcluded: manuallyExcludedRef.current,
+        },
+        Date.now()
+      );
+      applyMatchUpdate(update);
     } finally {
       isScanningRef.current = false;
-      if (isScannerModalOpen) setIsScanning(false);
     }
-  }, [selectedSourceId, myHeroId, buildItemIds, isScannerModalOpen, clearOwnedItems, lockHero]);
+  }, [selectedSourceId, buildItemIds, isDiagnosticsOpen, applyMatchUpdate]);
 
   // Run initial scan + ultra-fast silent background scan every 350ms (near-instantaneous item updates)
   useEffect(() => {
@@ -911,6 +688,15 @@ export function App() {
     };
   }, [isDedicatedOverlayWindow, performScreenScan, refreshSources]);
 
+  // Version and update notices (main window only)
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api || isDedicatedOverlayWindow) return;
+    api.getAppInfo().then(setAppInfo);
+    api.updates.status().then(setUpdateStatus);
+    return api.updates.onStatus(setUpdateStatus);
+  }, [isDedicatedOverlayWindow]);
+
   const handleToggleOverlay = async () => {
     if (window.electronAPI) {
       const next = await window.electronAPI.setOverlayMode(!isOverlayMode);
@@ -927,14 +713,59 @@ export function App() {
     }
   };
 
-  const applyPresetSimulation = (heroId: string, lane: LaneColor, enemies: string[]) => {
-    setMyHeroId(heroId);
-    setLaneColor(lane);
-    setLaneMode(enemies.length > 1 ? 'duo' : 'solo');
-    setLaneEnemyIds(enemies);
+  const handleLogsChange = (enabled: boolean) => {
+    setMatchLogEnabled(enabled);
+    setLogsEnabled(enabled);
   };
 
-  /** "⬆ Remplace X" (upgrade) or "⇄ Vendre X" (inventory full) under a recommendation. */
+  /** Contents of a problem report: readable summary, raw state, and the GitHub issue form fields. */
+  const collectReport = (): ReportContent => {
+    const d = lastDetection;
+    const frame = formatIssue ?? (d?.frameWidth ? { width: d.frameWidth, height: d.frameHeight ?? 0 } : null);
+    const data = getDataInfo();
+    const info = [
+      `Language: ${lang}`,
+      `Hero: ${myHeroId}${isHeroLocked ? ' (locked)' : ''} — build ${activeBuild.id}`,
+      `Lane: ${laneColor} / ${laneMode}, partner: ${allyPartnerId ?? '-'}`,
+      `Enemies: lane [${laneEnemyIds.join(', ')}] team [${teamEnemyIds.join(', ')}]`,
+      `Owned: [${ownedItems.join(', ')}] (by hand: [${[...readManualOwned()].join(', ')}])`,
+      `Inventory: ${inventoryStatus ? JSON.stringify(inventoryStatus) : '-'}${isFull ? ' FULL' : ''}`,
+      `Souls: ${currentSouls ?? '-'}`,
+      `Next purchases: ${nextToBuyQueue
+        .slice(0, 3)
+        .map((e) => e.item.id)
+        .join(', ')}`,
+      `Capture: ${frame ? `${frame.width}x${frame.height}` : '-'}${formatIssue ? ' (unsupported format)' : ''}${
+        hudMissing ? ' (no HUD found)' : ''
+      }`,
+      d
+        ? `Last scan (${d.isDeadlockWindow ? 'Deadlock window' : d.sourceName}): ${
+            d.shopOpen ? 'shop' : d.hudVisible ? 'HUD' : 'no HUD'
+          }, allies [${(d.allySlots ?? []).map((id) => id ?? '?').join(',')}] enemies [${(d.enemySlots ?? [])
+            .map((id) => id ?? '?')
+            .join(',')}]`
+        : 'Last scan: open the Diagnostics tab to include it',
+      `Data: ${data.generatedAt} (${data.origin})`,
+      `Game logs: ${logsEnabled ? 'on' : 'off'}`,
+    ].join('\n');
+    const state: Record<string, string | null> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)!;
+      if (key.startsWith('dl_') && key !== 'dl_remoteData') state[key] = localStorage.getItem(key);
+    }
+    return {
+      info,
+      state: JSON.stringify(state, null, 2),
+      fields: {
+        version: appInfo?.version ?? '',
+        resolution: frame ? `${frame.width}x${frame.height}` : '',
+        hero: myHero.name,
+        language: lang,
+      },
+    };
+  };
+
+  /** "⬆ Replaces X" (upgrade) or "⇄ Sell X" (inventory full) under a recommendation. */
   const renderSlotPlan = (itemId: string, compact = false) => {
     const plan = slotPlans.get(itemId);
     if (!plan) return null;
@@ -942,11 +773,11 @@ export function App() {
     if (plan.kind === 'full') {
       return (
         <div className={`rounded-lg border font-bold bg-red-500/15 border-red-400/50 text-red-200 ${sizeClass}`}>
-          ⇄ Inventaire plein : vends un objet avant d'acheter
+          {t('slot.fullSellFirst')}
         </div>
       );
     }
-    const other = ITEMS_DB[plan.itemId];
+    const other = ITEMS[plan.itemId];
     if (!other) return null;
     const isUpgrade = plan.kind === 'upgrade';
     return (
@@ -956,982 +787,940 @@ export function App() {
             ? 'bg-sky-500/15 border-sky-400/40 text-sky-200'
             : 'bg-red-500/15 border-red-400/50 text-red-200'
         }`}
-        title={
-          isUpgrade
-            ? "Amélioration : l'objet prend la place de son composant, pas besoin de slot libre"
-            : "Inventaire plein : vends cet objet (le moins utile pour ton build) pour libérer un slot"
-        }
+        title={isUpgrade ? t('slot.upgradeTitle') : t('slot.sellTitle')}
       >
-        <span className="shrink-0">{isUpgrade ? '⬆ Remplace' : '⇄ Vendre'}</span>
+        <span className="shrink-0">{isUpgrade ? t('slot.replaces') : t('slot.sell')}</span>
         <ItemArtworkIcon itemId={other.id} category={other.category} size={compact ? 16 : 20} />
         <span className="truncate">{other.name.split('(')[0].trim()}</span>
       </div>
     );
   };
 
+  /** Why an item is recommended: how often high-rank players of this hero buy it, and their win rate with it. */
+  const whyText = (entry: QueueEntry): string | null => {
+    const stat = getHeroItemStat(myHeroId, entry.item.id);
+    const meta = getHeroMetaInfo(myHeroId);
+    if (!stat || !meta) return null;
+    const pick = lang === 'en' ? `${Math.round(stat.pickRate * 100)}%` : `${Math.round(stat.pickRate * 100)} %`;
+    const parts = [
+      t('why.meta', pick, rankLabel(meta.badgeMin, lang), myHero.name),
+      t('why.winRate', formatPercent(stat.winRate, lang)),
+    ];
+    if (stat.buyTimeS > 0) parts.push(t('why.buyTime', formatDuration(stat.buyTimeS)));
+    return parts.join(' · ');
+  };
+
+  const reasonText = (entry: QueueEntry) => entry.counterReason ?? (entry.reasonKey ? t(entry.reasonKey) : '');
+
   const inventoryLabel = inventoryStatus
-    ? `inventaire ${inventoryStatus.occupied}/${INVENTORY_SLOTS - inventoryStatus.locked}${
-        isInventoryFull ? ' — PLEIN' : ''
-      }`
-    : `${ownedItems.length} objets possédés`;
+    ? t('inv.label', inventoryStatus.occupied, INVENTORY_SLOTS - inventoryStatus.locked, isFull)
+    : t('inv.ownedCount', ownedItems.length);
 
   const totalSelectedEnemies = laneEnemyIds.length + teamEnemyIds.length;
-  const allyHeroObj = allyPartnerId ? HEROES_DB.find((h) => h.id === allyPartnerId) : null;
-  const currentLaneObj = DEADLOCK_LANES.find((l) => l.id === laneColor) || DEADLOCK_LANES[0];
+  const allyHeroObj = allyPartnerId ? HEROES.find((h) => h.id === allyPartnerId) : null;
+  const heroName = (id: string) => HEROES.find((h) => h.id === id)?.name;
 
   // ================= DEDICATED TRANSPARENT IN-GAME OVERLAY HUD WINDOW =================
   if (isDedicatedOverlayWindow) {
     return (
-      <div className="h-screen w-screen p-2 flex flex-col select-none bg-transparent overflow-hidden">
-        <div className="flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden">
-          <div className="drag-region px-3 py-2 bg-gradient-to-r from-amber-950/80 via-[#15131c] to-[#15131c] border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={28} />
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-display text-xs font-extrabold text-amber-300 truncate">
-                    {myHero.name.toUpperCase()}
-                  </span>
-                  {currentSouls !== null && (
-                    <span className="text-[10px] font-bold text-teal-300 bg-teal-950/70 px-1.5 py-0.2 rounded border border-teal-500/40">
-                      {currentSouls.toLocaleString('fr-FR')} Âmes
+      <I18nContext.Provider value={i18n}>
+        <div className="h-screen w-screen p-2 flex flex-col select-none bg-transparent overflow-hidden">
+          <div className="flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden">
+            <div className="drag-region px-3 py-2 bg-gradient-to-r from-amber-950/80 via-[#15131c] to-[#15131c] border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={28} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-display text-xs font-extrabold text-amber-300 truncate">
+                      {myHero.name.toUpperCase()}
                     </span>
-                  )}
-                </div>
-                <span className="text-[9px] text-slate-400 block leading-none">
-                  VS{' '}
-                  {laneEnemyIds
-                    .map((id) => HEROES_DB.find((h) => h.id === id)?.name)
-                    .join(' + ') || 'Lane'}
-                </span>
-              </div>
-            </div>
-
-            <div className="no-drag flex items-center gap-1 shrink-0">
-              <button
-                onClick={handleToggleClickThrough}
-                title="Verrouiller/Déverrouiller la souris (Alt+L)"
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 transition ${
-                  isClickThrough
-                    ? 'bg-red-500/35 border-red-400 text-red-100'
-                    : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
-                }`}
-              >
-                {isClickThrough ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                Alt+L
-              </button>
-              <button
-                onClick={() => window.electronAPI?.setOverlayMode(false)}
-                title="Masquer l'Overlay (Alt+O)"
-                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-red-500/30 text-[10px] font-bold text-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {isClickThrough && (
-            <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-[10px] text-center text-red-200 font-semibold">
-              🔒 Mode Fantôme actif — <kbd className="px-1 bg-black/50 rounded">Alt+L</kbd>
-            </div>
-          )}
-
-          <div className="no-drag px-2.5 py-2 bg-black/50 border-b border-white/10 flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase text-purple-300">Sorts :</span>
-            <div className="flex items-center gap-1">
-              {activeBuild.abilitiesOrder.map((key, idx) => {
-                const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
-                return (
-                  <React.Fragment key={key}>
-                    <PowerIcon
-                      heroId={myHero.id}
-                      abilityKey={key}
-                      abilityName={ab?.name || key}
-                      size={32}
-                    />
-                    {idx < 3 && <span className="text-slate-500 text-xs font-bold">›</span>}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="no-drag flex-1 overflow-y-auto p-2.5 space-y-2.5">
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
-                <ShoppingCart className="w-3 h-3 text-emerald-400" /> À Acheter Tout de Suite
-              </span>
-              {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
-                const loc = getShopLocationBadge(entry.item);
-                const canAfford = currentSouls !== null && currentSouls >= entry.item.cost;
-                return (
-                  <div
-                    key={entry.item.id}
-                    onClick={() => handleToggleOwnedItem(entry.item.id)}
-                    className={`p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
-                      canAfford
-                        ? 'bg-emerald-950/50 border-emerald-400 shadow-lg'
-                        : 'bg-[#171520] border-white/15 hover:border-amber-400/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-5 h-5 rounded-full bg-amber-500 text-black font-extrabold text-[10px] flex items-center justify-center shrink-0">
-                        #{idx + 1}
+                    {currentSouls !== null && (
+                      <span className="text-[10px] font-bold text-teal-300 bg-teal-950/70 px-1.5 py-0.2 rounded border border-teal-500/40">
+                        {t('souls', formatNumber(currentSouls))}
                       </span>
-                      <ItemArtworkIcon
-                        itemId={entry.item.id}
-                        category={entry.item.category}
-                        size={34}
-                      />
-                      <div className="min-w-0">
-                        <div className="text-xs font-extrabold text-white truncate">
-                          {entry.item.name.split('(')[0].trim()}
-                        </div>
-                        <div className="text-[9px] font-bold flex items-center gap-1">
-                          <span
-                            className="w-2 h-2 rounded-full inline-block"
-                            style={{ backgroundColor: loc.dotColor }}
-                          />
-                          <span className="text-slate-300">{loc.tabLabel.replace('BOUTIQUE : ', '')}</span>
-                        </div>
-                        {renderSlotPlan(entry.item.id, true)}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-xs font-extrabold text-teal-300 block">
-                        {entry.item.cost}
-                      </span>
-                      {canAfford && (
-                        <span className="text-[9px] font-extrabold text-emerald-300">
-                          ACHETER !
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+                  <span className="text-[9px] text-slate-400 block leading-none">
+                    VS {laneEnemyIds.map(heroName).join(' + ') || 'Lane'}
+                  </span>
+                </div>
+              </div>
 
-  return (
-    <div className="h-screen w-screen flex flex-col bg-deadlock-bg text-slate-100 overflow-hidden">
-      {/* 1. COMPACT TOP BAR (Hero + Partner + Lane + Enemies + Silent Controls) */}
-      <div className="px-3 py-2 bg-[#14121b] border-b border-white/10 flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-30">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setOpenPopover(openPopover === 'myHero' ? null : 'myHero')}
-            className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/80 border border-amber-500/40 transition"
-          >
-            <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={32} />
-            <span className="font-display text-xs sm:text-sm font-extrabold text-white">
-              {myHero.name}
-            </span>
-            {isHeroLocked && (
-              <span title="Héros verrouillé pour cette partie : il ne change plus (même mort). Re-détecté à la partie suivante.">
-                <Lock className="w-3 h-3 text-amber-400" />
-              </span>
-            )}
-            <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
-          </button>
-
-          {laneMode === 'duo' && (
-            <button
-              onClick={() => setOpenPopover(openPopover === 'ally' ? null : 'ally')}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/40 transition text-xs font-bold text-emerald-200"
-              title="Allié sur ma lane"
-            >
-              {allyHeroObj ? (
-                <HeroPortraitIcon
-                  heroId={allyHeroObj.id}
-                  color={allyHeroObj.accentColor}
-                  size={28}
-                />
-              ) : (
-                <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
-              )}
-              <span>{allyHeroObj ? allyHeroObj.name : '+ Allié'}</span>
-            </button>
-          )}
-
-          {myHero.builds.length > 1 && (
-            <div className="flex items-center bg-black/50 p-0.5 rounded-lg border border-white/10">
-              {myHero.builds.map((b, idx) => (
+              <div className="no-drag flex items-center gap-1 shrink-0">
                 <button
-                  key={b.id}
-                  title={`${b.name}\n${b.subtitle}`}
-                  onClick={() => setSelectedBuildId(b.id)}
-                  className={`px-2 py-1 rounded-md text-[11px] font-bold transition ${
-                    activeBuild.id === b.id
-                      ? 'bg-amber-500 text-black'
-                      : 'text-slate-400 hover:text-white'
+                  onClick={handleToggleClickThrough}
+                  title={t('overlay.clickThroughTitle')}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 transition ${
+                    isClickThrough
+                      ? 'bg-red-500/35 border-red-400 text-red-100'
+                      : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
                   }`}
                 >
-                  Build #{idx + 1}
+                  {isClickThrough ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                  Alt+L
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Center: Enemies Button */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setOpenPopover(openPopover === 'enemies' ? null : 'enemies')}
-            className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-red-950/35 hover:bg-red-950/55 border border-red-500/40 transition"
-          >
-            <div className="flex -space-x-1.5">
-              {laneEnemyIds.length > 0 ? (
-                laneEnemyIds.map((eid) => {
-                  const eh = HEROES_DB.find((h) => h.id === eid);
-                  return eh ? (
-                    <HeroPortraitIcon key={eid} heroId={eh.id} color={eh.accentColor} size={28} />
-                  ) : null;
-                })
-              ) : (
-                <Swords className="w-4 h-4 text-red-400" />
-              )}
-            </div>
-            <span className="text-xs font-bold text-white">
-              VS Lane ({laneEnemyIds.length}) {teamEnemyIds.length > 0 && `+${teamEnemyIds.length} Team`}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-red-300" />
-          </button>
-
-          {/* Silent Auto-Scan Toggle (No blinking/spinning animations!) */}
-          <button
-            onClick={() => setAutoScanEnabled((v) => !v)}
-            title="Activer/Désactiver la détection automatique silencieuse"
-            className={`px-2 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
-              autoScanEnabled
-                ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
-                : 'bg-white/5 border-white/10 text-slate-400'
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Auto</span>
-          </button>
-
-          <button
-            onClick={() => performScreenScan()}
-            title="Scanner maintenant (Alt+S)"
-            className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] flex items-center gap-1 transition"
-          >
-            <Camera className="w-3.5 h-3.5" />
-            <span>Scan</span>
-          </button>
-
-          <button
-            onClick={handleToggleOverlay}
-            title="Afficher/Masquer le HUD Overlay transparent sur l'écran de jeu (Alt+O)"
-            className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
-              isOverlayMode
-                ? 'bg-purple-500 text-white border-purple-300 shadow-glow-spirit'
-                : 'bg-purple-600/20 hover:bg-purple-600/35 border-purple-400/50 text-purple-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Overlay</span>
-          </button>
-        </div>
-
-        {/* POPOVER MODALS */}
-        {openPopover === 'myHero' && (
-          <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-amber-500/60 shadow-2xl z-50 space-y-2">
-            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-              <span className="text-xs font-bold uppercase text-amber-300">Choisir Mon Héros</span>
-              <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
-              {HEROES_DB.map((h) => (
                 <button
-                  key={h.id}
-                  onClick={() => {
-                    setMyHeroId(h.id);
-                    lockHero(true); // picked by hand: the scanner no longer changes it this match
-                    heroStabilizerRef.current.reset();
-                    setLaneEnemyIds((prev) => prev.filter((id) => id !== h.id));
-                    setTeamEnemyIds((prev) => prev.filter((id) => id !== h.id));
-                    if (allyPartnerId === h.id) setAllyPartnerId(null);
-                    setOpenPopover(null);
-                  }}
-                  className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                    h.id === myHeroId
-                      ? 'bg-amber-500/25 border-amber-400 text-white font-bold'
-                      : 'bg-black/40 border-white/5 text-slate-300'
-                  }`}
+                  onClick={() => window.electronAPI?.setOverlayMode(false)}
+                  title={t('overlay.hideTitle')}
+                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-red-500/30 text-[10px] font-bold text-slate-200"
                 >
-                  <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
-                  <span className="text-xs truncate">{h.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {openPopover === 'ally' && (
-          <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-emerald-500/60 shadow-2xl z-50 space-y-2">
-            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-              <span className="text-xs font-bold uppercase text-emerald-300">Allié en Lane</span>
-              <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
-              {HEROES_DB.filter((h) => h.id !== myHeroId).map((h) => (
-                <button
-                  key={h.id}
-                  onClick={() => {
-                    setAllyPartnerId(h.id);
-                    setLaneEnemyIds((prev) => prev.filter((id) => id !== h.id));
-                    setTeamEnemyIds((prev) => prev.filter((id) => id !== h.id));
-                    setOpenPopover(null);
-                  }}
-                  className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                    h.id === allyPartnerId
-                      ? 'bg-emerald-500/25 border-emerald-400 text-white font-bold'
-                      : 'bg-black/40 border-white/5 text-slate-300'
-                  }`}
-                >
-                  <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
-                  <span className="text-xs truncate">{h.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {openPopover === 'enemies' && (
-          <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-red-500/60 shadow-2xl space-y-2.5 z-50">
-            <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-              <span className="text-xs font-bold uppercase text-red-300">
-                Ennemis ({totalSelectedEnemies}/6)
-              </span>
-              <div className="flex items-center gap-3">
-                {totalSelectedEnemies > 0 && (
-                  <button
-                    onClick={() => {
-                      setLaneEnemyIds([]);
-                      setTeamEnemyIds([]);
-                    }}
-                    className="text-[11px] text-red-400 hover:underline"
-                  >
-                    Tout vider
-                  </button>
-                )}
-                <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
                   ✕
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/10">
-              <button
-                onClick={() => setEnemyPopoverMode('lane')}
-                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
-                  enemyPopoverMode === 'lane' ? 'bg-red-500 text-white' : 'text-slate-400'
-                }`}
-              >
-                🎯 Ma Lane ({laneEnemyIds.length}/{laneMode === 'solo' ? 1 : 2})
-              </button>
-              <button
-                onClick={() => setEnemyPopoverMode('team')}
-                className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
-                  enemyPopoverMode === 'team' ? 'bg-orange-500 text-black' : 'text-slate-400'
-                }`}
-              >
-                🌐 Autres Lanes ({teamEnemyIds.length}/{6 - laneEnemyIds.length})
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
-              {HEROES_DB.filter((h) => h.id !== myHeroId && h.id !== allyPartnerId).map((eh) => {
-                const isInLane = laneEnemyIds.includes(eh.id);
-                const isInTeam = teamEnemyIds.includes(eh.id);
-                return (
-                  <button
-                    key={eh.id}
-                    onClick={() => handleSelectEnemyHero(eh.id)}
-                    className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                      isInLane
-                        ? 'bg-red-500/30 border-red-400 text-white font-bold'
-                        : isInTeam
-                        ? 'bg-orange-500/25 border-orange-400 text-orange-100 font-bold'
-                        : 'bg-black/40 border-white/5 text-slate-300'
-                    }`}
-                  >
-                    <HeroPortraitIcon heroId={eh.id} color={eh.accentColor} size={26} />
-                    <div className="min-w-0">
-                      <span className="text-xs block truncate">{eh.name}</span>
-                      {isInLane && <span className="text-[9px] text-red-300 block">Lane</span>}
-                      {isInTeam && <span className="text-[9px] text-orange-300 block">Team</span>}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 2. NAVIGATION TABS */}
-      <div className="px-3 bg-[#100e15] border-b border-white/10 flex items-center justify-between shrink-0">
-        <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-          {(
-            [
-              { id: 'essential', label: 'Build Actif', icon: LayoutGrid },
-              { id: 'powers', label: 'Sorts (1-4)', icon: Zap },
-              { id: 'builds', label: 'Détails Objets', icon: Package },
-              { id: 'matchups', label: `Conseils (${totalSelectedEnemies})`, icon: Swords },
-              { id: 'logs', label: 'Diagnostic', icon: Terminal },
-            ] as const
-          ).map((tab) => {
-            const TabIcon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
-                  active
-                    ? 'border-amber-400 text-amber-300 bg-amber-500/10'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <TabIcon className="w-3.5 h-3.5 shrink-0" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2 py-1">
-          {currentSouls !== null && (
-            <span className="px-2 py-0.5 rounded-lg bg-teal-950/60 border border-teal-500/40 text-[11px] text-teal-300 font-extrabold">
-              💰 {currentSouls.toLocaleString('fr-FR')} Âmes en poche
-            </span>
-          )}
-          {ownedItems.length > 0 && (
-            <button
-              onClick={clearOwnedItems}
-              className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white flex items-center gap-1"
-              title="Réinitialiser les objets achetés"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset ({ownedItems.length})</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 3. MAIN VIEW */}
-      <main
-        onClick={() => {
-          if (openPopover) setOpenPopover(null);
-        }}
-        className="flex-1 overflow-y-auto p-3 space-y-3 bg-deadlock-bg"
-      >
-        <div className="max-w-5xl mx-auto space-y-3">
-          {/* ================= TAB 1: BUILD ACTIF ================= */}
-          {activeTab === 'essential' && (
-            <div className="space-y-3">
-              {/* ★ PRIORITY #1: À ACHETER TOUT DE SUITE (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#15131d] to-[#15131d] border-2 border-emerald-500/60 shadow-xl space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-xl bg-emerald-500 text-black">
-                      <ShoppingCart className="w-4 h-4" />
-                    </span>
-                    <div>
-                      <h2 className="font-display text-sm font-extrabold uppercase tracking-wider text-emerald-300">
-                        À Acheter Tout de Suite — Prochains Objets ({inventoryLabel})
-                      </h2>
-                      <p className="text-[11px] text-slate-300">
-                        Seuls vos <strong>prochains achats</strong> s'affichent ici (les objets déjà achetés passent automatiquement à la suite). Le #1 reste fixe jusqu'à son achat. Cliquez sur un objet si vous voulez le passer manuellement.
-                      </p>
-                      {inventoryStatus && inventoryStatus.unmatched > 0 && (
-                        <p className="text-[11px] text-orange-300 font-semibold">
-                          ⚠ {inventoryStatus.unmatched} objet(s) de ton inventaire non reconnu(s) : si un objet
-                          proposé est déjà acheté, clique dessus pour le passer.
-                        </p>
-                      )}
-                      <p className="text-[11px] text-amber-300 font-semibold">
-                        {activeBuild.name} — <span className="text-slate-400 font-normal">{activeBuild.subtitle}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {currentSouls !== null && (
-                    <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-xs font-extrabold text-teal-200">
-                      Âmes détectées : {currentSouls.toLocaleString('fr-FR')}
-                    </div>
-                  )}
-                </div>
-
-                {/* Top 6 Immediate Next Buys */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                  {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
-                    const { item, reason, isCounter } = entry;
-                    const loc = getShopLocationBadge(item);
-                    const canAfford = currentSouls !== null && currentSouls >= item.cost;
-                    const missingSouls =
-                      currentSouls !== null && currentSouls < item.cost
-                        ? item.cost - currentSouls
-                        : null;
-                    const frName = item.name.split('(')[0].trim();
-
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => handleToggleOwnedItem(item.id)}
-                        className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between gap-2.5 relative ${
-                          idx === 0
-                            ? canAfford
-                              ? 'bg-emerald-950/60 border-emerald-400 ring-2 ring-emerald-400/30'
-                              : 'bg-amber-950/35 border-amber-400'
-                            : canAfford
-                            ? 'bg-emerald-950/35 border-emerald-500/60'
-                            : 'bg-black/50 border-white/15 hover:border-white/35'
-                        }`}
-                      >
-                        <div className="space-y-2">
-                          {/* Header: Order Badge + Affordability Status */}
-                          <div className="flex items-center justify-between gap-1">
-                            <span
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                                idx === 0
-                                  ? 'bg-amber-400 text-black'
-                                  : 'bg-white/15 text-slate-200'
-                              }`}
-                            >
-                              {idx === 0 ? (
-                                <span className="flex items-center gap-1">
-                                  ★ PROCHAIN ACHAT #1 <Lock className="w-2.5 h-2.5" />
-                                </span>
-                              ) : (
-                                `Suite #${idx + 1}`
-                              )}
-                            </span>
-
-                            {canAfford ? (
-                              <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-[10px] uppercase">
-                                ✅ ACHETABLE !
-                              </span>
-                            ) : missingSouls !== null ? (
-                              <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-amber-300 font-bold text-[10px]">
-                                Manque {missingSouls} Âmes
-                              </span>
-                            ) : (
-                              <span className="text-xs font-extrabold text-teal-300">
-                                {item.cost} Âmes
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Item Icon + French Name */}
-                          <div className="flex items-center gap-2.5">
-                            <ItemArtworkIcon
-                              itemId={item.id}
-                              category={item.category}
-                              size={46}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="font-bold text-sm text-white leading-tight">
-                                {frName}
-                              </div>
-                              <div className="text-[11px] font-extrabold text-teal-300 mt-0.5">
-                                {item.cost.toLocaleString('fr-FR')} Âmes
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Exact Shop Location Badge ("Où le trouver dans la boutique") */}
-                          <div
-                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold flex flex-col gap-0.5 ${loc.badgeClass}`}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className="w-2.5 h-2.5 rounded-full shrink-0"
-                                style={{ backgroundColor: loc.dotColor }}
-                              />
-                              <span className="uppercase tracking-wide">{loc.tabLabel}</span>
-                            </div>
-                            <span className="text-[10px] opacity-90 pl-4">{loc.tierLabel}</span>
-                          </div>
-
-                          {renderSlotPlan(item.id)}
-                        </div>
-
-                        {/* Reason + Click to Skip / Advance */}
-                        <div className="pt-1 border-t border-white/10 flex items-center justify-between text-[11px]">
-                          <span
-                            className={`truncate font-semibold ${
-                              isCounter ? 'text-orange-300' : 'text-slate-300'
-                            }`}
-                          >
-                            {reason}
-                          </span>
-                          <span className="px-2 py-0.5 rounded bg-white/10 hover:bg-emerald-500/30 text-slate-200 font-bold flex items-center gap-1 shrink-0">
-                            Passer →
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            {isClickThrough && (
+              <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-[10px] text-center text-red-200 font-semibold">
+                {t('overlay.ghostActive')} <kbd className="px-1 bg-black/50 rounded">Alt+L</kbd>
               </div>
+            )}
 
-              {/* Compact Power Order Strip */}
-              <div className="p-2.5 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-[11px] font-bold uppercase text-purple-300 flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5 text-purple-400" /> Ordre Sorts :
-                </span>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {activeBuild.abilitiesOrder.map((key, idx) => {
-                    const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
-                    const frSpellName = ab?.name.split('(')[0].trim() || key;
-                    return (
-                      <React.Fragment key={key}>
-                        <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-lg border border-white/5">
-                          <PowerIcon
-                            heroId={myHero.id}
-                            abilityKey={key}
-                            abilityName={ab?.name || key}
-                            size={30}
-                          />
-                          <span className="text-xs font-bold text-white">{frSpellName}</span>
-                        </div>
-                        {idx < 3 && <span className="text-slate-500 font-bold text-xs">→</span>}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
-              {tacticalPlan.priorityItems.filter((rec) => !ownedItems.includes(rec.item.id)).length > 0 && (
-                <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5 text-orange-400" /> Prochains Contres VS{' '}
-                    {laneEnemyIds
-                      .map((id) => HEROES_DB.find((h) => h.id === id)?.name)
-                      .join(' + ')}
-                    {teamEnemyIds.length > 0 && ` (+${teamEnemyIds.length} Team)`}
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                    {tacticalPlan.priorityItems
-                      .filter((rec) => !ownedItems.includes(rec.item.id))
-                      .slice(0, 3)
-                      .map((rec) => (
-                        <ItemCard
-                          key={rec.item.id}
-                          item={rec.item}
-                          isOwned={false}
-                          onToggleOwned={handleToggleOwnedItem}
-                          highlightReasons={rec.reasons}
-                          compact
-                        />
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 3 Build Phases — filtered so owned items automatically disappear and show only remaining items */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-                {(
-                  [
-                    {
-                      key: 'early',
-                      title: '1. Début de Lane — Restant à acheter',
-                      accent: 'text-amber-300 border-amber-500/30',
-                    },
-                    {
-                      key: 'mid',
-                      title: '2. Milieu de Partie (1 600) — Suite',
-                      accent: 'text-purple-300 border-purple-500/30',
-                    },
-                    {
-                      key: 'late',
-                      title: '3. Fin de Partie (3 200-6 400) — Suite',
-                      accent: 'text-teal-300 border-teal-500/30',
-                    },
-                  ] as const
-                ).map((col) => {
-                  const unownedPhaseIds = activeBuild.phases[col.key].filter(
-                    (id) => !ownedItems.includes(id)
+            <div className="no-drag px-2.5 py-2 bg-black/50 border-b border-white/10 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase text-purple-300">{t('overlay.abilities')}</span>
+              <div className="flex items-center gap-1">
+                {activeBuild.abilitiesOrder.map((key, idx) => {
+                  const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
+                  return (
+                    <React.Fragment key={key}>
+                      <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={32} />
+                      {idx < 3 && <span className="text-slate-500 text-xs font-bold">›</span>}
+                    </React.Fragment>
                   );
+                })}
+              </div>
+            </div>
+
+            <div className="no-drag flex-1 overflow-y-auto p-2.5 space-y-2.5">
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
+                  <ShoppingCart className="w-3 h-3 text-emerald-400" /> {t('overlay.buyNow')}
+                </span>
+                {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
+                  const loc = getShopLocationBadge(entry.item, t, formatNumber);
+                  const canAfford = currentSouls !== null && currentSouls >= entry.item.cost;
                   return (
                     <div
-                      key={col.key}
-                      className={`p-3 rounded-xl bg-deadlock-panel border ${col.accent} space-y-2`}
+                      key={entry.item.id}
+                      onClick={() => handleToggleOwnedItem(entry.item.id)}
+                      title={[reasonText(entry), whyText(entry)].filter(Boolean).join('\n')}
+                      className={`p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
+                        canAfford
+                          ? 'bg-emerald-950/50 border-emerald-400 shadow-lg'
+                          : 'bg-[#171520] border-white/15 hover:border-amber-400/50'
+                      }`}
                     >
-                      <h3 className="font-display text-xs font-extrabold uppercase tracking-wider">
-                        {col.title}
-                      </h3>
-                      {unownedPhaseIds.length === 0 ? (
-                        <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 font-bold">
-                          ✅ Phase complétée — passez à la colonne suivante !
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-5 h-5 rounded-full bg-amber-500 text-black font-extrabold text-[10px] flex items-center justify-center shrink-0">
+                          #{idx + 1}
+                        </span>
+                        <ItemArtworkIcon itemId={entry.item.id} category={entry.item.category} size={34} />
+                        <div className="min-w-0">
+                          <div className="text-xs font-extrabold text-white truncate">
+                            {entry.item.name.split('(')[0].trim()}
+                          </div>
+                          <div className="text-[9px] font-bold flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: loc.dotColor }} />
+                            <span className="text-slate-300">{loc.tab}</span>
+                          </div>
+                          {renderSlotPlan(entry.item.id, true)}
                         </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
-                          {unownedPhaseIds.map((itemId) => {
-                            const item = ITEMS_DB[itemId];
-                            return item ? (
-                              <ItemCard
-                                key={itemId}
-                                item={item}
-                                isOwned={false}
-                                onToggleOwned={handleToggleOwnedItem}
-                                compact
-                              />
-                            ) : null;
-                          })}
-                        </div>
-                      )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-extrabold text-teal-300 block">{entry.item.cost}</span>
+                        {canAfford && (
+                          <span className="text-[9px] font-extrabold text-emerald-300">{t('overlay.buy')}</span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+      </I18nContext.Provider>
+    );
+  }
 
-              {/* Owned Items Archive at the bottom of the page */}
-              {ownedItems.length > 0 && (
-                <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] font-bold uppercase text-slate-400">
-                    🎒 Objets possédés ({ownedItems.length}, ignorés des recommandations) :
-                  </span>
-                  {ownedItems.map((id) => {
-                    const it = ITEMS_DB[id];
-                    if (!it) return null;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => handleToggleOwnedItem(id)}
-                        title="Cliquer pour remettre cet objet dans les recommandations"
-                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-950/50 border border-white/10 text-[11px] font-semibold text-slate-300 transition"
-                      >
-                        <ItemArtworkIcon itemId={it.id} category={it.category} size={18} />
-                        <span>{it.name.split('(')[0].trim()}</span>
-                        <span className="text-[10px] text-slate-500">✕</span>
-                      </button>
-                    );
-                  })}
-                </div>
+  const showUpdateBanner =
+    !updateDismissed && (updateStatus.state === 'available' || updateStatus.state === 'ready');
+
+  return (
+    <I18nContext.Provider value={i18n}>
+      <div className="h-screen w-screen flex flex-col bg-deadlock-bg text-slate-100 overflow-hidden">
+        {/* 1. COMPACT TOP BAR (Hero + Partner + Lane + Enemies + Silent Controls) */}
+        <div className="px-3 py-2 bg-[#14121b] border-b border-white/10 flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-30">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setOpenPopover(openPopover === 'myHero' ? null : 'myHero')}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/80 border border-amber-500/40 transition"
+            >
+              <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={32} />
+              <span className="font-display text-xs sm:text-sm font-extrabold text-white">{myHero.name}</span>
+              {isHeroLocked && (
+                <span title={t('hero.lockedTitle')}>
+                  <Lock className="w-3 h-3 text-amber-400" />
+                </span>
               )}
-            </div>
-          )}
+              <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
+            </button>
 
-          {/* ================= TAB 2: SORTS DÉTAILLÉS (1-4) ================= */}
-          {activeTab === 'powers' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {activeBuild.abilitiesOrder.map((key, index) => {
-                const detail = activeBuild.abilitiesDetails.find((a) => a.key === key);
-                if (!detail) return null;
-                return (
-                  <div
-                    key={key}
-                    className="p-4 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-start gap-3"
-                  >
-                    <PowerIcon
-                      heroId={myHero.id}
-                      abilityKey={detail.key}
-                      abilityName={detail.name}
-                      size={52}
-                    />
-                    <div className="space-y-1 flex-1">
-                      <span className="text-[10px] font-bold uppercase text-purple-300">
-                        Max #{index + 1} • Touche [{detail.key}]
-                      </span>
-                      <h3 className="font-bold text-sm text-white">
-                        {detail.name.split('(')[0].trim()}
-                      </h3>
-                      <p className="text-xs text-amber-200/90">{detail.priorityTip}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ================= TAB 3: DÉTAILS DE TOUS LES OBJETS ================= */}
-          {activeTab === 'builds' && (
-            <div className="space-y-4">
-              <div className="p-3 rounded-xl bg-deadlock-panel border border-amber-500/30">
-                <h3 className="text-sm font-extrabold text-amber-300">{activeBuild.name}</h3>
-                <p className="text-[11px] text-slate-300">{activeBuild.subtitle}</p>
-              </div>
-              {(
-                [
-                  { key: 'early', title: 'Début de Lane (800 Âmes)' },
-                  { key: 'mid', title: 'Milieu de Partie (1 600 Âmes)' },
-                  { key: 'late', title: 'Fin de Partie (3 200 - 6 400 Âmes)' },
-                  { key: 'situational', title: 'Objets Situationnels' },
-                ] as const
-              ).map((phase) => (
-                <div key={phase.key} className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase text-amber-300">{phase.title}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {activeBuild.phases[phase.key].map((itemId) => {
-                      const item = ITEMS_DB[itemId];
-                      return item ? (
-                        <ItemCard
-                          key={itemId}
-                          item={item}
-                          isOwned={ownedItems.includes(itemId)}
-                          onToggleOwned={handleToggleOwnedItem}
-                        />
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* ================= TAB 4: CONSEILS DE LANE & MATCHUPS ================= */}
-          {activeTab === 'matchups' && (
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/30 space-y-1.5">
-                <h3 className="text-xs font-bold uppercase text-amber-300">
-                  {tacticalPlan.laneStrategy.laneTitle}
-                </h3>
-                <p className="text-xs text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
-                {tacticalPlan.laneStrategy.allySynergyTip && (
-                  <p className="text-xs text-emerald-300 pt-1">
-                    🤝 {tacticalPlan.laneStrategy.allySynergyTip}
-                  </p>
+            {laneMode === 'duo' && (
+              <button
+                onClick={() => setOpenPopover(openPopover === 'ally' ? null : 'ally')}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/40 transition text-xs font-bold text-emerald-200"
+                title={t('ally.title')}
+              >
+                {allyHeroObj ? (
+                  <HeroPortraitIcon heroId={allyHeroObj.id} color={allyHeroObj.accentColor} size={28} />
+                ) : (
+                  <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
                 )}
-              </div>
+                <span>{allyHeroObj ? allyHeroObj.name : t('ally.add')}</span>
+              </button>
+            )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {tacticalPlan.matchupAlerts.map((alert, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3.5 rounded-xl bg-deadlock-panel border space-y-1.5 ${
-                      alert.isInMyLane ? 'border-red-500/50' : 'border-orange-500/30'
+            {myHero.builds.length > 1 && (
+              <div className="flex items-center bg-black/50 p-0.5 rounded-lg border border-white/10">
+                {myHero.builds.map((b, idx) => (
+                  <button
+                    key={b.id}
+                    title={`${b.name}\n${b.subtitle}`}
+                    onClick={() => setSelectedBuildId(b.id)}
+                    className={`px-2 py-1 rounded-md text-[11px] font-bold transition ${
+                      activeBuild.id === b.id ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">
-                        {alert.isInMyLane ? '🎯 Lane :' : '🌐 Team :'} VS {alert.enemyName}
-                      </span>
-                      <span className="text-[10px] font-bold text-red-300">
-                        {alert.dangerLevel}
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-300">{alert.keyRule}</p>
-                  </div>
+                    {t('build.n', idx + 1)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Center: Enemies Button */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setOpenPopover(openPopover === 'enemies' ? null : 'enemies')}
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-red-950/35 hover:bg-red-950/55 border border-red-500/40 transition"
+            >
+              <div className="flex -space-x-1.5">
+                {laneEnemyIds.length > 0 ? (
+                  laneEnemyIds.map((eid) => {
+                    const eh = HEROES.find((h) => h.id === eid);
+                    return eh ? <HeroPortraitIcon key={eid} heroId={eh.id} color={eh.accentColor} size={28} /> : null;
+                  })
+                ) : (
+                  <Swords className="w-4 h-4 text-red-400" />
+                )}
+              </div>
+              <span className="text-xs font-bold text-white">
+                {t('enemies.button', laneEnemyIds.length, teamEnemyIds.length)}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-red-300" />
+            </button>
+
+            {/* Silent Auto-Scan Toggle (No blinking/spinning animations!) */}
+            <button
+              onClick={() => setAutoScanEnabled((v) => !v)}
+              title={t('autoscan.title')}
+              className={`px-2 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
+                autoScanEnabled
+                  ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
+                  : 'bg-white/5 border-white/10 text-slate-400'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden md:inline">{t('autoscan.label')}</span>
+            </button>
+
+            <button
+              onClick={() => performScreenScan()}
+              title={t('scan.title')}
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] flex items-center gap-1 transition"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>{t('scan.label')}</span>
+            </button>
+
+            <button
+              onClick={handleToggleOverlay}
+              title={t('overlay.toggleTitle')}
+              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
+                isOverlayMode
+                  ? 'bg-purple-500 text-white border-purple-300 shadow-glow-spirit'
+                  : 'bg-purple-600/20 hover:bg-purple-600/35 border-purple-400/50 text-purple-200'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{t('overlay.label')}</span>
+            </button>
+
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              title={t('settings.open')}
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* POPOVER MODALS */}
+          {openPopover === 'myHero' && (
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-amber-500/60 shadow-2xl z-50 space-y-2">
+              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                <span className="text-xs font-bold uppercase text-amber-300">{t('hero.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
+                {HEROES.map((h) => (
+                  <button
+                    key={h.id}
+                    onClick={() => {
+                      setMyHeroId(h.id);
+                      snapshotRef.current = { ...snapshotRef.current, myHeroId: h.id };
+                      lockHero(true); // picked by hand: the scanner no longer changes it this match
+                      trackerRef.current.resetHero();
+                      setLaneEnemyIds((prev) => prev.filter((id) => id !== h.id));
+                      setTeamEnemyIds((prev) => prev.filter((id) => id !== h.id));
+                      if (allyPartnerId === h.id) setAllyPartnerId(null);
+                      setOpenPopover(null);
+                    }}
+                    className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
+                      h.id === myHeroId
+                        ? 'bg-amber-500/25 border-amber-400 text-white font-bold'
+                        : 'bg-black/40 border-white/5 text-slate-300'
+                    }`}
+                  >
+                    <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
+                    <span className="text-xs truncate">{h.name}</span>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ================= TAB 5: DIAGNOSTIC (ONLY IF OPENED MANUALLY) ================= */}
-          {activeTab === 'logs' && (
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/40 space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="text-xs font-extrabold uppercase text-amber-300 flex items-center gap-1.5">
-                    <Terminal className="w-4 h-4 text-amber-400" /> Diagnostic & Choix de l'Écran
-                  </h3>
+          {openPopover === 'ally' && (
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-emerald-500/60 shadow-2xl z-50 space-y-2">
+              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                <span className="text-xs font-bold uppercase text-emerald-300">{t('ally.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
+                {HEROES.filter((h) => h.id !== myHeroId).map((h) => (
                   <button
+                    key={h.id}
                     onClick={() => {
-                      refreshSources();
-                      performScreenScan();
+                      setAllyPartnerId(h.id);
+                      setLaneEnemyIds((prev) => prev.filter((id) => id !== h.id));
+                      setTeamEnemyIds((prev) => prev.filter((id) => id !== h.id));
+                      setOpenPopover(null);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center gap-1.5"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    Scanner Maintenant
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[11px] text-slate-400 font-semibold mr-1">
-                    Écran cible :
-                  </span>
-                  <button
-                    onClick={() => {
-                      setSelectedSourceId('');
-                      setTimeout(() => performScreenScan(), 100);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
-                      selectedSourceId === ''
-                        ? 'bg-amber-500 text-black border-amber-400'
-                        : 'bg-black/50 text-slate-300 border-white/10 hover:border-white/30'
+                    className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
+                      h.id === allyPartnerId
+                        ? 'bg-emerald-500/25 border-emerald-400 text-white font-bold'
+                        : 'bg-black/40 border-white/5 text-slate-300'
                     }`}
                   >
-                    🎯 Auto (Écran Principal de Jeu)
+                    <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
+                    <span className="text-xs truncate">{h.name}</span>
                   </button>
-                  {sources.map((src) => (
+                ))}
+              </div>
+            </div>
+          )}
+
+          {openPopover === 'enemies' && (
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-red-500/60 shadow-2xl space-y-2.5 z-50">
+              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                <span className="text-xs font-bold uppercase text-red-300">{t('enemies.title', totalSelectedEnemies)}</span>
+                <div className="flex items-center gap-3">
+                  {totalSelectedEnemies > 0 && (
                     <button
-                      key={src.id}
                       onClick={() => {
-                        setSelectedSourceId(src.id);
-                        setTimeout(() => performScreenScan(), 100);
+                        setLaneEnemyIds([]);
+                        setTeamEnemyIds([]);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
-                        selectedSourceId === src.id
-                          ? 'bg-amber-500 text-black border-amber-400'
-                          : 'bg-black/50 text-slate-300 border-white/10 hover:border-white/30'
+                      className="text-[11px] text-red-400 hover:underline"
+                    >
+                      {t('enemies.clear')}
+                    </button>
+                  )}
+                  <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/10">
+                <button
+                  onClick={() => setEnemyPopoverMode('lane')}
+                  className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
+                    enemyPopoverMode === 'lane' ? 'bg-red-500 text-white' : 'text-slate-400'
+                  }`}
+                >
+                  {t('enemies.myLane', laneEnemyIds.length, laneMode === 'solo' ? 1 : 2)}
+                </button>
+                <button
+                  onClick={() => setEnemyPopoverMode('team')}
+                  className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
+                    enemyPopoverMode === 'team' ? 'bg-orange-500 text-black' : 'text-slate-400'
+                  }`}
+                >
+                  {t('enemies.otherLanes', teamEnemyIds.length, 6 - laneEnemyIds.length)}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
+                {HEROES.filter((h) => h.id !== myHeroId && h.id !== allyPartnerId).map((eh) => {
+                  const isInLane = laneEnemyIds.includes(eh.id);
+                  const isInTeam = teamEnemyIds.includes(eh.id);
+                  return (
+                    <button
+                      key={eh.id}
+                      onClick={() => handleSelectEnemyHero(eh.id)}
+                      className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
+                        isInLane
+                          ? 'bg-red-500/30 border-red-400 text-white font-bold'
+                          : isInTeam
+                          ? 'bg-orange-500/25 border-orange-400 text-orange-100 font-bold'
+                          : 'bg-black/40 border-white/5 text-slate-300'
                       }`}
                     >
-                      🖥️ {src.name}
+                      <HeroPortraitIcon heroId={eh.id} color={eh.accentColor} size={26} />
+                      <div className="min-w-0">
+                        <span className="text-xs block truncate">{eh.name}</span>
+                        {isInLane && <span className="text-[9px] text-red-300 block">{t('enemies.laneBadge')}</span>}
+                        {isInTeam && <span className="text-[9px] text-orange-300 block">{t('enemies.teamBadge')}</span>}
+                      </div>
                     </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="aspect-video rounded-lg bg-black/80 border border-white/10 overflow-hidden flex items-center justify-center">
-                    {lastCaptureUrl ? (
-                      <img
-                        src={lastCaptureUrl}
-                        alt="Écran capturé"
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-xs text-slate-500">Aucun scan effectué</span>
-                    )}
-                  </div>
-                  <div className="aspect-video rounded-lg bg-black/80 border border-white/10 overflow-hidden flex items-center justify-center">
-                    {lastDetection?.hudPreviewUrl ? (
-                      <img
-                        src={lastDetection.hudPreviewUrl}
-                        alt="HUD analysé"
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-xs text-slate-500">En attente de capture...</span>
-                    )}
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
-      </main>
 
-      <ScreenScannerModal
-        isOpen={isScannerModalOpen}
-        onClose={() => setIsScannerModalOpen(false)}
-        lastCaptureUrl={lastCaptureUrl}
-        lastDetection={lastDetection}
-        isScanning={isScanning}
-        autoScanEnabled={autoScanEnabled}
-        onToggleAutoScan={() => setAutoScanEnabled((v) => !v)}
-        onManualScan={() => performScreenScan()}
-        sources={sources}
-        selectedSourceId={selectedSourceId}
-        onSelectSource={setSelectedSourceId}
-        onRefreshSources={refreshSources}
-        onApplyPresetSimulation={applyPresetSimulation}
-      />
-    </div>
+        {/* 2. NAVIGATION TABS */}
+        <div className="px-3 bg-[#100e15] border-b border-white/10 flex items-center justify-between shrink-0">
+          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {(
+              [
+                { id: 'essential', label: t('tabs.essential'), icon: LayoutGrid },
+                { id: 'powers', label: t('tabs.powers'), icon: Zap },
+                { id: 'builds', label: t('tabs.builds'), icon: Package },
+                { id: 'matchups', label: t('tabs.matchups', totalSelectedEnemies), icon: Swords },
+                { id: 'logs', label: t('tabs.logs'), icon: Terminal },
+              ] as const
+            ).map((tab) => {
+              const TabIcon = tab.icon;
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
+                    active
+                      ? 'border-amber-400 text-amber-300 bg-amber-500/10'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2 py-1">
+            {currentSouls !== null && (
+              <span className="px-2 py-0.5 rounded-lg bg-teal-950/60 border border-teal-500/40 text-[11px] text-teal-300 font-extrabold">
+                {t('souls.inPocket', formatNumber(currentSouls))}
+              </span>
+            )}
+            {ownedItems.length > 0 && (
+              <button
+                onClick={clearOwnedItems}
+                className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white flex items-center gap-1"
+                title={t('owned.resetTitle')}
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>{t('owned.reset', ownedItems.length)}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Notices: update available, unsupported screen format, HUD never found */}
+        {(showUpdateBanner || formatIssue || hudMissing) && (
+          <div className="px-3 pt-2 space-y-2 shrink-0">
+            {showUpdateBanner && (
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center justify-between gap-2 flex-wrap text-xs">
+                <span className="font-bold text-emerald-200">
+                  {updateStatus.state === 'ready'
+                    ? t('update.ready', updateStatus.version)
+                    : updateStatus.state === 'available'
+                    ? t('update.available', updateStatus.version)
+                    : ''}
+                </span>
+                <div className="flex items-center gap-2">
+                  {updateStatus.state === 'available' && (
+                    <button
+                      onClick={() => window.electronAPI?.openExternal(updateStatus.url)}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold"
+                    >
+                      {t('update.download')}
+                    </button>
+                  )}
+                  {updateStatus.state === 'ready' && (
+                    <button
+                      onClick={() => window.electronAPI?.updates.install()}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold"
+                    >
+                      {t('update.restart')}
+                    </button>
+                  )}
+                  <button onClick={() => setUpdateDismissed(true)} className="text-slate-400 hover:text-white" title={t('update.dismiss')}>
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+            {formatIssue && (
+              <div className="max-w-5xl mx-auto px-3 py-2.5 rounded-xl bg-red-950/70 border-2 border-red-500/70 flex items-start gap-2.5">
+                <MonitorX className="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
+                <div className="space-y-1 flex-1">
+                  <p className="text-xs font-extrabold uppercase text-red-200">{t('resolution.title')}</p>
+                  <p className="text-xs text-red-100">
+                    {t('resolution.body', formatIssue.width, formatIssue.height, aspectLabel(formatIssue.width, formatIssue.height))}
+                  </p>
+                  <p className="text-[11px] text-red-200/90">{t('resolution.help')}</p>
+                </div>
+                <button
+                  onClick={() => setIsReportOpen(true)}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold text-red-100 shrink-0"
+                >
+                  {t('resolution.report')}
+                </button>
+              </div>
+            )}
+            {!formatIssue && hudMissing && (
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-500/40 flex items-start gap-2 text-[11px] text-amber-100">
+                <Info className="w-4 h-4 text-amber-300 shrink-0" />
+                <span>
+                  <strong>{t('hud.notFoundTitle')}.</strong> {t('hud.notFoundBody')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 3. MAIN VIEW */}
+        <main
+          onClick={() => {
+            if (openPopover) setOpenPopover(null);
+          }}
+          className="flex-1 overflow-y-auto p-3 space-y-3 bg-deadlock-bg"
+        >
+          <div className="max-w-5xl mx-auto space-y-3">
+            {/* ================= TAB 1: ACTIVE BUILD ================= */}
+            {activeTab === 'essential' && (
+              <div className="space-y-3">
+                {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#15131d] to-[#15131d] border-2 border-emerald-500/60 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-xl bg-emerald-500 text-black">
+                        <ShoppingCart className="w-4 h-4" />
+                      </span>
+                      <div>
+                        <h2 className="font-display text-sm font-extrabold uppercase tracking-wider text-emerald-300">
+                          {t('buy.title', inventoryLabel)}
+                        </h2>
+                        <p className="text-[11px] text-slate-300">{t('buy.help')}</p>
+                        {inventoryStatus && inventoryStatus.unmatched > 0 && (
+                          <p className="text-[11px] text-orange-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
+                        )}
+                        <p className="text-[11px] text-amber-300 font-semibold">
+                          {activeBuild.name} — <span className="text-slate-400 font-normal">{activeBuild.subtitle}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {currentSouls !== null && (
+                      <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-xs font-extrabold text-teal-200">
+                        {t('souls.detected', formatNumber(currentSouls))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Top 6 Immediate Next Buys */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                    {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
+                      const { item, isCounter } = entry;
+                      const loc = getShopLocationBadge(item, t, formatNumber);
+                      const canAfford = currentSouls !== null && currentSouls >= item.cost;
+                      const missingSouls =
+                        currentSouls !== null && currentSouls < item.cost ? item.cost - currentSouls : null;
+                      const shortName = item.name.split('(')[0].trim();
+                      const why = whyText(entry);
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => handleToggleOwnedItem(item.id)}
+                          className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between gap-2.5 relative ${
+                            idx === 0
+                              ? canAfford
+                                ? 'bg-emerald-950/60 border-emerald-400 ring-2 ring-emerald-400/30'
+                                : 'bg-amber-950/35 border-amber-400'
+                              : canAfford
+                              ? 'bg-emerald-950/35 border-emerald-500/60'
+                              : 'bg-black/50 border-white/15 hover:border-white/35'
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            {/* Header: Order Badge + Affordability Status */}
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                                  idx === 0 ? 'bg-amber-400 text-black' : 'bg-white/15 text-slate-200'
+                                }`}
+                              >
+                                {idx === 0 ? (
+                                  <span className="flex items-center gap-1">
+                                    {t('buy.next1')} <Lock className="w-2.5 h-2.5" />
+                                  </span>
+                                ) : (
+                                  t('buy.nextN', idx + 1)
+                                )}
+                              </span>
+
+                              {canAfford ? (
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-[10px] uppercase">
+                                  {t('buy.affordable')}
+                                </span>
+                              ) : missingSouls !== null ? (
+                                <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-amber-300 font-bold text-[10px]">
+                                  {t('buy.missing', formatNumber(missingSouls))}
+                                </span>
+                              ) : (
+                                <span className="text-xs font-extrabold text-teal-300">{t('souls', String(item.cost))}</span>
+                              )}
+                            </div>
+
+                            {/* Item Icon + Name */}
+                            <div className="flex items-center gap-2.5">
+                              <ItemArtworkIcon itemId={item.id} category={item.category} size={46} />
+                              <div className="min-w-0 flex-1">
+                                <div className="font-bold text-sm text-white leading-tight">{shortName}</div>
+                                <div className="text-[11px] font-extrabold text-teal-300 mt-0.5">
+                                  {t('souls', formatNumber(item.cost))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Exact Shop Location Badge */}
+                            <div className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold flex flex-col gap-0.5 ${loc.badgeClass}`}>
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: loc.dotColor }} />
+                                <span className="uppercase tracking-wide">
+                                  {t('shop.prefix')}
+                                  {loc.tab}
+                                </span>
+                              </div>
+                              <span className="text-[10px] opacity-90 pl-4">{loc.tierLabel}</span>
+                            </div>
+
+                            {renderSlotPlan(item.id)}
+
+                            {/* Why this item: meta statistics of this hero */}
+                            {why && (
+                              <p className="text-[10px] text-slate-400 leading-snug flex gap-1" title={t('buy.whyTitle')}>
+                                <Info className="w-3 h-3 shrink-0 mt-px text-slate-500" />
+                                <span>{why}</span>
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Reason + Click to Skip / Advance */}
+                          <div className="pt-1 border-t border-white/10 flex items-center justify-between text-[11px]">
+                            <span
+                              className={`truncate font-semibold ${isCounter ? 'text-orange-300' : 'text-slate-300'}`}
+                              title={reasonText(entry)}
+                            >
+                              {reasonText(entry)}
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-white/10 hover:bg-emerald-500/30 text-slate-200 font-bold flex items-center gap-1 shrink-0">
+                              {t('buy.skip')}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Compact Power Order Strip */}
+                <div className="p-2.5 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-[11px] font-bold uppercase text-purple-300 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-purple-400" /> {t('abilities.order')}
+                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {activeBuild.abilitiesOrder.map((key, idx) => {
+                      const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
+                      const spellName = ab?.name.split('(')[0].trim() || key;
+                      return (
+                        <React.Fragment key={key}>
+                          <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-lg border border-white/5">
+                            <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={30} />
+                            <span className="text-xs font-bold text-white">{spellName}</span>
+                          </div>
+                          {idx < 3 && <span className="text-slate-500 font-bold text-xs">→</span>}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
+                {tacticalPlan.priorityItems.filter((rec) => !ownedItems.includes(rec.item.id)).length > 0 && (
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-orange-400" />{' '}
+                      {t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {tacticalPlan.priorityItems
+                        .filter((rec) => !ownedItems.includes(rec.item.id))
+                        .slice(0, 3)
+                        .map((rec) => (
+                          <ItemCard
+                            key={rec.item.id}
+                            item={rec.item}
+                            isOwned={false}
+                            onToggleOwned={handleToggleOwnedItem}
+                            highlightReasons={rec.reasons}
+                            compact
+                          />
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3 Build Phases — filtered so owned items automatically disappear and show only remaining items */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+                  {(
+                    [
+                      { key: 'early', title: t('phases.early'), accent: 'text-amber-300 border-amber-500/30' },
+                      { key: 'mid', title: t('phases.mid'), accent: 'text-purple-300 border-purple-500/30' },
+                      { key: 'late', title: t('phases.late'), accent: 'text-teal-300 border-teal-500/30' },
+                    ] as const
+                  ).map((col) => {
+                    const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !ownedItems.includes(id));
+                    return (
+                      <div key={col.key} className={`p-3 rounded-xl bg-deadlock-panel border ${col.accent} space-y-2`}>
+                        <h3 className="font-display text-xs font-extrabold uppercase tracking-wider">{col.title}</h3>
+                        {unownedPhaseIds.length === 0 ? (
+                          <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 font-bold">
+                            {t('phases.done')}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
+                            {unownedPhaseIds.map((itemId) => {
+                              const item = ITEMS[itemId];
+                              return item ? (
+                                <ItemCard
+                                  key={itemId}
+                                  item={item}
+                                  isOwned={false}
+                                  onToggleOwned={handleToggleOwnedItem}
+                                  compact
+                                />
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Owned Items Archive at the bottom of the page */}
+                {ownedItems.length > 0 && (
+                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold uppercase text-slate-400">{t('owned.title', ownedItems.length)}</span>
+                    {ownedItems.map((id) => {
+                      const it = ITEMS[id];
+                      if (!it) return null;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => handleToggleOwnedItem(id)}
+                          title={t('owned.removeTitle')}
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-950/50 border border-white/10 text-[11px] font-semibold text-slate-300 transition"
+                        >
+                          <ItemArtworkIcon itemId={it.id} category={it.category} size={18} />
+                          <span>{it.name.split('(')[0].trim()}</span>
+                          <span className="text-[10px] text-slate-500">✕</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ================= TAB 2: ABILITIES (1-4) ================= */}
+            {activeTab === 'powers' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {activeBuild.abilitiesOrder.map((key, index) => {
+                  const detail = activeBuild.abilitiesDetails.find((a) => a.key === key);
+                  if (!detail) return null;
+                  return (
+                    <div key={key} className="p-4 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-start gap-3">
+                      <PowerIcon heroId={myHero.id} abilityKey={detail.key} abilityName={detail.name} size={52} />
+                      <div className="space-y-1 flex-1">
+                        <span className="text-[10px] font-bold uppercase text-purple-300">{t('powers.max', index + 1, detail.key)}</span>
+                        <h3 className="font-bold text-sm text-white">{detail.name.split('(')[0].trim()}</h3>
+                        <p className="text-xs text-amber-200/90">{detail.priorityTip}</p>
+                        {detail.description && <p className="text-[11px] text-slate-400">{detail.description}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ================= TAB 3: ITEM DETAILS ================= */}
+            {activeTab === 'builds' && (
+              <div className="space-y-4">
+                <div className="p-3 rounded-xl bg-deadlock-panel border border-amber-500/30">
+                  <h3 className="text-sm font-extrabold text-amber-300">{activeBuild.name}</h3>
+                  <p className="text-[11px] text-slate-300">{activeBuild.subtitle}</p>
+                </div>
+                {(
+                  [
+                    { key: 'early', title: t('details.early') },
+                    { key: 'mid', title: t('details.mid') },
+                    { key: 'late', title: t('details.late') },
+                    { key: 'situational', title: t('details.situational') },
+                  ] as const
+                ).map((phase) => (
+                  <div key={phase.key} className="space-y-2">
+                    <h3 className="text-xs font-bold uppercase text-amber-300">{phase.title}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {activeBuild.phases[phase.key].map((itemId) => {
+                        const item = ITEMS[itemId];
+                        return item ? (
+                          <ItemCard
+                            key={itemId}
+                            item={item}
+                            isOwned={ownedItems.includes(itemId)}
+                            onToggleOwned={handleToggleOwnedItem}
+                          />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ================= TAB 4: LANE ADVICE & MATCHUPS ================= */}
+            {activeTab === 'matchups' && (
+              <div className="space-y-3">
+                <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/30 space-y-1.5">
+                  <h3 className="text-xs font-bold uppercase text-amber-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
+                  <p className="text-xs text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
+                  {tacticalPlan.laneStrategy.allySynergyTip && (
+                    <p className="text-xs text-emerald-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {tacticalPlan.matchupAlerts.map((alert) => (
+                    <div
+                      key={alert.enemyId}
+                      className={`p-3.5 rounded-xl bg-deadlock-panel border space-y-1.5 ${
+                        alert.isInMyLane ? 'border-red-500/50' : 'border-orange-500/30'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">
+                          {alert.isInMyLane ? t('matchups.lane') : t('matchups.team')} VS {alert.enemyName}
+                        </span>
+                        <span className="text-[10px] font-bold text-red-300">{t(DANGER_KEYS[alert.dangerLevel])}</span>
+                      </div>
+                      <p className="text-xs text-emerald-300">{alert.keyRule}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ================= TAB 5: DIAGNOSTICS ================= */}
+            {activeTab === 'logs' && (
+              <DiagnosticsTab
+                heroes={HEROES}
+                sources={sources}
+                selectedSourceId={selectedSourceId}
+                onSelectSource={(id) => {
+                  setSelectedSourceId(id);
+                  refreshSources();
+                }}
+                onScanNow={() => {
+                  refreshSources();
+                  performScreenScan();
+                }}
+                onReport={() => setIsReportOpen(true)}
+                lastCaptureUrl={lastCaptureUrl}
+                lastDetection={lastDetection}
+              />
+            )}
+          </div>
+        </main>
+
+        {isSettingsOpen && (
+          <SettingsModal
+            onClose={() => setIsSettingsOpen(false)}
+            onLangChange={changeLang}
+            logsEnabled={logsEnabled}
+            onLogsChange={handleLogsChange}
+            appInfo={appInfo}
+            updateStatus={updateStatus}
+            onReport={() => {
+              setIsSettingsOpen(false);
+              setIsReportOpen(true);
+            }}
+          />
+        )}
+        {isReportOpen && (
+          <ReportDialog
+            onClose={() => setIsReportOpen(false)}
+            repoUrl={appInfo?.repoUrl ?? 'https://github.com/PedroGomesFR/deadlock-blueprint'}
+            logsEnabled={logsEnabled}
+            collect={collectReport}
+          />
+        )}
+        {showOnboarding && (
+          <OnboardingModal
+            onLangChange={changeLang}
+            onDone={(enableLogs) => {
+              handleLogsChange(enableLogs);
+              localStorage.setItem(ONBOARDED_KEY, '1');
+              setShowOnboarding(false);
+            }}
+          />
+        )}
+      </div>
+    </I18nContext.Provider>
   );
 }
+
 
 export default App;

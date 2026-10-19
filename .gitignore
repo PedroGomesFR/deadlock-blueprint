@@ -10,3 +10,9 @@ Thumbs.db
 desktop.ini
 .DS_Store
 *.log
+
+# OCR engine copied from node_modules by scripts/copy-ocr-assets.mjs
+public/tesseract/
+
+# Output of the vision replay harness (scripts/vision-replay.cjs)
+tests/vision/out/

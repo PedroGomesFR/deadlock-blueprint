@@ -1,150 +1,179 @@
 <div align="center">
 
-<img src="public/icons/upscalemedia-transformed.png" alt="Logo Deadlock Blueprint" width="128" />
+<img src="public/icons/upscalemedia-transformed.png" alt="Deadlock Blueprint logo" width="128" />
 
 # Deadlock Blueprint
 
-**Ton coach de build en temps réel pour Deadlock.**
-Il lit ton écran, reconnaît ta partie et te dit quoi acheter, maintenant.
+**Your real-time build coach for Deadlock.**
+It watches your screen, recognizes your match and tells you what to buy, right now.
 
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&logoColor=white)
-![Electron](https://img.shields.io/badge/Electron-33-47848F?logo=electron&logoColor=white)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Licence MIT](https://img.shields.io/badge/licence-MIT-green)
+[![CI](https://github.com/PedroGomesFR/deadlock-blueprint/actions/workflows/ci.yml/badge.svg)](https://github.com/PedroGomesFR/deadlock-blueprint/actions/workflows/ci.yml)
 
-[**📥 Télécharger**](https://github.com/PedroGomesFR/deadlock-blueprint/releases/latest) · [Fonctionnalités](#-fonctionnalités) · [Utilisation](#-utilisation) · [FAQ](#-faq) · [Développement](#%EF%B8%8F-développement)
+[**📥 Download**](https://github.com/PedroGomesFR/deadlock-blueprint/releases/latest) · [Features](#-features) · [Can I get banned?](#can-i-get-banned) · [FAQ](#-faq) · [Report a problem](#-report-a-problem) · [Français](README.fr.md)
 
 </div>
 
 ---
 
+<!-- TODO: docs/demo.gif — 15 s: buy the #1 in the shop, the list moves on (see docs/CONTRIBUTING.md › Recording the demo) -->
+
 <table>
   <tr>
-    <td width="74%"><img src="docs/app.png" alt="Fenêtre principale : prochains achats, objet à vendre quand l'inventaire est plein, contres" /></td>
-    <td width="26%"><img src="docs/overlay.png" alt="Overlay en jeu" /></td>
+    <td width="74%"><img src="docs/app-en.png" alt="Main window: next purchases with the item to sell when the inventory is full, why each item, counters" /></td>
+    <td width="26%"><img src="docs/overlay-en.png" alt="In-game overlay" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>Fenêtre principale : prochains achats, contres et objet à vendre quand l'inventaire est plein</sub></td>
-    <td align="center"><sub>Overlay par-dessus le jeu</sub></td>
+    <td align="center"><sub>Main window: next purchases, what to sell when your inventory is full, and why each item</sub></td>
+    <td align="center"><sub>Overlay on top of the game</sub></td>
   </tr>
 </table>
 
-## ✨ Fonctionnalités
+## ✨ Features
 
-### 👁️ Détection automatique, sans rien toucher au jeu
-Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconnaît :
+### 👁️ Automatic detection, without touching the game
+Every 350 ms the app reads the image of the Deadlock window and recognizes:
 
-- **Ton héros** grâce à ton portrait surligné dans la barre du haut (les 38 héros). Il est **verrouillé pour toute la partie** : quand tu es mort et que tu regardes un coéquipier, rien ne bouge.
-- **Tes alliés, les 6 ennemis, ta lane et ton partenaire de lane**, que tu joues côté Ambre ou Saphir.
-- **Ton inventaire** (12 slots, y compris ceux encore verrouillés), même boutique ouverte.
-- **Tes âmes**, lues par OCR.
+- **Your hero**, from your highlighted portrait in the top bar (all 43 heroes). It stays **locked for the whole match**: when you are dead and spectating a teammate, nothing changes.
+- **Your allies, the 6 enemies, your lane and your lane partner**, on the Amber or Sapphire side. Each portrait is voted over the whole match, so a single misread frame (a respawn timer, a low-HP banner) changes nothing.
+- **Your inventory** (12 slots, padlocked ones included), even with the shop open and with items on cooldown.
+- **Your souls**, read by OCR, fully offline.
 
-### 🛒 Recommandations d'achat
-- **Builds méta issus de vraies statistiques** : les objets les plus achetés en haut rang (Oracle+, 30 derniers jours) et le build publié avec le meilleur taux de victoire, via [deadlock-api.com](https://deadlock-api.com).
-- **« À acheter tout de suite »** : les prochains objets dans l'ordre, avec l'onglet de la boutique et ce qu'il te manque en âmes. Le **#1 reste fixe** jusqu'à ce que tu l'achètes.
-- **Contres automatiques** contre tes adversaires de lane et l'équipe ennemie (anti-soin, résistances...).
-- **Jamais un objet que tu as déjà**, ni un composant déjà amélioré.
-- **Inventaire plein ?** Chaque recommandation indique **quel objet vendre** (le moins utile pour ton build), ou **lequel sera remplacé** s'il s'agit d'une amélioration.
+### 🛒 What to buy
+- **Meta builds from real statistics**: the items most bought by high-rank players (Oracle+, last 30 days) and the published build with the best win rate, from [deadlock-api.com](https://deadlock-api.com). **Updated every week**, without a new version of the app.
+- **"Buy right now"**: your next items in order, with their shop tab and how many souls you are short. The **#1 stays fixed** until you buy it.
+- **Why this item?** "Bought in 76% of Oracle+ Infernus games · 47.8% win rate with it · usually bought around 18:42", or "Anti-heal against Baba".
+- **Counters** against your lane opponents and the enemy team (anti-heal, resists, CC immunity…).
+- **Never an item you already own**, nor a component already upgraded.
+- **Inventory full?** Each recommendation says **which item to sell** (the least useful for your build), or **which one it replaces** for an upgrade.
 
-### 🎯 Overlay en jeu
-Un panneau transparent, toujours au premier plan, affiche ton ordre de sorts et tes 3 prochains achats. En **mode fantôme**, les clics le traversent et il ne gêne jamais ta visée.
+### 🎯 In-game overlay
+A transparent panel, always on top, shows your ability order and your next 3 purchases. In **ghost mode** clicks go through it, so it never gets in the way of your aim.
 
 ## 📥 Installation
 
-1. Télécharge **`Deadlock-Blueprint-<version>.exe`** dans les [**Releases**](https://github.com/PedroGomesFR/deadlock-blueprint/releases/latest).
-2. Lance-le. C'est un exécutable portable : aucune installation, aucun prérequis.
+Download from the [**latest release**](https://github.com/PedroGomesFR/deadlock-blueprint/releases/latest):
+
+| File | |
+| :--- | :--- |
+| `Deadlock-Blueprint-Setup-<version>.exe` | **Installer, recommended.** Installs for your user only (no admin rights) and **updates itself**. |
+| `Deadlock-Blueprint-<version>.exe` | Portable: one file, no install. Tells you when a new version is out. |
 
 > [!NOTE]
-> L'exécutable n'est pas signé. Au premier lancement, Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis sur **Exécuter quand même**.
+> The executables are not code-signed (a certificate costs several hundred euros a year). On first launch Windows SmartScreen may say "Windows protected your PC": click **More info**, then **Run anyway**.
+> Each release is **built by GitHub Actions from the public source code** and lists the **SHA-256** of each file with a **VirusTotal** link. To check your download: `Get-FileHash .\Deadlock-Blueprint-Setup-<version>.exe` in PowerShell.
 
-## 🎮 Utilisation
+## Can I get banned?
 
-1. Lance **Deadlock Blueprint**, puis Deadlock (l'ordre n'a pas d'importance).
-2. Entre en partie : le héros, la lane, les ennemis et l'inventaire se remplissent tout seuls en 1 à 2 secondes.
-3. Achète le **#1** affiché : il disparaît de la liste dès qu'il apparaît dans ton inventaire.
+**The app works like OBS or Discord screen sharing: it only reads the image that is already on your screen.**
 
-Pour de meilleurs résultats, joue en **1920×1080**. C'est la résolution sur laquelle le scanner est calibré ; les autres résolutions 16:9 sont mises à l'échelle.
+- It does **not read or write the game's memory**, does **not inject** anything into the game, does **not modify** any game file and does **not send any input** (no keystrokes, no mouse).
+- The capture uses the standard Windows screen-capture API (the same one browsers use to share a window).
+- The overlay is an ordinary always-on-top window, like the Discord or Steam overlay, and does not draw inside the game.
 
-### ⌨️ Raccourcis (utilisables en jeu)
+Anti-cheat systems go after programs that read or modify a game's memory or automate input; Deadlock Blueprint does neither and never touches the game process. That said, it is a third-party tool that Valve has not approved, and nobody but Valve can promise anything: use it at your own discretion.
 
-| Raccourci | Action |
+## 🔒 Privacy
+
+- **No match data leaves your PC.** The only network requests are:
+  - the weekly builds and items, read from this GitHub repository (`raw.githubusercontent.com`);
+  - the update check (GitHub releases);
+  - the interface fonts (Google Fonts).
+- **Game logs are off by default.** If you turn them on (first launch, or Settings), the app keeps a log of your last 5 matches **on your PC only** (text plus HUD captures of the inventory and top bar, ~30 MB per match), to help fix detection problems. They are stored in `%APPDATA%\deadlock-tactical-autobuild\match-logs` and can be deleted from Settings. They only leave your PC if you attach them to a report yourself.
+
+## 🎮 Usage
+
+1. Start **Deadlock Blueprint**, then Deadlock (in any order).
+2. Join a match: hero, lane, enemies and inventory fill in on their own within 1–2 seconds.
+3. Buy the **#1**: it leaves the list as soon as it appears in your inventory.
+
+### 🖥️ Supported setups
+
+| | |
+| :--- | :--- |
+| ✅ **16:9**: 1920×1080, 2560×1440, 3840×2160… | Calibrated on 1920×1080; other 16:9 resolutions are scaled. |
+| ✅ Fullscreen or borderless windowed | |
+| ⛔ Ultrawide (21:9, 32:9), 16:10, 4:3, windowed with borders | The app says so and **pauses detection** instead of showing wrong recommendations. Pick your hero and enemies by hand meanwhile. [Reporting your format](#-report-a-problem) helps add it. |
+| ⚠️ A changed HUD scale, colour filters | The HUD is not where the scanner looks: the app shows a hint when it finds no HUD for a few minutes. |
+
+Hero skins whose portrait differs a lot from the default one may be misread on some frames; the per-match vote usually recovers them.
+
+### ⌨️ Shortcuts (they work in game)
+
+| Shortcut | Action |
 | :---: | :--- |
-| <kbd>Alt</kbd> + <kbd>O</kbd> | Afficher / masquer l'**overlay** par-dessus le jeu |
-| <kbd>Alt</kbd> + <kbd>L</kbd> | **Mode fantôme** : les clics traversent l'overlay |
-| <kbd>Alt</kbd> + <kbd>S</kbd> | Forcer un scan immédiat |
+| <kbd>Alt</kbd> + <kbd>O</kbd> | Show / hide the **overlay** on top of the game |
+| <kbd>Alt</kbd> + <kbd>L</kbd> | **Ghost mode**: clicks go through the overlay |
+| <kbd>Alt</kbd> + <kbd>S</kbd> | Scan now |
 
-### 🖱️ Corriger à la main
-- **Clic sur ton héros** (en haut à gauche) : choisis-le dans la liste ; il est alors verrouillé pour la partie.
-- **Clic sur un objet proposé** (« Passer ») : marque-le comme déjà acheté, utile si un objet de ton inventaire n'est pas reconnu.
-- **Reset** : vide la liste des objets possédés.
-- L'onglet **Diagnostic** montre ce que le scanner voit : portraits reconnus (★ = toi), inventaire, sorts.
+### 🖱️ Fixing things by hand
+- **Click your hero** (top left) and pick the right one: it is then locked for the match.
+- **Click a suggested item** ("Skip") to mark it as bought, useful if an item of your inventory is not recognized.
+- **Reset** clears the owned items.
+- The **Diagnostics** tab shows what the scanner sees: capture, portraits slot by slot (★ = you), inventory slot by slot.
 
-## 🔒 Sécurité et vie privée
+## 🐞 Report a problem
 
-- L'application **lit uniquement l'image affichée**, comme un logiciel de streaming ou de partage d'écran.
-- Elle **ne lit pas la mémoire du jeu**, n'injecte rien et ne modifie aucun fichier de Deadlock.
-- Aucune donnée de partie n'est envoyée nulle part. Les seuls appels réseau téléchargent les fichiers de l'OCR (Tesseract.js, depuis un CDN) et les polices de l'interface.
+**Diagnostics › Report a problem** (or Settings) creates a `.zip` in your Downloads folder with the system info and, if you want, the log of your last match, then opens a pre-filled GitHub issue. **Drag the `.zip` into the issue** before submitting. A game log lets the match be replayed and the scanner fixed: that is how most detection bugs get fixed.
 
 ## ❓ FAQ
 
 <details>
-<summary><b>Le héros détecté n'est pas le bon</b></summary>
+<summary><b>The detected hero is wrong</b></summary>
 
-Clique sur le héros en haut à gauche et choisis le bon : il est verrouillé pour la partie, puis re-détecté automatiquement à la partie suivante (quand la composition ennemie change).
+Click the hero at the top left and pick the right one: it is locked for the match, then detected again automatically at the next match.
 </details>
 
 <details>
-<summary><b>Rien n'est détecté</b></summary>
+<summary><b>Nothing is detected</b></summary>
 
-- Vérifie que la fenêtre du jeu s'appelle bien « Deadlock » et qu'elle n'est pas réduite.
-- La détection des héros a besoin de la barre du haut (scores des deux équipes). Les modes sans cette barre, comme l'entraînement, ne sont pas reconnus.
-- L'onglet **Diagnostic** indique la source capturée et ce qui est reconnu.
+- Check that the game window is called "Deadlock" and is not minimized, and that your resolution is 16:9 (see [Supported setups](#%EF%B8%8F-supported-setups)).
+- Hero detection needs the top bar (both teams' scores). Modes without it, such as the training range, are not recognized.
+- The **Diagnostics** tab shows the captured source and what is recognized.
 </details>
 
 <details>
-<summary><b>Un objet que j'ai déjà est encore proposé</b></summary>
+<summary><b>An item I already own is still suggested</b></summary>
 
-Son icône n'a pas été reconnue dans ton inventaire : l'application l'indique (« ⚠ objet non reconnu »). Clique sur l'objet proposé pour le passer.
+Its icon was not recognized in your inventory: the app says so ("⚠ item not recognized"). Click the suggested item to skip it.
 </details>
 
 <details>
-<summary><b>Combien de RAM utilise l'application ?</b></summary>
+<summary><b>Why does it need the Internet?</b></summary>
 
-Environ 650 Mo au total, stable dans le temps, dont environ 400 Mo pour le pipeline de capture vidéo (processus GPU). Les versions antérieures à la 1.2.0 capturaient toutes les fenêtres ouvertes à chaque scan et pouvaient monter à plusieurs Go : mets à jour si c'est ton cas.
+Only to download the weekly builds and to check for updates. Without Internet it works with the builds it already has. Souls are read offline.
 </details>
 
-## 🛠️ Développement
+<details>
+<summary><b>How much RAM does it use?</b></summary>
 
-**Prérequis :** [Node.js](https://nodejs.org) 18 ou plus, Windows.
+About 650 MB in total, stable over time, of which about 400 MB is the video capture pipeline (GPU process).
+</details>
+
+## 🛠️ Development
+
+**Requirements:** [Node.js](https://nodejs.org) 20 or later, Windows.
 
 ```bash
 git clone https://github.com/PedroGomesFR/deadlock-blueprint.git
 cd deadlock-blueprint
 npm install
+npm run dev
 ```
 
-| Commande | Rôle |
+| Command | |
 | :--- | :--- |
-| `npm run dev` | Interface avec rechargement à chaud (Vite) + Electron |
-| `npm run build` puis `npm start` | Version compilée, lancée avec Electron |
-| `npm run dist` | Génère l'exécutable portable dans `release/` |
-| `npm run update-builds` | Met à jour les builds méta et le catalogue d'objets depuis deadlock-api.com (**à relancer après chaque patch de Deadlock**) |
+| `npm run dev` | Interface with hot reload (Vite) + Electron |
+| `npm test` | Rules, recorded games replayed through them, translations |
+| `npm run test:vision` | The real scanner on saved game frames (Electron) |
+| `npm run dist` | Installer and portable exe in `release/` |
+| `npm run update-builds` | New meta builds and item catalogue from deadlock-api.com (done every week by GitHub Actions) |
 
-**Stack :** Electron · React · TypeScript · Vite · Tailwind CSS · Tesseract.js
+See [**docs/CONTRIBUTING.md**](docs/CONTRIBUTING.md) to recalibrate the scanner, add a hero, translate, or publish a release. The HUD coordinates and calibration notes are in [`AGENTS.md`](AGENTS.md).
 
-```
-electron/            Processus principal : fenêtres, overlay, raccourcis, choix de la source capturée
-src/App.tsx          Interface, boucle de scan, file des prochains achats
-src/services/
-  screenCapture.ts   Flux vidéo unique de la fenêtre Deadlock
-  visionScanner.ts   Vision : portraits, sorts, inventaire, cadenas, âmes (OCR)
-  counterEngine.ts   Contres selon les ennemis
-src/data/            Héros, builds, objets (dont generated/ : données de deadlock-api.com)
-scripts/             update-builds.mjs
-```
+**Stack:** Electron · React · TypeScript · Vite · Tailwind CSS · Tesseract.js
 
-Les coordonnées du HUD, les seuils calibrés et les choix techniques sont documentés dans [`AGENTS.md`](AGENTS.md).
+## ⚖️ Legal
 
-## ⚠️ Avertissement
-
-Projet de fan, **non affilié à Valve Corporation ni approuvé par elle**. Deadlock ainsi que ses noms, images et icônes de héros et d'objets sont la propriété de Valve.
+Deadlock Blueprint is a fan project, **not affiliated with, endorsed or approved by Valve Corporation**. Deadlock and its names, images, hero and item icons are the property of Valve; the project includes some of them to recognize and show heroes and items. Game data and statistics come from [deadlock-api.com](https://deadlock-api.com). The source code is under the [MIT licence](LICENSE); see [NOTICE.md](NOTICE.md) for third-party content.

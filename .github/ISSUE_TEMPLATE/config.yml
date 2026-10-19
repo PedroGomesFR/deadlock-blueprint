@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: FAQ (detection, SmartScreen, "can I get banned?")
+    url: https://github.com/PedroGomesFR/deadlock-blueprint#faq
+    about: Most questions are answered here.

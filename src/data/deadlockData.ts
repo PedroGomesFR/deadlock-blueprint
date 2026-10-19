@@ -1,5 +1,11 @@
-import generatedItemsCatalog from './generated/itemsCatalog.json';
-import generatedMetaBuilds from './generated/metaBuilds.json';
+import { getCatalogData, getMetaData } from './dataSource';
+import { EN_GENERIC_BUILD, EN_HEROES, EN_LANES } from './deadlockData.en';
+import type { Lang } from '../i18n/lang';
+
+// The data below is written in French (HEROES_DB, ITEMS_DB, DEADLOCK_LANES: used by the scanner and the
+// application logic). getHeroesDb / getItemsDb / getLanes give the same data, same ids, in the interface
+// language: English names and descriptions come from the generated catalogue (official game texts), the
+// English text of the hand-written guides from deadlockData.en.ts.
 
 export type ItemCategory = 'weapon' | 'vitality' | 'spirit';
 export type ItemTier = 1 | 2 | 3 | 4; // 800, 1600, 3200, 6400 souls
@@ -18,8 +24,10 @@ export type ThreatTag =
 
 export interface DeadlockItem {
   id: string;
-  name: string;
-  frHint: string;
+  name: string; // in the data's language; the French data adds the English name: "Chargeur XL (Extended Magazine)"
+  nameFr: string;
+  nameEn: string;
+  hint: string;
   category: ItemCategory;
   tier: ItemTier;
   cost: number;
@@ -134,7 +142,14 @@ export const DEADLOCK_LANES: {
   },
 ];
 
-const LEGACY_ITEMS_DB: Record<string, DeadlockItem> = {
+const DEADLOCK_LANES_EN: typeof DEADLOCK_LANES = DEADLOCK_LANES.map((lane) => ({ ...lane, ...EN_LANES[lane.id] }));
+
+export const getLanes = (lang: Lang) => (lang === 'en' ? DEADLOCK_LANES_EN : DEADLOCK_LANES);
+
+/** Hand-written item texts of an older patch (prices 500/1250/3000/6200), kept for the items not renamed since. */
+type LegacyItem = Omit<DeadlockItem, 'nameFr' | 'nameEn' | 'hint'> & { frHint: string };
+
+const LEGACY_ITEMS_DB: Record<string, LegacyItem> = {
   // ================= WEAPON (ORANGE) =================
   high_velocity_mag: {
     id: 'high_velocity_mag',
@@ -856,38 +871,69 @@ interface GeneratedCatalogItem {
   isActive: boolean;
   upgradesFrom: string[];
   descriptionFr: string;
+  descriptionEn?: string;
+  statsFr?: string[];
+  statsEn?: string[];
   icon?: string;
   legacyIcon?: string;
 }
 
-const englishPart = (name: string) => (name.match(/\(([^)]+)\)/)?.[1] ?? name).trim().toLowerCase();
+const englishPart = (name: string) => (name.match(/\(([^)]+)\)/)?.[1] ?? name).trim();
 
 /**
- * Le catalogue généré (prix, paliers, noms officiels) fait autorité. Les textes écrits à la main
- * sont conservés quand l'objet n'a pas été renommé depuis (sinon ils décrivent un autre effet).
+ * Le catalogue généré (prix, paliers, noms officiels, stats actuelles) fait autorité. En français, les
+ * textes écrits à la main sont conservés quand l'objet n'a pas été renommé depuis (sinon ils décrivent un
+ * autre effet) ; en anglais, la description officielle du jeu est utilisée.
  * Les objets retirés du jeu disparaissent ; sans catalogue, on retombe sur l'ancienne liste.
  */
-function buildItemsDb(): Record<string, DeadlockItem> {
+function buildItemsDb(lang: Lang): Record<string, DeadlockItem> {
   const catalog = Object.values(
-    (generatedItemsCatalog as unknown as { items: Record<string, GeneratedCatalogItem> }).items ?? {}
+    (getCatalogData() as unknown as { items: Record<string, GeneratedCatalogItem> }).items ?? {}
   );
-  if (catalog.length === 0) return LEGACY_ITEMS_DB;
-
   const db: Record<string, DeadlockItem> = {};
+
+  if (catalog.length === 0) {
+    for (const legacy of Object.values(LEGACY_ITEMS_DB)) {
+      const { frHint, ...rest } = legacy;
+      const nameEn = englishPart(legacy.name);
+      db[legacy.id] = {
+        ...rest,
+        name: lang === 'en' ? nameEn : legacy.name,
+        nameFr: legacy.name.split('(')[0].trim(),
+        nameEn,
+        hint: lang === 'en' ? '' : frHint,
+        stats: lang === 'en' ? [] : legacy.stats,
+      };
+    }
+    return db;
+  }
+
   for (const c of catalog) {
     const legacy = LEGACY_ITEMS_DB[c.id];
-    const sameItem = legacy !== undefined && englishPart(legacy.name) === c.nameEn.toLowerCase();
+    const sameItem = legacy !== undefined && englishPart(legacy.name).toLowerCase() === c.nameEn.toLowerCase();
     const keepLegacyText = sameItem || (legacy !== undefined && !c.descriptionFr);
+    const fr = {
+      name: c.nameFr !== c.nameEn ? `${c.nameFr} (${c.nameEn})` : c.nameFr,
+      hint: keepLegacyText ? legacy.frHint : c.descriptionFr,
+      // Current values from the game data first: the hand-written stats date from an older patch
+      stats: c.statsFr?.length ? c.statsFr : sameItem ? legacy.stats : [],
+      description: keepLegacyText ? legacy.description : c.descriptionFr,
+    };
+    const en = {
+      name: c.nameEn,
+      hint: c.descriptionEn ?? '',
+      stats: c.statsEn ?? [],
+      description: c.descriptionEn ?? '',
+    };
     db[c.id] = {
       id: c.id,
-      name: c.nameFr !== c.nameEn ? `${c.nameFr} (${c.nameEn})` : c.nameFr,
-      frHint: keepLegacyText ? legacy.frHint : c.descriptionFr,
+      ...(lang === 'en' ? en : fr),
+      nameFr: c.nameFr,
+      nameEn: c.nameEn,
       category: c.category,
       tier: c.tier,
       cost: c.cost,
       isActive: c.isActive,
-      stats: sameItem ? legacy.stats : [],
-      description: keepLegacyText ? legacy.description : c.descriptionFr,
       countersTags: legacy?.countersTags,
       upgradesFrom: c.upgradesFrom.length > 0 ? c.upgradesFrom : undefined,
       icon: c.icon,
@@ -897,7 +943,11 @@ function buildItemsDb(): Record<string, DeadlockItem> {
   return db;
 }
 
-export const ITEMS_DB: Record<string, DeadlockItem> = buildItemsDb();
+export const ITEMS_DB: Record<string, DeadlockItem> = buildItemsDb('fr');
+const ITEMS_DB_EN: Record<string, DeadlockItem> = buildItemsDb('en');
+
+/** Item catalogue in the interface language (same ids, prices and tiers as ITEMS_DB). */
+export const getItemsDb = (lang: Lang) => (lang === 'en' ? ITEMS_DB_EN : ITEMS_DB);
 
 const BASE_HEROES_DB: DeadlockHero[] = [
   // ================= 1. VINDICTA (VEDETTE AVEC FOCUS COMPLET) =================
@@ -2099,6 +2149,38 @@ const BASE_HEROES_DB: DeadlockHero[] = [
       mid: ['mystic_vulnerability', 'enchanters_barrier', 'improved_cooldown', 'spirit_lifesteal'],
       late: ['improved_burst', 'boundless_spirit', 'mystic_reverb', 'superior_cooldown'],
     },
+    {
+      id: 'rat_king',
+      name: 'Rat King',
+      role: 'Bagarreur Royal, Nuée de Rats & Bannière d\'Équipe',
+      archetype: 'Bruiser / Tank' as const,
+      accentColor: '#b45309',
+      threatTags: ['tank_frontline', 'spirit_burst', 'cc_catch'] as ThreatTag[],
+      baseTips: 'Apparat royal (3) vous donne une barrière qui renvoie des balles : engagez quand elle est active. Gloire à la Ratannie ! (4) rend vos alliés proches insensibles aux ralentissements et réduit leurs dégâts subis.',
+      s1: 'Grenade de ferraille (Scrap Grenade)',
+      s2: 'Horde de rats (Rat Swarm)',
+      s3: 'Apparat royal (Royal Pestments)',
+      s4: 'Gloire à la Ratannie ! (Rule, Ratannia!)',
+      early: ['high_velocity_mag', 'monster_rounds', 'extra_health', 'sprint_boots'],
+      mid: ['pristine_emblem', 'enduring_speed', 'fleetfoot', 'improved_cooldown'],
+      late: ['spirit_resilience', 'superior_cooldown', 'leech', 'unstoppable'],
+    },
+    {
+      id: 'deadman_danny',
+      name: 'Deadman Danny',
+      role: 'Tireur Volant au Jetpack & Missiles Spirituels',
+      archetype: 'Sniper / Pick' as const,
+      accentColor: '#f59e0b',
+      threatTags: ['flier_mobility', 'sniper_poke', 'cc_catch'] as ThreatTag[],
+      baseTips: 'Posez Salve Strix (1) puis achevez les cibles marquées avec un tir chargé. Le jetpack (2) surchauffe : prévoyez votre chute explosive au milieu des ennemis.',
+      s1: 'Salve Strix (Strix Salvo)',
+      s2: 'Chimère 1re gén. (Chimera Mk1)',
+      s3: 'Largage de kérosène (Jettison Fuel)',
+      s4: 'Affaire conclue (Close The Deal)',
+      early: ['high_velocity_mag', 'headshot_booster', 'extra_stamina', 'extra_charge'],
+      mid: ['quicksilver_reload', 'slowing_bullets', 'enduring_speed', 'mystic_vulnerability'],
+      late: ['sharpshooter', 'crippling_headshot', 'superior_cooldown', 'boundless_spirit'],
+    },
   ].map((h) => ({
     id: h.id,
     name: h.name,
@@ -2144,55 +2226,105 @@ type AbilityKey = '1' | '2' | '3' | '4';
 
 interface GeneratedBuild {
   kind: 'stats' | 'published';
-  title: string;
-  subtitle: string;
+  sourceName?: string; // title of the published build, as written by its author
+  winRate: number;
+  matches: number;
   badgeMin: number;
   abilitiesOrder?: AbilityKey[];
   phases: HeroBuildArchetype['phases'];
 }
 
 interface GeneratedHeroMeta {
-  abilities: { key: AbilityKey; nameFr: string; nameEn: string; descriptionFr?: string }[];
+  matches: number;
+  winRate: number;
+  badgeMin: number;
+  abilities: {
+    key: AbilityKey;
+    nameFr: string;
+    nameEn: string;
+    descriptionFr?: string;
+    descriptionEn?: string;
+    icon?: string; // official icon (public/icons/abilities/api)
+  }[];
   builds: GeneratedBuild[];
+  /** itemId -> [share of the games where it was bought, smoothed win rate, average buy time (s)] */
+  itemStats?: Record<string, [number, number, number]>;
 }
 
-const BADGE_LABELS: Record<number, string> = { 81: 'Oracle+', 71: 'Archon+', 51: 'Ritualist+', 0: 'tous rangs' };
-const ORDINALS = ['1ER', '2E', '3E', '4E'];
+const generatedHeroes = () =>
+  (getMetaData() as unknown as { heroes: Record<string, GeneratedHeroMeta> }).heroes ?? {};
 
-function withMetaBuilds(hero: DeadlockHero): DeadlockHero {
-  const meta = (generatedMetaBuilds as unknown as { heroes: Record<string, GeneratedHeroMeta> }).heroes?.[hero.id];
+const BADGE_LABELS: Record<number, string> = { 81: 'Oracle+', 71: 'Archon+', 51: 'Ritualist+' };
+
+/** Rank bracket of the generated statistics ("Oracle+"). */
+export const rankLabel = (badgeMin: number, lang: Lang) =>
+  BADGE_LABELS[badgeMin] ?? (lang === 'en' ? 'all ranks' : 'tous rangs');
+
+/** "47,5 %" / "47.5%" */
+export const formatPercent = (x: number, lang: Lang) =>
+  lang === 'en' ? `${(x * 100).toFixed(1)}%` : `${(x * 100).toFixed(1).replace('.', ',')} %`;
+
+const formatCount = (n: number, lang: Lang) => n.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
+
+const META_TEXT = {
+  fr: {
+    statsTitle: (rank: string) => `Méta ${rank} — objets les plus achetés`,
+    statsSubtitle: (matches: string, rank: string, days: number, wr: string) =>
+      `${matches} parties ${rank} sur ${days} jours • ${wr} de victoires pour le héros`,
+    publishedTitle: (wr: string) => `Meilleur build publié — ${wr} de victoires`,
+    publishedSubtitle: (name: string, matches: string, rank: string) => `« ${name} » • ${matches} parties ${rank}`,
+    maxTip: (rank: number, label: string) => `MAXER EN ${['1ER', '2E', '3E', '4E'][rank] ?? '4E'} (ordre des joueurs ${label}).`,
+    // Hand-written tips about the max order would contradict the real data
+    maxOrderTip: /max|1er|2e|premier|second/i,
+  },
+  en: {
+    statsTitle: (rank: string) => `${rank} meta — most bought items`,
+    statsSubtitle: (matches: string, rank: string, days: number, wr: string) =>
+      `${matches} ${rank} games over ${days} days • hero win rate ${wr}`,
+    publishedTitle: (wr: string) => `Best published build — ${wr} win rate`,
+    publishedSubtitle: (name: string, matches: string, rank: string) => `"${name}" • ${matches} ${rank} games`,
+    maxTip: (rank: number, label: string) => `MAX ${['1ST', '2ND', '3RD', '4TH'][rank] ?? '4TH'} (order played by ${label} players).`,
+    maxOrderTip: /max|1st|2nd|first|second/i,
+  },
+};
+
+function withMetaBuilds(hero: DeadlockHero, lang: Lang): DeadlockHero {
+  const meta = generatedHeroes()[hero.id];
   const base = hero.builds[0];
   if (!meta || meta.builds.length === 0 || !base) return hero;
 
+  const text = META_TEXT[lang];
+  const windowDays = (getMetaData() as { windowDays?: number }).windowDays ?? 30;
   // Les héros sans build écrit à la main avaient des noms de sorts inventés : on prend les noms officiels
   const isGenericHero = base.id.endsWith('_meta_build');
   const baseDetails: AbilityUpgradeInfo[] = isGenericHero
     ? meta.abilities.map((a) => ({
         key: a.key,
-        name: a.nameFr !== a.nameEn ? `${a.nameFr} (${a.nameEn})` : a.nameFr,
-        description: a.descriptionFr || '',
+        name: lang === 'en' ? a.nameEn : a.nameFr !== a.nameEn ? `${a.nameFr} (${a.nameEn})` : a.nameFr,
+        description: (lang === 'en' ? a.descriptionEn : a.descriptionFr) || '',
         priorityTip: '',
       }))
     : base.abilitiesDetails;
 
   const generated: HeroBuildArchetype[] = meta.builds.map((b) => {
     const order = b.abilitiesOrder && b.abilitiesOrder.length === 4 ? b.abilitiesOrder : base.abilitiesOrder;
-    const rank = BADGE_LABELS[b.badgeMin] ?? 'haut rang';
+    const rank = rankLabel(b.badgeMin, lang);
+    const wr = formatPercent(b.winRate, lang);
+    const matches = formatCount(b.matches, lang);
     const keepKnown = (ids: string[]) => ids.filter((id) => ITEMS_DB[id]);
     return {
       id: `${hero.id}_${b.kind}_meta`,
-      name: b.title,
-      subtitle: b.subtitle,
+      name: b.kind === 'stats' ? text.statsTitle(rank) : text.publishedTitle(wr),
+      subtitle:
+        b.kind === 'stats'
+          ? text.statsSubtitle(matches, rank, windowDays, wr)
+          : text.publishedSubtitle(b.sourceName ?? '', matches, rank),
       playstyle: base.playstyle,
       recommendedForLanes: ['solo', 'duo'],
       abilitiesOrder: order,
       abilitiesDetails: baseDetails.map((d) => {
-        // Hand-written tips that talk about the max order would contradict the real data: keep only the others
-        const handTip = /max|1er|2e|premier|second/i.test(d.priorityTip) ? '' : d.priorityTip;
-        return {
-          ...d,
-          priorityTip: `MAXER EN ${ORDINALS[order.indexOf(d.key)] ?? '4E'} (ordre des joueurs ${rank}).${handTip ? ` ${handTip}` : ''}`,
-        };
+        const handTip = text.maxOrderTip.test(d.priorityTip) ? '' : d.priorityTip;
+        return { ...d, priorityTip: `${text.maxTip(order.indexOf(d.key), rank)}${handTip ? ` ${handTip}` : ''}` };
       }),
       phases: {
         early: keepKnown(b.phases.early),
@@ -2204,14 +2336,88 @@ function withMetaBuilds(hero: DeadlockHero): DeadlockHero {
     };
   });
 
+  const builds = isGenericHero ? generated : [...generated, ...hero.builds];
+  // English: the current official ability names (the hand-written ones date from an older patch: Catalyst -> Napalm)
+  const officialName = (key: AbilityKey) => meta.abilities.find((a) => a.key === key)?.nameEn;
   return {
     ...hero,
     // Un héros générique n'a qu'un build inventé : on le remplace par les builds réels
-    builds: isGenericHero ? generated : [...generated, ...hero.builds],
+    builds:
+      lang === 'en'
+        ? builds.map((b) => ({
+            ...b,
+            abilitiesDetails: b.abilitiesDetails.map((d) => ({ ...d, name: officialName(d.key) ?? d.name })),
+          }))
+        : builds,
   };
 }
 
-export const HEROES_DB: DeadlockHero[] = BASE_HEROES_DB.map(withMetaBuilds);
+/** Official icon of a hero's ability (downloaded by npm run update-builds), if any. */
+export function getAbilityIcon(heroId: string, key: AbilityKey): string | undefined {
+  return generatedHeroes()[heroId]?.abilities.find((a) => a.key === key)?.icon;
+}
+
+/** English text of a hand-written hero (deadlockData.en.ts); ability names keep their English part. */
+function translateHero(hero: DeadlockHero): DeadlockHero {
+  const en = EN_HEROES[hero.id];
+  const englishName = (name: string) => englishPart(name);
+  return {
+    ...hero,
+    role: en?.role ?? hero.role,
+    baseTips: en?.baseTips ?? hero.baseTips,
+    builds: hero.builds.map((build) => {
+      if (build.id.endsWith('_meta_build')) {
+        return EN_GENERIC_BUILD(hero.name, en?.role ?? hero.role, en?.baseTips ?? hero.baseTips, build);
+      }
+      const b = en?.builds?.[build.id];
+      return {
+        ...build,
+        name: b?.name ?? build.name,
+        subtitle: b?.subtitle ?? build.subtitle,
+        playstyle: b?.playstyle ?? build.playstyle,
+        abilitiesDetails: build.abilitiesDetails.map((d) => ({
+          ...d,
+          name: englishName(d.name),
+          description: b?.abilities[d.key]?.description ?? d.description,
+          priorityTip: b?.abilities[d.key]?.priorityTip ?? d.priorityTip,
+        })),
+        laneTips: b?.laneTips ?? build.laneTips,
+      };
+    }),
+    specificMatchups: hero.specificMatchups
+      ? Object.fromEntries(
+          Object.entries(hero.specificMatchups).map(([enemyId, m]) => [
+            enemyId,
+            { ...m, summary: en?.matchups?.[enemyId]?.summary ?? m.summary, laneRule: en?.matchups?.[enemyId]?.laneRule ?? m.laneRule },
+          ])
+        )
+      : undefined,
+  };
+}
+
+export const HEROES_DB: DeadlockHero[] = BASE_HEROES_DB.map((h) => withMetaBuilds(h, 'fr'));
+const HEROES_DB_EN: DeadlockHero[] = BASE_HEROES_DB.map((h) => withMetaBuilds(translateHero(h), 'en'));
+
+/** Heroes in the interface language (same ids, builds and items as HEROES_DB). */
+export const getHeroesDb = (lang: Lang) => (lang === 'en' ? HEROES_DB_EN : HEROES_DB);
+
+export interface HeroItemStat {
+  pickRate: number; // share of the hero's games where the item was bought
+  winRate: number; // smoothed towards the hero's win rate
+  buyTimeS: number; // average buy time
+}
+
+/** Statistics of an item on this hero, for the rank bracket of the meta build. */
+export function getHeroItemStat(heroId: string, itemId: string): HeroItemStat | undefined {
+  const row = generatedHeroes()[heroId]?.itemStats?.[itemId];
+  return row ? { pickRate: row[0], winRate: row[1], buyTimeS: row[2] } : undefined;
+}
+
+/** Rank bracket, games and win rate of the hero in the generated statistics. */
+export function getHeroMetaInfo(heroId: string): { badgeMin: number; matches: number; winRate: number } | undefined {
+  const meta = generatedHeroes()[heroId];
+  return meta ? { badgeMin: meta.badgeMin, matches: meta.matches, winRate: meta.winRate } : undefined;
+}
 
 // ================= TACTICAL COUNTER ENGINE =================
 export interface TacticalRecommendation {
@@ -2221,6 +2427,7 @@ export interface TacticalRecommendation {
     urgency: 'Critique (En Face / Lane)' | 'Haute (Teamfight / Mid)' | 'Moyenne (Late Game)';
   }[];
   matchupAlerts: {
+    enemyId: string;
     enemyName: string;
     enemyColor: string;
     isInMyLane: boolean;
@@ -2237,6 +2444,74 @@ export interface TacticalRecommendation {
   };
 }
 
+type Urgency = TacticalRecommendation['priorityItems'][number]['urgency'];
+
+/** Texts of the counter engine. Item names in the rules are the English ones in both languages (as in the shop search). */
+const TACTICAL_TEXT = {
+  fr: {
+    counter: (enemy: string) => `Contre ${enemy}`,
+    ccRule: (enemy: string) => `Attention aux contrôles de ${enemy} : gardez vos distances et prenez Reactive Barrier / Debuff Remover.`,
+    airPokeRule: (enemy: string) => `Ne restez pas à découvert face au poke aérien de ${enemy}. Utilisez Knockdown ou du Bouclier Spirituel.`,
+    healerRule: (enemy: string) => `Coupez la régénération de ${enemy} avec Healbane ou Toxic Bullets.`,
+    archetype: (role: string) => `Archétype : ${role}`,
+    blocksCc: (enemy: string) => `Bloque le CC/Hook de ${enemy}`,
+    purges: (enemy: string) => `Purge les contrôles/bombes de ${enemy}`,
+    ccImmunity: (enemy: string) => `Immunité aux CC contre ${enemy}`,
+    antiHeal: (enemy: string) => `Anti-soin (-40%) contre ${enemy}`,
+    toxic: (enemy: string) => `Saignement & -65% soin vs ${enemy}`,
+    decay: (enemy: string) => `Malédiction anti-soin vs ${enemy}`,
+    knockdown: (enemy: string) => `Fait tomber ${enemy} du ciel`,
+    hex: (enemy: string) => `Silence la mobilité de ${enemy}`,
+    spiritShield: (enemy: string) => `Bouclier Spirituel contre le burst de ${enemy}`,
+    spiritResist: (enemy: string) => `Résistance Spirituelle vs ${enemy}`,
+    bulletShield: (enemy: string) => `Bouclier Balistique vs ${enemy}`,
+    metalSkin: (enemy: string) => `Immunité aux balles de ${enemy}`,
+    returnFire: (enemy: string) => `Renvoie les balles de ${enemy}`,
+    suppressor: (enemy: string) => `-25% Cadence de tir sur ${enemy}`,
+    etherealShift: (enemy: string) => `Invulnérabilité contre le all-in de ${enemy}`,
+    superiorStamina: (enemy: string) => `Mobilité aérienne face à ${enemy}`,
+    soloDeny: 'Sécurise et deny les âmes en 1v1 Solo',
+    soloSustain: 'Sustain autonome en lane Solo',
+    duoPush: 'Contrôle du push en Duo 2v2',
+    allyComboTip: (ally: string) =>
+      `Synergie avec votre allié ${ally} : gardez vos sorts de burst/immobilisation (ex: Stake + Assassinate) pour enchaîner immédiatement sur l'engagement ou le CC de ${ally} !`,
+    allyCombo: (ally: string) => `Combo dévastateur sur le contrôle de votre allié ${ally}`,
+    allyDuoTip: (ally: string) =>
+      `Synergie Duo avec ${ally} : alternez vos poussées de vagues et concentrez vos tirs sur la même cible dès qu'un ennemi utilise son dash.`,
+  },
+  en: {
+    counter: (enemy: string) => `Counters ${enemy}`,
+    ccRule: (enemy: string) => `Watch out for ${enemy}'s crowd control: keep your distance and get Reactive Barrier / Debuff Remover.`,
+    airPokeRule: (enemy: string) => `Don't stay in the open against ${enemy}'s aerial poke. Use Knockdown or Spirit Shielding.`,
+    healerRule: (enemy: string) => `Cut ${enemy}'s healing with Healbane or Toxic Bullets.`,
+    archetype: (role: string) => `Archetype: ${role}`,
+    blocksCc: (enemy: string) => `Blocks ${enemy}'s CC / hook`,
+    purges: (enemy: string) => `Purges ${enemy}'s CC / bombs`,
+    ccImmunity: (enemy: string) => `CC immunity against ${enemy}`,
+    antiHeal: (enemy: string) => `Anti-heal (-40%) against ${enemy}`,
+    toxic: (enemy: string) => `Bleed & -65% healing vs ${enemy}`,
+    decay: (enemy: string) => `Anti-heal curse vs ${enemy}`,
+    knockdown: (enemy: string) => `Knocks ${enemy} out of the sky`,
+    hex: (enemy: string) => `Shuts down ${enemy}'s mobility`,
+    spiritShield: (enemy: string) => `Spirit shield against ${enemy}'s burst`,
+    spiritResist: (enemy: string) => `Spirit resist vs ${enemy}`,
+    bulletShield: (enemy: string) => `Bullet shield vs ${enemy}`,
+    metalSkin: (enemy: string) => `Bullet immunity against ${enemy}`,
+    returnFire: (enemy: string) => `Reflects ${enemy}'s bullets`,
+    suppressor: (enemy: string) => `-25% fire rate on ${enemy}`,
+    etherealShift: (enemy: string) => `Invulnerability against ${enemy}'s all-in`,
+    superiorStamina: (enemy: string) => `Air mobility against ${enemy}`,
+    soloDeny: 'Secures and denies souls in a 1v1 solo lane',
+    soloSustain: 'Self-sustain in a solo lane',
+    duoPush: 'Wave push control in a 2v2 duo lane',
+    allyComboTip: (ally: string) =>
+      `Synergy with your ally ${ally}: keep your burst / root abilities (e.g. Stake + Assassinate) to follow up right away on ${ally}'s engage or CC!`,
+    allyCombo: (ally: string) => `Devastating combo on your ally ${ally}'s crowd control`,
+    allyDuoTip: (ally: string) =>
+      `Duo synergy with ${ally}: take turns pushing the wave and focus the same target as soon as an enemy uses their dash.`,
+  },
+};
+
 export function generateTacticalPlan(
   myHeroId: string,
   buildId: string,
@@ -2244,39 +2519,32 @@ export function generateTacticalPlan(
   laneMode: LaneMode,
   laneEnemyIds: string[],
   teamEnemyIds: string[] = [],
-  allyPartnerId: string | null = null
+  allyPartnerId: string | null = null,
+  lang: Lang = 'fr'
 ): TacticalRecommendation {
-  const myHero = HEROES_DB.find((h) => h.id === myHeroId) || HEROES_DB[0];
+  const heroes = getHeroesDb(lang);
+  const items = getItemsDb(lang);
+  const lanes = getLanes(lang);
+  const text = TACTICAL_TEXT[lang];
+  const myHero = heroes.find((h) => h.id === myHeroId) || heroes[0];
   const selectedBuild = myHero.builds.find((b) => b.id === buildId) || myHero.builds[0];
-  const laneInfo = DEADLOCK_LANES.find((l) => l.id === laneColor) || DEADLOCK_LANES[0];
+  const laneInfo = lanes.find((l) => l.id === laneColor) || lanes[0];
 
   const laneEnemies = laneEnemyIds
-    .map((id) => HEROES_DB.find((h) => h.id === id))
+    .map((id) => heroes.find((h) => h.id === id))
     .filter((h): h is DeadlockHero => Boolean(h));
 
   const otherTeamEnemies = teamEnemyIds
     .filter((id) => !laneEnemyIds.includes(id))
-    .map((id) => HEROES_DB.find((h) => h.id === id))
+    .map((id) => heroes.find((h) => h.id === id))
     .filter((h): h is DeadlockHero => Boolean(h));
 
-  const allyHero = allyPartnerId ? HEROES_DB.find((h) => h.id === allyPartnerId) : null;
+  const allyHero = allyPartnerId ? heroes.find((h) => h.id === allyPartnerId) : null;
 
-  const itemScores: Record<
-    string,
-    {
-      score: number;
-      reasons: string[];
-      urgency: 'Critique (En Face / Lane)' | 'Haute (Teamfight / Mid)' | 'Moyenne (Late Game)';
-    }
-  > = {};
+  const itemScores: Record<string, { score: number; reasons: string[]; urgency: Urgency }> = {};
 
-  const addItemRecommendation = (
-    itemId: string,
-    score: number,
-    reason: string,
-    urgency: 'Critique (En Face / Lane)' | 'Haute (Teamfight / Mid)' | 'Moyenne (Late Game)'
-  ) => {
-    if (!ITEMS_DB[itemId]) return;
+  const addItemRecommendation = (itemId: string, score: number, reason: string, urgency: Urgency) => {
+    if (!items[itemId]) return;
     if (!itemScores[itemId]) {
       itemScores[itemId] = { score: 0, reasons: [], urgency };
     }
@@ -2294,12 +2562,14 @@ export function generateTacticalPlan(
   const evaluateEnemy = (enemy: DeadlockHero, isInMyLane: boolean) => {
     const weight = isInMyLane ? 1.0 : 0.45;
     const prefix = isInMyLane ? `[LANE] ` : `[TEAM] `;
-    const defaultUrgency = isInMyLane ? 'Critique (En Face / Lane)' : 'Haute (Teamfight / Mid)';
+    const defaultUrgency: Urgency = isInMyLane ? 'Critique (En Face / Lane)' : 'Haute (Teamfight / Mid)';
+    const name = enemy.name;
 
     const specific = myHero.specificMatchups?.[enemy.id];
     if (specific) {
       matchupAlerts.push({
-        enemyName: enemy.name,
+        enemyId: enemy.id,
+        enemyName: name,
         enemyColor: enemy.accentColor,
         isInMyLane,
         dangerLevel: specific.dangerLevel,
@@ -2310,7 +2580,7 @@ export function generateTacticalPlan(
         addItemRecommendation(
           itemId,
           Math.round((35 - idx * 5) * weight),
-          `${prefix}Contre ${enemy.name}`,
+          `${prefix}${text.counter(name)}`,
           isInMyLane && idx === 0 ? 'Critique (En Face / Lane)' : 'Haute (Teamfight / Mid)'
         );
       });
@@ -2321,59 +2591,60 @@ export function generateTacticalPlan(
 
       if (tags.includes('cc_catch')) {
         danger = 'High';
-        rule = `Attention aux contrôles de ${enemy.name} : gardez vos distances et prenez Reactive Barrier / Debuff Remover.`;
+        rule = text.ccRule(name);
       } else if (tags.includes('flier_mobility') && tags.includes('sniper_poke')) {
         danger = 'High';
-        rule = `Ne restez pas à découvert face au poke aérien de ${enemy.name}. Utilisez Knockdown ou du Bouclier Spirituel.`;
+        rule = text.airPokeRule(name);
       } else if (tags.includes('healer')) {
         danger = 'Medium';
-        rule = `Coupez la régénération de ${enemy.name} avec Healbane ou Toxic Bullets.`;
+        rule = text.healerRule(name);
       }
 
       matchupAlerts.push({
-        enemyName: enemy.name,
+        enemyId: enemy.id,
+        enemyName: name,
         enemyColor: enemy.accentColor,
         isInMyLane,
         dangerLevel: danger,
-        advice: `Archétype : ${enemy.role}`,
+        advice: text.archetype(enemy.role),
         keyRule: rule,
       });
     }
 
     if (enemy.threatTags.includes('cc_catch')) {
       if (isInMyLane) {
-        addItemRecommendation('reactive_barrier', 30, `[LANE] Bloque le CC/Hook de ${enemy.name}`, 'Critique (En Face / Lane)');
+        addItemRecommendation('reactive_barrier', 30, `[LANE] ${text.blocksCc(name)}`, 'Critique (En Face / Lane)');
       }
-      addItemRecommendation('debuff_remover', Math.round(24 * weight), `${prefix}Purge les contrôles/bombes de ${enemy.name}`, defaultUrgency);
-      addItemRecommendation('unstoppable', Math.round(18 * weight), `${prefix}Immunité aux CC contre ${enemy.name}`, 'Moyenne (Late Game)');
+      addItemRecommendation('debuff_remover', Math.round(24 * weight), `${prefix}${text.purges(name)}`, defaultUrgency);
+      addItemRecommendation('unstoppable', Math.round(18 * weight), `${prefix}${text.ccImmunity(name)}`, 'Moyenne (Late Game)');
     }
     if (enemy.threatTags.includes('healer')) {
-      addItemRecommendation('healbane', Math.round(28 * weight), `${prefix}Anti-soin (-40%) contre ${enemy.name}`, defaultUrgency);
-      addItemRecommendation('toxic_bullets', Math.round(24 * weight), `${prefix}Saignement & -65% soin vs ${enemy.name}`, 'Haute (Teamfight / Mid)');
-      addItemRecommendation('decay', Math.round(20 * weight), `${prefix}Malédiction anti-soin vs ${enemy.name}`, defaultUrgency);
+      addItemRecommendation('healbane', Math.round(28 * weight), `${prefix}${text.antiHeal(name)}`, defaultUrgency);
+      addItemRecommendation('toxic_bullets', Math.round(24 * weight), `${prefix}${text.toxic(name)}`, 'Haute (Teamfight / Mid)');
+      addItemRecommendation('decay', Math.round(20 * weight), `${prefix}${text.decay(name)}`, defaultUrgency);
     }
     if (enemy.threatTags.includes('flier_mobility')) {
-      addItemRecommendation('knockdown', Math.round(28 * weight), `${prefix}Fait tomber ${enemy.name} du ciel`, 'Haute (Teamfight / Mid)');
-      addItemRecommendation('slowing_hex', Math.round(26 * weight), `${prefix}Silence la mobilité de ${enemy.name}`, defaultUrgency);
+      addItemRecommendation('knockdown', Math.round(28 * weight), `${prefix}${text.knockdown(name)}`, 'Haute (Teamfight / Mid)');
+      addItemRecommendation('slowing_hex', Math.round(26 * weight), `${prefix}${text.hex(name)}`, defaultUrgency);
     }
     if (enemy.threatTags.includes('spirit_burst') || enemy.threatTags.includes('sniper_poke')) {
       if (isInMyLane) {
-        addItemRecommendation('spirit_shielding', 26, `[LANE] Bouclier Spirituel contre le burst de ${enemy.name}`, 'Critique (En Face / Lane)');
+        addItemRecommendation('spirit_shielding', 26, `[LANE] ${text.spiritShield(name)}`, 'Critique (En Face / Lane)');
       } else {
-        addItemRecommendation('spirit_resilience', 18, `[TEAM] Résistance Spirituelle vs ${enemy.name}`, 'Haute (Teamfight / Mid)');
+        addItemRecommendation('spirit_resilience', 18, `[TEAM] ${text.spiritResist(name)}`, 'Haute (Teamfight / Mid)');
       }
     }
     if (enemy.threatTags.includes('bullet_hose')) {
       if (isInMyLane) {
-        addItemRecommendation('weapon_shielding', 22, `[LANE] Bouclier Balistique vs ${enemy.name}`, 'Critique (En Face / Lane)');
+        addItemRecommendation('weapon_shielding', 22, `[LANE] ${text.bulletShield(name)}`, 'Critique (En Face / Lane)');
       }
-      addItemRecommendation('metal_skin', Math.round(26 * weight), `${prefix}Immunité aux balles de ${enemy.name}`, 'Haute (Teamfight / Mid)');
-      addItemRecommendation('return_fire', Math.round(24 * weight), `${prefix}Renvoie les balles de ${enemy.name}`, defaultUrgency);
-      addItemRecommendation('suppressor', Math.round(20 * weight), `${prefix}-25% Cadence de tir sur ${enemy.name}`, defaultUrgency);
+      addItemRecommendation('metal_skin', Math.round(26 * weight), `${prefix}${text.metalSkin(name)}`, 'Haute (Teamfight / Mid)');
+      addItemRecommendation('return_fire', Math.round(24 * weight), `${prefix}${text.returnFire(name)}`, defaultUrgency);
+      addItemRecommendation('suppressor', Math.round(20 * weight), `${prefix}${text.suppressor(name)}`, defaultUrgency);
     }
     if (enemy.threatTags.includes('close_assassin')) {
-      addItemRecommendation('ethereal_shift', Math.round(24 * weight), `${prefix}Invulnérabilité contre le all-in de ${enemy.name}`, 'Haute (Teamfight / Mid)');
-      addItemRecommendation('superior_stamina', Math.round(20 * weight), `${prefix}Mobilité aérienne face à ${enemy.name}`, 'Haute (Teamfight / Mid)');
+      addItemRecommendation('ethereal_shift', Math.round(24 * weight), `${prefix}${text.etherealShift(name)}`, 'Haute (Teamfight / Mid)');
+      addItemRecommendation('superior_stamina', Math.round(20 * weight), `${prefix}${text.superiorStamina(name)}`, 'Haute (Teamfight / Mid)');
     }
   };
 
@@ -2383,18 +2654,18 @@ export function generateTacticalPlan(
   // Lane & Ally Partner adjustments
   let allySynergyTip: string | undefined = undefined;
   if (laneMode === 'solo') {
-    addItemRecommendation('high_velocity_mag', 15, 'Sécurise et deny les âmes en 1v1 Solo', 'Critique (En Face / Lane)');
-    addItemRecommendation('extra_regen', 14, 'Sustain autonome en lane Solo', 'Critique (En Face / Lane)');
+    addItemRecommendation('high_velocity_mag', 15, text.soloDeny, 'Critique (En Face / Lane)');
+    addItemRecommendation('extra_regen', 14, text.soloSustain, 'Critique (En Face / Lane)');
   } else {
-    addItemRecommendation('monster_rounds', 14, 'Contrôle du push en Duo 2v2', 'Critique (En Face / Lane)');
+    addItemRecommendation('monster_rounds', 14, text.duoPush, 'Critique (En Face / Lane)');
     if (allyHero) {
       if (allyHero.threatTags.includes('cc_catch') || allyHero.threatTags.includes('tank_frontline')) {
-        allySynergyTip = `Synergie avec votre allié ${allyHero.name} : gardez vos sorts de burst/immobilisation (ex: Stake + Assassinate) pour enchaîner immédiatement sur l'engagement ou le CC de ${allyHero.name} !`;
+        allySynergyTip = text.allyComboTip(allyHero.name);
         if (myHero.id === 'vindicta') {
-          addItemRecommendation('alchemical_fire', 22, `Combo dévastateur sur le contrôle de votre allié ${allyHero.name}`, 'Haute (Teamfight / Mid)');
+          addItemRecommendation('alchemical_fire', 22, text.allyCombo(allyHero.name), 'Haute (Teamfight / Mid)');
         }
       } else {
-        allySynergyTip = `Synergie Duo avec ${allyHero.name} : alternez vos poussées de vagues et concentrez vos tirs sur la même cible dès qu'un ennemi utilise son dash.`;
+        allySynergyTip = text.allyDuoTip(allyHero.name);
       }
     }
   }
@@ -2404,12 +2675,12 @@ export function generateTacticalPlan(
     .sort(
       (a, b) =>
         b[1].score - a[1].score ||
-        ITEMS_DB[a[0]].cost - ITEMS_DB[b[0]].cost ||
+        items[a[0]].cost - items[b[0]].cost ||
         a[0].localeCompare(b[0])
     )
     .slice(0, 6)
     .map(([itemId, data]) => ({
-      item: ITEMS_DB[itemId],
+      item: items[itemId],
       reasons: data.reasons,
       urgency: data.urgency,
     }));
@@ -2428,4 +2699,3 @@ export function generateTacticalPlan(
     },
   };
 }
-

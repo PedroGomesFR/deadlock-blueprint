@@ -1,0 +1,47 @@
+name: Update meta builds
+
+# Every Monday, and on demand (Actions › Update meta builds › Run workflow): new statistics and items from
+# deadlock-api.com. Installed apps download the committed files at their next launch (src/data/dataSource.ts),
+# so a Deadlock patch reaches the players without a new release.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-builds
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      # No Electron binary needed here
+      - run: npm ci --ignore-scripts
+
+      - name: Download the statistics and the item catalogue
+        run: npm run update-builds
+
+      # The script refuses to write broken data; the tests also check the translations and the builds
+      - name: Tests
+        run: npm test
+
+      - name: Commit the new data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/generated public/icons/items/api public/icons/abilities/api
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Meta builds: weekly update ($(date -u +%Y-%m-%d))"
+          git push

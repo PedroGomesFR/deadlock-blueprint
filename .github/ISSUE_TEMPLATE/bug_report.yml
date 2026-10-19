@@ -1,0 +1,54 @@
+name: Problem / wrong detection
+description: Something is detected wrong, a recommendation makes no sense, or the app misbehaves.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! The fastest way: in the app, **Diagnostics › Report a problem**. It fills in this form and creates a `.zip` in your Downloads folder.
+        **Drag that `.zip` into the box below** before submitting: with the game log inside, the problem can be replayed and fixed.
+  - type: dropdown
+    id: area
+    attributes:
+      label: What went wrong?
+      options:
+        - My hero
+        - Enemies / allies / lane
+        - Inventory (owned items)
+        - Souls
+        - Recommendations
+        - Unsupported screen format
+        - Overlay / app
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened, and what did you expect?
+      description: Roughly when in the match (e.g. "around 15:00, after I bought Toxic Bullets").
+    validations:
+      required: true
+  - type: input
+    id: attachment
+    attributes:
+      label: Report file
+      description: Name of the .zip created by the app. Drag the file itself into the description box above.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings › Updates
+  - type: input
+    id: resolution
+    attributes:
+      label: Game resolution
+      description: e.g. 1920x1080, 2560x1440, 3440x1440. Also say if you play windowed or change the HUD scale.
+  - type: input
+    id: hero
+    attributes:
+      label: Hero played
+  - type: input
+    id: language
+    attributes:
+      label: App language

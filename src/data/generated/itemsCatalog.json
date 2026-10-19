@@ -1,5 +1,6 @@
 {
-  "generatedAt": "2026-10-18T15:38:51.709Z",
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T16:23:15.602Z",
   "items": {
     "extended_magazine": {
       "id": "extended_magazine",
@@ -13,6 +14,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+30% Mun. max.", "+8% Dégâts des armes"],
+      "statsEn": ["+30% Max Ammo", "+8% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/basic_magazine.png",
       "icon": "./icons/items/api/extended_magazine.png"
     },
@@ -28,6 +32,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+25% Dégâts des armes contre les PNJ", "+25% Résistance aux balles contre les PNJ", "+1 Régénération en dehors du combat"],
+      "statsEn": ["+25% Weapon Damage vs. NPCs", "+25% Bullet Resist vs. NPCs", "+1 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/monster_rounds.png",
       "icon": "./icons/items/api/monster_rounds.png",
       "legacyIcon": "./icons/items/monster_rounds.png"
@@ -42,10 +49,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "monster_rounds"
-      ],
+      "upgradesFrom": ["monster_rounds"],
       "descriptionFr": "Vous ciblez un PNJ hostile et le drainez pour obtenir 170 % d'âmes bonus et un bonus puissant de longue durée.",
+      "descriptionEn": "Target an enemy NPC and consume it for 170% Bonus Souls and grants a powerful long lasting buff.",
+      "statsFr": ["+2 Régénération en dehors du combat", "+30% Dégâts des armes contre les PNJ", "+30% Résistance aux balles contre les PNJ", "270s Temps de récupération", "160s Durée"],
+      "statsEn": ["+2 Out of Combat Regen", "+30% Weapon Damage vs. NPCs", "+30% Bullet Resist vs. NPCs", "270s Cooldown", "160s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/cultist_sacrifice.png",
       "icon": "./icons/items/api/cultist_sacrifice.png"
     },
@@ -61,6 +69,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles ont une chance d'électriser la cible. Le choc électrique rebondira sur une unité ennemie à proximité.",
+      "descriptionEn": "Your bullets have a chance to shock your target. The shock will jump to a nearby enemy.",
+      "statsFr": ["0.2s Fréquence max.", "4 Sauts max."],
+      "statsEn": ["0.2s Max Frequency", "4 Max Jumps"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/tesla_bullets.png",
       "icon": "./icons/items/api/tesla_bullets.png",
       "legacyIcon": "./icons/items/tesla_bullets.png"
@@ -75,10 +86,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "tesla_bullets"
-      ],
+      "upgradesFrom": ["tesla_bullets"],
       "descriptionFr": "Lance un projectile qui inflige des dégâts, applique un ralentissement puissant qui s'amenuise au fil du temps, empêche l'adversaire de puiser dans son endurance et réduit au silence ses objets et capacités de déplacemen",
+      "descriptionEn": "Launch a projectile that deals damage, applies a strong slow that recovers over time, prevents Stamina usage and Silences their movement-based items and abilities.",
+      "statsFr": ["+5% Cadence de tir", "0.2s Fréquence max.", "6 Sauts max.", "40s Temps de récupération", "3s Durée de ralentissement"],
+      "statsEn": ["+5% Fire Rate", "0.2s Max Frequency", "6 Max Jumps", "40s Cooldown", "3s Slow Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/capacitor.png",
       "icon": "./icons/items/api/capacitor.png"
     },
@@ -94,6 +106,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Lorsque votre seuil de PV dépasse 65 %, vous infligez des dégâts des armes supplémentaires et vos balles réduisent la résistance aux balles de la cible.",
+      "descriptionEn": "When you are above 65% health, deal additional Weapon Damage and your bullets reduce enemy Bullet Resist.",
+      "statsFr": ["+4.5 Régénération en dehors du combat", "+125 PV bonus", "8s Durée de l'effet négatif"],
+      "statsEn": ["+4.5 Out of Combat Regen", "+125 Bonus Health", "8s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/hollow_point.png",
       "icon": "./icons/items/api/hollow_point.png"
     },
@@ -107,10 +122,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "high_velocity_mag"
-      ],
+      "upgradesFrom": ["high_velocity_mag"],
       "descriptionFr": "Vos attaques appliquent des dégâts des armes supplémentaires contre les adversaires avec plus de 50 % de PV.",
+      "descriptionEn": "Your attacks have additional Weapon Damage against enemies above 50% health.",
+      "statsFr": ["+60% Vitesse des balles", "+8% Dégâts des armes", "+7 Pouvoir spirituel"],
+      "statsEn": ["+60% Bullet Velocity", "+8% Weapon Damage", "+7 Spirit Power"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/opening_rounds.png",
       "icon": "./icons/items/api/pristine_emblem.png",
       "legacyIcon": "./icons/items/pristine_emblem.png"
@@ -127,6 +143,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+60% Vitesse des balles", "+8% Dégâts des armes"],
+      "statsEn": ["+60% Bullet Velocity", "+8% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/high_velocity_rounds.png",
       "icon": "./icons/items/api/high_velocity_mag.png",
       "legacyIcon": "./icons/items/high_velocity_mag.png"
@@ -143,6 +162,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochaine attaque de mêlée vous soigne. Le soin est de 30 % contre les unités non-occultistes. Le temps de récupération est multiplié par 1.5 pour les attaques de mêlée légères.",
+      "descriptionEn": "Your next Melee attack heals you. This heal is 30% effective vs non-heroes. Cooldown is 1.5x as long for Light Melee hits.",
+      "statsFr": ["+12% Dégâts de mêlée", "8s Temps de récupération"],
+      "statsEn": ["+12% Melee Damage", "8s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/melee_lifesteal.png",
       "icon": "./icons/items/api/melee_lifesteal.png"
     },
@@ -158,6 +180,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "En cas de parade réussie contre une unité occultiste ennemie, vous gagnez des PV d'un montant des dégâts parés et renvoyez ces derniers à la cible. Accorde un bonus temporaire de dégâts.",
+      "descriptionEn": "On a successful Parry against an enemy Hero, Heal yourself for the damage parried and returns that damage to the target, and temporarily gain increased damage.",
+      "statsFr": ["1.75s Tps de récup. de la parade", "+18% Résistance aux attaques de mêlée", "+75 PV bonus", "6s Durée de l'effet positif"],
+      "statsEn": ["1.75s Parry Cooldown", "+18% Melee Resist", "+75 Bonus Health", "6s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/rebuttal.png",
       "icon": "./icons/items/api/rebuttal.png"
     },
@@ -173,6 +198,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochaine parade vous protège des dégâts et des effets d'objets et de capacités adverses. En cas de parade de sort réussie, vous obtenez des soins, de la vitesse de déplacement et du Pouvoir spirituel.",
+      "descriptionEn": "Your next parry protects you from the damage and effects of enemy abilities and items. On a successful spell parry heal and gain move speed and Spirit.",
+      "statsFr": ["+50 PV bonus", "+5 Pouvoir spirituel", "6s Durée de l'effet positif", "23s Temps de récupération", "0.8s Durée de parade des sorts"],
+      "statsEn": ["+50 Bonus Health", "+5 Spirit Power", "6s Buff Duration", "23s Cooldown", "0.8s Spell Parry Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/counterspell.png",
       "icon": "./icons/items/api/counterspell.png"
     },
@@ -186,10 +214,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "slowing_bullets"
-      ],
+      "upgradesFrom": ["slowing_bullets"],
       "descriptionFr": "Vos balles ralentissent les cibles.",
+      "descriptionEn": "Your bullets build up a Movement Slow on enemies.",
+      "statsFr": ["+30% Dégâts des armes", "+22% Résistance aux effets négatifs", "-14% Récupération d'endurance", "-20% Distance de l'élan", "3.5s Durée de ralentissement"],
+      "statsEn": ["+30% Weapon Damage", "+22% Debuff Resist", "-14% Stamina Recovery", "-20% Dash Distance", "3.5s Slow Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/weighted_shots.png",
       "icon": "./icons/items/api/weighted_shots.png"
     },
@@ -205,6 +234,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Augmente vos dégâts des armes quand vous attaquez une cible à courte portée.",
+      "descriptionEn": "Deal additional Weapon Damage when in close range to your target.",
+      "statsFr": ["+20% Résistance aux attaques de mêlée"],
+      "statsEn": ["+20% Melee Resist"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/close_quarters.png",
       "icon": "./icons/items/api/close_quarters.png",
       "legacyIcon": "./icons/items/close_quarters.png"
@@ -221,6 +253,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vous infligez des dégâts des armes bonus quand vous attaquez une cible au-delà de la distance minimale.",
+      "descriptionEn": "Deal additional Weapon Damage when beyond a minimum distance from your target.",
+      "statsFr": ["+8% Portée de réduction des dégâts"],
+      "statsEn": ["+8% Weapon Fall-off Range"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/long_range.png",
       "icon": "./icons/items/api/long_range.png"
     },
@@ -236,6 +271,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles ralentissent les cibles.",
+      "descriptionEn": "Your bullets build up a Movement Slow on enemies.",
+      "statsFr": ["-20% Distance de l'élan", "3.5s Durée de ralentissement", "0.7% Accumulation par tir"],
+      "statsEn": ["-20% Dash Distance", "3.5s Slow Duration", "0.7% Buildup Per Shot"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/slowing_bullets.png",
       "icon": "./icons/items/api/slowing_bullets.png",
       "legacyIcon": "./icons/items/slowing_bullets.png"
@@ -252,6 +290,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles s'accumulent pour réduire les dégâts infligés par la cible et appliquent une réduction des soins.",
+      "descriptionEn": "Your bullets build up to reduce the target's outgoing damage and apply healing reduction.",
+      "statsFr": ["+10% Dégâts des armes", "+150 PV bonus", "5s Durée de l'effet négatif", "0.77% Accumulation par tir"],
+      "statsEn": ["+10% Weapon Damage", "+150 Bonus Health", "5s Debuff Duration", "0.77% Buildup Per Shot"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/inhibitor.png",
       "icon": "./icons/items/api/inhibitor.png"
     },
@@ -267,6 +308,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles appliquent un effet négatif qui réduit la résistance spirituelle de la cible et vous confère à vous et votre équipe du vol de vie spirituel contre cette cible.",
+      "descriptionEn": "Your bullets apply a debuff that reduces the Spirit Resist of the target and grants you and your allies Spirit Lifesteal against them.",
+      "statsFr": ["8s Durée de l'effet négatif"],
+      "statsEn": ["8s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/spirit_shredder_bullets.png",
       "icon": "./icons/items/api/soul_shredder_bullets.png",
       "legacyIcon": "./icons/items/soul_shredder_bullets.png"
@@ -283,6 +327,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Augmente la résistance aux balles des unités alliées à proximité.",
+      "descriptionEn": "Provides Bullet Resist to nearby friendly units.",
+      "statsFr": ["7s Durée", "22s Temps de récupération"],
+      "statsEn": ["7s Duration", "22s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/heroic_aura.png",
       "icon": "./icons/items/api/heroic_aura.png"
     },
@@ -298,6 +345,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Lance un projectile qui se déploie devant vous, et qui réduit au silence les adversaires pendant une courte durée et leur inflige des dégâts d'impact.Le silence n'interrompt pas la canalisation des capacités.",
+      "descriptionEn": "Launch an expanding projectile which Silences enemies for a short duration and deals impact damage. Silence does not interrupt channeling abilities.",
+      "statsFr": ["+50 PV bonus", "42s Temps de récupération"],
+      "statsEn": ["+50 Bonus Health", "42s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/silence_glyph.png",
       "icon": "./icons/items/api/silence_wave.png"
     },
@@ -313,6 +363,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles finissent par réduire leurs cibles au silence. À l'expiration de l'effet, les cibles y sont immunisées pendant 10 s.",
+      "descriptionEn": "Your bullets build up to a Silence. Victims are immune to the build up for 10s after silence expires.",
+      "statsFr": ["+12% Résistance spirituelle", "6s Durée de l'effet négatif", "10s Durée de l'immunité", "1.04% Accumulation par tir"],
+      "statsEn": ["+12% Spirit Resist", "6s Debuff Duration", "10s Immunity Duration", "1.04% Buildup Per Shot"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/silencer.png",
       "icon": "./icons/items/api/silencer.png",
       "legacyIcon": "./icons/items/silencer.png"
@@ -329,6 +382,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Augmente vos dégâts des armes à mesure que vous subissez des dégâts répétés.",
+      "descriptionEn": "Your Weapon Damage increases as you take sustained damage.",
+      "statsFr": ["+8% Résistance aux balles", "120 Dégâts subis par charge", "10 Charges max.", "10s Durée"],
+      "statsEn": ["+8% Bullet Resist", "120 Damage taken to Stack", "10 Max Stacks", "10s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/berserker.png",
       "icon": "./icons/items/api/berserker.png"
     },
@@ -344,6 +400,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Augmente vos statistiques quand vous avez moins de 50 % de vos PV et les effets négatifs sont réduits.",
+      "descriptionEn": "While you are below 50% health, you gain stat bonuses for a duration and existing debuffs on you are reduced.",
+      "statsFr": ["+160 PV bonus", "+15% Cadence de tir", "+10% Vol de vie des balles", "16s Temps de récupération", "10s Durée"],
+      "statsEn": ["+160 Bonus Health", "+15% Fire Rate", "+10% Bullet Lifesteal", "16s Cooldown", "10s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/frenzy.png",
       "icon": "./icons/items/api/frenzy.png"
     },
@@ -359,6 +418,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles volent temporairement les PV max. de vos adversaires. Les unités ennemies récupèrent leurs PV à la fin de l'effet négatif.",
+      "descriptionEn": "Your bullets temporarily steal Max HP from enemies. Enemies regain their stolen health when the debuff expires.",
+      "statsFr": ["+15% Dégâts des armes", "+10% Résistance aux balles", "17s Durée du vol", "1.2s Fréquence max."],
+      "statsEn": ["+15% Weapon Damage", "+10% Bullet Resist", "17s Steal Duration", "1.2s Max Frequency"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/siphon_bullets.png",
       "icon": "./icons/items/api/siphon_bullets.png"
     },
@@ -374,6 +436,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochain tir à la tête contre une unité occultiste ennemie inflige des dégâts des armes bonus.",
+      "descriptionEn": "Your next headshot against an enemy Hero deals bonus weapon damage.",
+      "statsFr": ["+30 PV bonus", "9s Temps de récupération"],
+      "statsEn": ["+30 Bonus Health", "9s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/headshot_booster.png",
       "icon": "./icons/items/api/headshot_booster.png",
       "legacyIcon": "./icons/items/headshot_booster.png"
@@ -390,6 +455,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "En cas de tir à la tête sur une cible, réduit sa résistance aux balles.",
+      "descriptionEn": "Landing a Headshot reduces their Bullet Resist.",
+      "statsFr": ["+60 PV bonus", "12s Durée de l'effet négatif"],
+      "statsEn": ["+60 Bonus Health", "12s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/weakening_headshot.png",
       "icon": "./icons/items/api/weakening_headshot.png"
     },
@@ -403,11 +471,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "long_range",
-        "high_velocity_mag"
-      ],
+      "upgradesFrom": ["long_range", "high_velocity_mag"],
       "descriptionFr": "Vous infligez des dégâts des armes bonus quand vous attaquez une cible au-delà de la distance minimale.",
+      "descriptionEn": "Deal additional Weapon Damage when beyond a minimum distance from your target.",
+      "statsFr": ["+20% Portée de réduction des dégâts", "+25% Zoom de l'arme", "+60% Vitesse des balles", "+10% Dégâts des armes"],
+      "statsEn": ["+20% Weapon Fall-off Range", "+25% Weapon Zoom", "+60% Bullet Velocity", "+10% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/sharp_shooter.png",
       "icon": "./icons/items/api/sharpshooter.png",
       "legacyIcon": "./icons/items/sharpshooter.png"
@@ -422,10 +490,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "headshot_booster"
-      ],
+      "upgradesFrom": ["headshot_booster"],
       "descriptionFr": "Votre prochain tir à la tête sur une unité occultiste ennemie inflige des dégâts des armes bonus, vous confère des soins ainsi que de la bonus move speed temporaire.",
+      "descriptionEn": "Your next headshot against an enemy Hero deals bonus weapon damage, heal you, and briefly grants bonus move speed.",
+      "statsFr": ["+5% Dégâts des armes", "+50 PV bonus", "3s Durée du bonus de vitesse", "8s Temps de récupération"],
+      "statsEn": ["+5% Weapon Damage", "+50 Bonus Health", "3s Move Speed Duration", "8s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/headhunter.png",
       "icon": "./icons/items/api/headhunter.png",
       "legacyIcon": "./icons/items/headhunter.png"
@@ -440,10 +509,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "soul_shredder_bullets"
-      ],
+      "upgradesFrom": ["soul_shredder_bullets"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+75 PV bonus", "8s Durée de l'effet négatif", "4 Charges max.", "2s Fréquence max."],
+      "statsEn": ["+75 Bonus Health", "8s Debuff Duration", "4 Max Stacks", "2s Max Frequency"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/spellslinger_headshots.png",
       "icon": "./icons/items/api/spirit_rend.png",
       "legacyIcon": "./icons/items/spirit_rend.png"
@@ -458,10 +528,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "weakening_headshot"
-      ],
+      "upgradesFrom": ["weakening_headshot"],
       "descriptionFr": "Vos tirs en pleine tête réduisent leur résistance aux balles, leur résistance spirituelle et les soins reçus.",
+      "descriptionEn": "Landing a Headshot will reduce their Bullet, Spirit Resist, and Incoming Healing.",
+      "statsFr": ["+125 PV bonus", "12s Durée de l'effet négatif"],
+      "statsEn": ["+125 Bonus Health", "12s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/crippling_headshot.png",
       "icon": "./icons/items/api/crippling_headshot.png",
       "legacyIcon": "./icons/items/crippling_headshot.png"
@@ -478,6 +549,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochaine balle infligera des dégâts spirituels en plus.",
+      "descriptionEn": "Your next bullet deals bonus spirit damage.",
+      "statsFr": ["7 Pouvoir spirituel", "8s Temps de récupération"],
+      "statsEn": ["7 Spirit Power", "8s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/mystic_shot.png",
       "icon": "./icons/items/api/mystic_shot.png",
       "legacyIcon": "./icons/items/mystic_shot.png"
@@ -494,6 +568,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles ont une chance d'être surpuissantes et de provoquer des dégâts des armes bonus quand elles touchent leur cible.Les dégâts bonus ne peuvent pas être critiques.",
+      "descriptionEn": "Your bullets have a chance to be empowered, causing them to deal bonus weapon damage on hit.Bonus damage cannot Crit.",
+      "statsFr": ["+30% Mun. max.", "25% Chances d'activation"],
+      "statsEn": ["+30% Max Ammo", "25% Proc Chance"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/lucky_shot.png",
       "icon": "./icons/items/api/lucky_shot.png"
     },
@@ -507,10 +584,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "close_quarters"
-      ],
+      "upgradesFrom": ["close_quarters"],
       "descriptionFr": "Quand vous tirez sur votre cible à bout portant, vous infligez des dégâts des armes bonus et vos balles appliquent un ralentissement.",
+      "descriptionEn": "When in close range to your target, gain Weapon Damage and your bullets apply a Movement Slow.",
+      "statsFr": ["+75 PV bonus", "+30% Résistance aux attaques de mêlée", "2s Durée de ralentissement"],
+      "statsEn": ["+75 Bonus Health", "+30% Melee Resist", "2s Slow Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/point_blank.png",
       "icon": "./icons/items/api/point_blank.png"
     },
@@ -526,6 +604,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles provoquent un saignement cumulable sur les unités ennemies touchées. Elles perdent un pourcentage de leurs PV max. au fil du temps. Diminue également les soins reçus par les cibles qui saignent.",
+      "descriptionEn": "Your bullets build up a Bleed on enemies, causing them to lose a percentage of their Max Health over time. Also reduces Incoming Healing on the bleeding target.",
+      "statsFr": ["4s Durée", "1.28% Accumulation par tir"],
+      "statsEn": ["4s Duration", "1.28% Buildup Per Shot"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/toxic_bullets.png",
       "icon": "./icons/items/api/toxic_bullets.png",
       "legacyIcon": "./icons/items/toxic_bullets.png"
@@ -542,6 +623,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos balles ricochent sur les unités ennemies proches de votre cible : elles appliquent les modificateurs de balles et infligent un pourcentage des dégâts originaux.",
+      "descriptionEn": "Your bullets will ricochet on enemies near your target, applying any bullet procs and dealing a percentage of the original damage.",
+      "statsFr": ["+18% Cadence de tir", "2 Nombre de cibles"],
+      "statsEn": ["+18% Fire Rate", "2 Ricochet Targets"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/ricochet.png",
       "icon": "./icons/items/api/ricochet.png"
     },
@@ -557,6 +641,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+210 PV bonus"],
+      "statsEn": ["+210 Bonus Health"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/extra_health.png",
       "icon": "./icons/items/api/extra_health.png",
       "legacyIcon": "./icons/items/extra_health.png"
@@ -573,6 +660,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+13% Vol de vie des balles", "+90 PV bonus", "+6% Dégâts des armes"],
+      "statsEn": ["+13% Bullet Lifesteal", "+90 Bonus Health", "+6% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/bullet_lifesteal.png",
       "icon": "./icons/items/api/bullet_lifesteal.png",
       "legacyIcon": "./icons/items/bullet_lifesteal.png"
@@ -589,6 +679,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Réduit la durée de tous les effets négatifs reçus.",
+      "descriptionEn": "Reduces the duration of all negative effects applied to you.",
+      "statsFr": ["+90 PV bonus", "+25% Résistance aux effets négatifs"],
+      "statsEn": ["+90 Bonus Health", "+25% Debuff Resist"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/debuff_reducer.png",
       "icon": "./icons/items/api/debuff_reducer.png",
       "legacyIcon": "./icons/items/debuff_reducer.png"
@@ -605,6 +698,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Supprime tous les effets négatifs non ultimes qui vous affectent. Lors d'une suppression, vous récupérez des PV et obtenez un bonus de vitesse de déplacement. N'est pas utilisable en cas d'étourdissement ou d'endormissem",
+      "descriptionEn": "Purge all non-ultimate negative effects currently applied to you. If any effects were removed, heal yourself and gain a move speed bonus. Cannot be used while Stunned or Slept.",
+      "statsFr": ["+10% Résistance spirituelle", "45s Temps de récupération", "3s Durée de l'effet positif"],
+      "statsEn": ["+10% Spirit Resist", "45s Cooldown", "3s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/debuff_remover.png",
       "icon": "./icons/items/api/debuff_remover.png",
       "legacyIcon": "./icons/items/debuff_remover.png"
@@ -621,6 +717,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vous avez moins de 50 % de vos PV, vous gagnez en résistance spirituelle.",
+      "descriptionEn": "When below 50% health, gain additional Spirit Resist.",
+      "statsFr": ["+30% Résistance spirituelle", "+3 Régénération en dehors du combat"],
+      "statsEn": ["+30% Spirit Resist", "+3 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/spirit_resilience.png",
       "icon": "./icons/items/api/spirit_resilience.png",
       "legacyIcon": "./icons/items/spirit_resilience.png"
@@ -637,6 +736,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vous avez moins de 50 % de vos PV, vous gagnez en résistance aux balles.",
+      "descriptionEn": "When below 50% health, gain additional Bullet Resist.",
+      "statsFr": ["+30% Résistance aux balles", "+3 Régénération en dehors du combat"],
+      "statsEn": ["+30% Bullet Resist", "+3 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/bullet_resilience.png",
       "icon": "./icons/items/api/bullet_resilience.png",
       "legacyIcon": "./icons/items/bullet_resilience.png"
@@ -653,6 +755,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Immunise contre les balles.",
+      "descriptionEn": "Become immune to bullets.",
+      "statsFr": ["+12% Résistance aux balles", "-20% Distance de l'élan", "5s Durée", "24s Temps de récupération"],
+      "statsEn": ["+12% Bullet Resist", "-20% Dash Distance", "5s Duration", "24s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/metal_skin.png",
       "icon": "./icons/items/api/metal_skin.png",
       "legacyIcon": "./icons/items/metal_skin.png"
@@ -667,10 +772,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_regen"
-      ],
+      "upgradesFrom": ["extra_regen"],
       "descriptionFr": "Améliore l'efficacité de vos soins.",
+      "descriptionEn": "Increases the effectiveness of your healing.",
+      "statsFr": ["+3 Régénération de PV", "+1 Régénération en dehors du combat"],
+      "statsEn": ["+3 Health Regen", "+1 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/healing_booster.png",
       "icon": "./icons/items/api/healing_booster.png"
     },
@@ -684,10 +790,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_health"
-      ],
+      "upgradesFrom": ["extra_health"],
       "descriptionFr": "Accorde de la régénération de PV si aucun dégât n'a été subi pendant un certain temps.",
+      "descriptionEn": "After not taking damage for a period, gain health regen.",
+      "statsFr": ["+375 PV bonus"],
+      "statsEn": ["+375 Bonus Health"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/fortitude.png",
       "icon": "./icons/items/api/fortitude.png"
     },
@@ -701,11 +808,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "bullet_lifesteal",
-        "spirit_lifesteal"
-      ],
+      "upgradesFrom": ["bullet_lifesteal", "spirit_lifesteal"],
       "descriptionFr": "Réduit les effets de réduction de soins appliqués par les unités ennemies.",
+      "descriptionEn": "Reduces the effect of enemy applied healing reduction.",
+      "statsFr": ["+28% Vol de vie spirituel", "+28% Vol de vie des balles", "+180 PV bonus", "+12% Dégâts des armes", "+12 Pouvoir spirituel"],
+      "statsEn": ["+28% Spirit Lifesteal", "+28% Bullet Lifesteal", "+180 Bonus Health", "+12% Weapon Damage", "+12 Spirit Power"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/leech.png",
       "icon": "./icons/items/api/leech.png",
       "legacyIcon": "./icons/items/leech.png"
@@ -722,6 +829,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+2 Régénération en dehors du combat"],
+      "statsEn": ["+2 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/sprint_boots.png",
       "icon": "./icons/items/api/sprint_boots.png",
       "legacyIcon": "./icons/items/sprint_boots.png"
@@ -736,10 +846,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "sprint_boots"
-      ],
+      "upgradesFrom": ["sprint_boots"],
       "descriptionFr": "Whenever you score an assist or kill, gain extra sprint, ability range and passive soul generation. This effect stacks and persists through death.",
+      "descriptionEn": "Whenever you score an assist or kill, gain extra sprint, ability range and passive soul generation. This effect stacks and persists through death.",
+      "statsFr": ["-15% Dégâts des armes contre les PNJ", "+2 Régénération en dehors du combat", "16 Charges max."],
+      "statsEn": ["-15% Weapon Damage vs. NPCs", "+2 Out of Combat Regen", "16 Max Stacks"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/trophy_collector.png",
       "icon": "./icons/items/api/trophy_collector.png"
     },
@@ -753,10 +864,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "sprint_boots"
-      ],
+      "upgradesFrom": ["sprint_boots"],
       "descriptionFr": "Réduit les pénalités de vitesse de déplacement appliquées par vos adversaires.",
+      "descriptionEn": "Reduces the effect of enemy Move Speed penalties.",
+      "statsFr": ["+2 Régénération en dehors du combat"],
+      "statsEn": ["+2 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/enduring_speed.png",
       "icon": "./icons/items/api/enduring_speed.png",
       "legacyIcon": "./icons/items/enduring_speed.png"
@@ -771,10 +883,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_stamina"
-      ],
+      "upgradesFrom": ["extra_stamina"],
       "descriptionFr": "Permet d'effectuer un second saut élancé ou élan propulsé avant l'atterrissage.",
+      "descriptionEn": "Allows an additional use of Air Jump or Air Dash before landing.",
+      "statsFr": ["+2 Endurance", "+18% Récupération d'endurance", "23% Distance de l'élan/saut élancé"],
+      "statsEn": ["+2 Stamina", "+18% Stamina Recovery", "23% Air Jump/Dash Distance"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/stamina_mastery.png",
       "icon": "./icons/items/api/superior_stamina.png",
       "legacyIcon": "./icons/items/superior_stamina.png"
@@ -791,6 +904,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+9% Cadence de tir"],
+      "statsEn": ["+9% Fire Rate"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/rapid_rounds.png",
       "icon": "./icons/items/api/rapid_rounds.png",
       "legacyIcon": "./icons/items/rapid_rounds.png"
@@ -807,6 +923,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+1 Endurance", "+12% Récupération d'endurance"],
+      "statsEn": ["+1 Stamina", "+12% Stamina Recovery"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/extra_stamina.png",
       "icon": "./icons/items/api/extra_stamina.png",
       "legacyIcon": "./icons/items/extra_stamina.png"
@@ -823,6 +942,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Réduit la résistance aux balles et la cadence de tir des unités ennemies proches. S'il n'y a qu'une unité occultiste ennemie à proximité, l'effet est doublé.",
+      "descriptionEn": "Reduces nearby enemies' Bullet Resist and Fire Rate. If there is only one enemy hero nearby, this effect is doubled.",
+      "statsFr": ["+100 PV bonus"],
+      "statsEn": ["+100 Bonus Health"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/hunters_aura.png",
       "icon": "./icons/items/api/hunters_aura.png"
     },
@@ -838,6 +960,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Accorde une protection pendant une courte durée.",
+      "descriptionEn": "Gain a Barrier for a short duration.",
+      "statsFr": ["+1 Régénération en dehors du combat", "4s Durée de protection", "60s Temps de récupération"],
+      "statsEn": ["+1 Out of Combat Regen", "4s Barrier Duration", "60s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/grit.png",
       "icon": "./icons/items/api/grit.png"
     },
@@ -851,10 +976,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "grit"
-      ],
+      "upgradesFrom": ["grit"],
       "descriptionFr": "Vous accorde une protection en cas de dégâts des armes considérables infligés par des occultistes adverses dans un court laps de temps.",
+      "descriptionEn": "Gain a Barrier whenever you take significant weapon damage from enemy Heroes in a small time frame.",
+      "statsFr": ["+2.5 Régénération en dehors du combat", "250 Seuil de dégâts", "4s Laps de temps", "35s Temps de récupération", "8s Durée de protection"],
+      "statsEn": ["+2.5 Out of Combat Regen", "250 Damage Threshold", "4s Time Frame", "35s Cooldown", "8s Barrier Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/weapon_shielding.png",
       "icon": "./icons/items/api/weapon_shielding.png"
     },
@@ -868,10 +994,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "grit"
-      ],
+      "upgradesFrom": ["grit"],
       "descriptionFr": "Vous accorde une protection en cas de dégâts spirituels considérables infligés par des occultistes adverses dans un court laps de temps.",
+      "descriptionEn": "Gain a Barrier whenever you take significant spirit damage from enemy Heroes in a small time frame.",
+      "statsFr": ["+2.5 Régénération en dehors du combat", "225 Seuil de dégâts", "3.5s Laps de temps", "8s Durée de protection", "45s Temps de récupération"],
+      "statsEn": ["+2.5 Out of Combat Regen", "225 Damage Threshold", "3.5s Time Frame", "8s Barrier Duration", "45s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/spirit_shielding.png",
       "icon": "./icons/items/api/spirit_shielding.png"
     },
@@ -887,6 +1014,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vos PV sont supérieurs à 65 %, vous infligez plus de dégâts des armes et gagnez en bonus de cadence de tir.",
+      "descriptionEn": "While you are above 65% health, gain weapon damage and bonus fire rate.",
+      "statsFr": ["+18% Résistance aux balles", "+3 Régénération en dehors du combat"],
+      "statsEn": ["+18% Bullet Resist", "+3 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/battle_vest.png",
       "icon": "./icons/items/api/battle_vest.png"
     },
@@ -902,6 +1032,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vos PV sont supérieurs à 65 %, vous obtenez un bonus de Pouvoir spirituel et de temps de récupération.",
+      "descriptionEn": "While you are above 65% health, gain bonus Spirit and Cooldown Reduction.",
+      "statsFr": ["+18% Résistance spirituelle", "+2 Régénération en dehors du combat"],
+      "statsEn": ["+18% Spirit Resist", "+2 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/enchanters_emblem.png",
       "icon": "./icons/items/api/enchanters_barrier.png",
       "legacyIcon": "./icons/items/enchanter_s_barrier.png"
@@ -918,6 +1051,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+10 Pouvoir spirituel"],
+      "statsEn": ["+10 Spirit Power"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/extra_spirit.png",
       "icon": "./icons/items/api/extra_spirit.png"
     },
@@ -933,6 +1069,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vous infligez des dégâts spirituels aux occultistes adverses, vous obtenez de la régénération de plus. Les charges se cumulent quand vous infligez des dégâts à des unités occultistes différentes.",
+      "descriptionEn": "Dealing spirit damage to enemy Heroes grants you Bonus regeneration. Stacks when dealing damage to different heroes.",
+      "statsFr": ["+50 PV bonus", "7s Durée de la régénération"],
+      "statsEn": ["+50 Bonus Health", "7s Regeneration Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_regen.png",
       "icon": "./icons/items/api/mystic_regeneration.png"
     },
@@ -946,10 +1085,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_spirit"
-      ],
+      "upgradesFrom": ["extra_spirit"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+18 Pouvoir spirituel", "+1.5 Régénération en dehors du combat"],
+      "statsEn": ["+18 Spirit Power", "+1.5 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/improved_spirit.png",
       "icon": "./icons/items/api/improved_spirit.png"
     },
@@ -963,10 +1103,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "spirit_lifesteal"
-      ],
+      "upgradesFrom": ["spirit_lifesteal"],
       "descriptionFr": "Augmente votre cadence de tir, votre pouvoir spirituel et votre vol de vie spirituel. L'effet gagne en puissance à mesure que vous tirez sur des occultistes adverses.",
+      "descriptionEn": "Gain bonus Fire Rate, Spirit Power and Spirit Lifesteal by charging up when shooting enemy heroes.",
+      "statsFr": ["+13% Durée de capacité", "+13% Vol de vie spirituel", "+90 PV bonus", "+6 Pouvoir spirituel", "1.08% Accumulation par tir"],
+      "statsEn": ["+13% Ability Duration", "+13% Spirit Lifesteal", "+90 Bonus Health", "+6 Spirit Power", "1.08% Buildup Per Shot"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/spiritual_overflow.png",
       "icon": "./icons/items/api/spiritual_overflow.png",
       "legacyIcon": "./icons/items/spiritual_overflow.png"
@@ -983,6 +1124,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Tire une balle automatiquement vers l'unité ennemie qui vous a infligé des dégâts avec ses capacités ou son arme.",
+      "descriptionEn": "Automatically fire a bullet towards any attacker who damages you with their abilities or weapon.",
+      "statsFr": ["6.5s Durée", "23s Temps de récupération"],
+      "statsEn": ["6.5s Duration", "23s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/return_fire.png",
       "icon": "./icons/items/api/return_fire.png",
       "legacyIcon": "./icons/items/return_fire.png"
@@ -997,10 +1141,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_reach"
-      ],
+      "upgradesFrom": ["mystic_reach"],
       "descriptionFr": "Augmente la portée et le rayon d'effet de vos capacités et objets.",
+      "descriptionEn": "Increases the range and effect radius of your abilities and items.",
+      "statsFr": ["+10% Résistance spirituelle", "+30% Portée de capacité"],
+      "statsEn": ["+10% Spirit Resist", "+30% Ability Range"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/greater_expansion.png",
       "icon": "./icons/items/api/greater_expansion.png"
     },
@@ -1016,6 +1161,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Imprègne une capacité pour augmenter sa portée et son rayon d'effet.",
+      "descriptionEn": "Imbue an ability to increase its range and effect radius.",
+      "statsFr": ["+20% Portée de capacité"],
+      "statsEn": ["+20% Ability Range"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_reach.png",
       "icon": "./icons/items/api/mystic_reach.png",
       "legacyIcon": "./icons/items/mystic_reach.png"
@@ -1032,6 +1180,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+1 Charges bonus pour les capacités", "7 Bonus de pouvoir spirituel pour les capacités chargées"],
+      "statsEn": ["+1 Bonus Ability Charges", "7 Bonus Spirit Power for Charged Abilities"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/extra_charge.png",
       "icon": "./icons/items/api/extra_charge.png",
       "legacyIcon": "./icons/items/extra_charge.png"
@@ -1048,6 +1199,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+13% Vol de vie spirituel", "+90 PV bonus", "+6 Pouvoir spirituel"],
+      "statsEn": ["+13% Spirit Lifesteal", "+90 Bonus Health", "+6 Spirit Power"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/spirit_lifesteal.png",
       "icon": "./icons/items/api/spirit_lifesteal.png",
       "legacyIcon": "./icons/items/spirit_lifesteal.png"
@@ -1064,6 +1218,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Réduit la résistance aux balles sur les unités ennemies lorsque vous infligez des dégâts spirituels.",
+      "descriptionEn": "Reduces Bullet Resist on enemies when you deal spirit damage.",
+      "statsFr": ["+9% Résistance aux balles", "+9% Dégâts des armes", "8s Durée"],
+      "statsEn": ["+9% Bullet Resist", "+9% Weapon Damage", "8s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/bullet_resist_shredder.png",
       "icon": "./icons/items/api/bullet_resist_shredder.png"
     },
@@ -1079,6 +1236,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+8% Vol de vie spirituel", "3s Délai", "6.25s Temps de récupération"],
+      "statsEn": ["+8% Spirit Lifesteal", "3s Delay Duration", "6.25s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_reverb.png",
       "icon": "./icons/items/api/mystic_reverb.png",
       "legacyIcon": "./icons/items/mystic_reverb.png"
@@ -1095,6 +1255,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Accumule des dégâts spirituels bonus au fil du temps. Ainsi, les capacités qui font plus de 80 de dégâts infligent des dégâts supplémentaires.",
+      "descriptionEn": "Charges up over time with bonus spirit damage, causing abilities dealing more than 80 damage to deal additional damage.",
+      "statsFr": ["14s Temps de recharge"],
+      "statsEn": ["14s Charge-Up Time"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_burst.png",
       "icon": "./icons/items/api/mystic_burst.png",
       "legacyIcon": "./icons/items/mystic_burst.png"
@@ -1109,10 +1272,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_burst"
-      ],
+      "upgradesFrom": ["mystic_burst"],
       "descriptionFr": "Accumule des dégâts spirituels bonus au fil du temps. Ainsi, les capacités qui font plus de 165 de dégâts infligent des dégâts supplémentaires. Outrepasse la résistance spirituelle.",
+      "descriptionEn": "Charges up over time with bonus spirit damage, causing abilities dealing more than 165 damage to deal additional damage. Ignores Spirit Resistance.",
+      "statsFr": ["+50 PV bonus", "14s Temps de recharge"],
+      "statsEn": ["+50 Bonus Health", "14s Charge-Up Time"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/tankbuster.png",
       "icon": "./icons/items/api/improved_burst.png",
       "legacyIcon": "./icons/items/improved_burst.png"
@@ -1129,6 +1293,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand une unité ennemie subit des dégâts spirituels, sa résistance spirituelle est réduite.",
+      "descriptionEn": "When an enemy takes spirit damage, they have their spirit resist reduced.",
+      "statsFr": ["+8% Résistance spirituelle", "7s Durée"],
+      "statsEn": ["+8% Spirit Resist", "7s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_vulnerability.png",
       "icon": "./icons/items/api/mystic_vulnerability.png",
       "legacyIcon": "./icons/items/mystic_vulnerability.png"
@@ -1145,6 +1312,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos dégâts spirituels réduisent les soins reçus par l'adversaire. Si une unité occultiste ennemie meurt sous son effet, vous recevrez des soins importants.",
+      "descriptionEn": "Your spirit damage reduces the enemy's Incoming Healing. If an enemy hero dies under this effect, you receive a large heal.",
+      "statsFr": ["+7 Pouvoir spirituel", "8s Durée"],
+      "statsEn": ["+7 Spirit Power", "8s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/healbane.png",
       "icon": "./icons/items/api/healbane.png",
       "legacyIcon": "./icons/items/healbane.png"
@@ -1161,6 +1331,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Lorsque la cible subit des dégâts spirituels, sa vitesse de déplacement est réduite.",
+      "descriptionEn": "When the target takes spirit damage, they have their Move Speed reduced.",
+      "statsFr": ["+50 PV bonus", "2s Durée"],
+      "statsEn": ["+50 Bonus Health", "2s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mystic_slow.png",
       "icon": "./icons/items/api/mystic_slow.png"
     },
@@ -1174,10 +1347,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_vulnerability"
-      ],
+      "upgradesFrom": ["mystic_vulnerability"],
       "descriptionFr": "Les dégâts spirituels infligés appliquent de l'amplification spirituelle cumulable qui augmente vos dégâts spirituels contre la cible.",
+      "descriptionEn": "Dealing spirit damage applies a stacking Spirit Amp that increases your spirit damage to the target.",
+      "statsFr": ["-8% Résistance spirituelle contre les dégâts spirituels", "+17% Résistance spirituelle", "12 Charges max.", "12s Durée", "0.7s Fréquence max. par cible"],
+      "statsEn": ["-8% Spirit Resist On Spirit Damage", "+17% Spirit Resist", "12 Max Stacks", "12s Duration", "0.7s Max Frequency Per Target"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/escalating_exposure.png",
       "icon": "./icons/items/api/escalating_exposure.png"
     },
@@ -1191,10 +1365,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_charge"
-      ],
+      "upgradesFrom": ["extra_charge"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+2 Charges bonus pour les capacités", "+30% Accél. du temps de récupération", "14% Réduction des temps de récupération pour les capacités chargées", "14 Bonus de pouvoir spirituel pour les capacités chargées"],
+      "statsEn": ["+2 Bonus Ability Charges", "+30% Faster Time Between Charges", "14% Cooldown Reduction For Charged Abilities", "14 Bonus Spirit Power for Charged Abilities"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/rapid_recharge.png",
       "icon": "./icons/items/api/rapid_recharge.png",
       "legacyIcon": "./icons/items/rapid_recharge.png"
@@ -1211,6 +1386,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Imprègne une capacité pour réduire son temps de récupération.",
+      "descriptionEn": "Imbue an ability to reduce its Cooldown.",
+      "statsFr": ["+18% Réduction des temps de recharge des capacités"],
+      "statsEn": ["+18% Ability Cooldown Reduction"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/improved_cooldown.png",
       "icon": "./icons/items/api/improved_cooldown.png",
       "legacyIcon": "./icons/items/improved_cooldown.png"
@@ -1225,10 +1403,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "improved_cooldown"
-      ],
+      "upgradesFrom": ["improved_cooldown"],
       "descriptionFr": "Réduit les temps de récupération de vos capacités.",
+      "descriptionEn": "Reduces the Cooldown of your abilities.",
+      "statsFr": ["+4 Régénération en dehors du combat", "+20% Réduction du temps de récupération des capacités"],
+      "statsEn": ["+4 Out of Combat Regen", "+20% Ability Cooldown Reduction"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/superior_cooldown.png",
       "icon": "./icons/items/api/superior_cooldown.png",
       "legacyIcon": "./icons/items/superior_cooldown.png"
@@ -1243,10 +1422,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "superior_cooldown"
-      ],
+      "upgradesFrom": ["superior_cooldown"],
       "descriptionFr": "Réduit les temps de récupération de vos capacités et objets.",
+      "descriptionEn": "Reduces the Cooldown of your abilities and items.",
+      "statsFr": ["+4 Régénération en dehors du combat", "+25% Réduction du temps de récupération des capacités", "+25% Réduction des temps de récupération des objets"],
+      "statsEn": ["+4 Out of Combat Regen", "+25% Ability Cooldown Reduction", "+25% Item Cooldown Reduction"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/transcendent_cooldown.png",
       "icon": "./icons/items/api/transcendent_cooldown.png"
     },
@@ -1262,6 +1442,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Ralentit les déplacements d'une cible ennemie et réduit au silence ses objets et capacités de mobilité.Augmente la gravité de la cible.N'a pas d'effet sur l'endurance de la cible.",
+      "descriptionEn": "Slows movement of enemy target. Also Silences their movement-based items and abilities.Increases the target's gravity.Does not affect target's stamina usage.",
+      "statsFr": ["3.5s Durée", "29s Temps de récupération"],
+      "statsEn": ["3.5s Duration", "29s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/slowing_hex.png",
       "icon": "./icons/items/api/slowing_hex.png",
       "legacyIcon": "./icons/items/slowing_hex.png"
@@ -1278,6 +1461,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Ciblez une unité ennemie pour réduire sa résistance spirituelle et son pouvoir spirituel.",
+      "descriptionEn": "Target an enemy to reduce their Spirit Resist and Spirit Power.",
+      "statsFr": ["+50 PV bonus", "18s Temps de récupération"],
+      "statsEn": ["+50 Bonus Health", "18s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/spirit_sap.png",
       "icon": "./icons/items/api/spirit_sap.png"
     },
@@ -1291,10 +1477,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "spirit_sap"
-      ],
+      "upgradesFrom": ["spirit_sap"],
       "descriptionFr": "Ciblez une unité ennemie pour la réduire au silence. Une partie de tous les dégâts infligés pendant le silence est appliquée à la cible après dissipation de l'effet.",
+      "descriptionEn": "Target an enemy to Silence them. A portion of all damage dealt during the silence gets applied to the target when the silence wears off.",
+      "statsFr": ["+10% Cadence de tir", "-9% Résist. spirit.", "12s Durée de réduct. de résistance", "-30 Pouvoir spirituel", "45s Temps de récupération"],
+      "statsEn": ["+10% Fire Rate", "-9% Spirit Resist", "12s Resist Reduction Duration", "-30 Spirit Power", "45s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/focus_lens.png",
       "icon": "./icons/items/api/focus_lens.png"
     },
@@ -1310,6 +1497,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Ciblez une unité ennemie pour réduire sa cadence de tir et sa résistance aux balles.",
+      "descriptionEn": "Target an enemy to reduce their Fire Rate and Bullet Resistance.",
+      "statsFr": ["+60 PV bonus", "5s Durée", "16s Temps de récupération"],
+      "statsEn": ["+60 Bonus Health", "5s Duration", "16s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/rusted_barrel.png",
       "icon": "./icons/items/api/rusted_barrel.png"
     },
@@ -1323,10 +1513,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "rusted_barrel"
-      ],
+      "upgradesFrom": ["rusted_barrel"],
       "descriptionFr": "Désarme une cible ennemie et réduit sa résistance aux balles.",
+      "descriptionEn": "Disarms enemy target and reduces their Bullet Resist.",
+      "statsFr": ["+75 PV bonus", "4.25s Durée", "16s Temps de récupération"],
+      "statsEn": ["+75 Bonus Health", "4.25s Duration", "16s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/disarming_hex.png",
       "icon": "./icons/items/api/disarming_hex.png"
     },
@@ -1340,10 +1531,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "healing_rite"
-      ],
+      "upgradesFrom": ["healing_rite"],
       "descriptionFr": "Soigne une cible occultiste alliée et vous-même d'un pourcentage des PV max. Pendant les soins, vous pouvez tirer la cible vers vous une fois. Autociblage possible.",
+      "descriptionEn": "Heals a target allied hero and yourself for a percentage of Max Health. Once while healing, you can Pull the target towards you. Can be self-cast.",
+      "statsFr": ["+6% Portée de capacité", "2.5s Durée de canalisation", "60s Temps de récupération"],
+      "statsEn": ["+6% Ability Range", "2.5s Channel Duration", "60s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/rescue_beam.png",
       "icon": "./icons/items/api/rescue_beam.png"
     },
@@ -1359,6 +1551,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Inflige des dégâts sur la durée. Les dégâts dépendent des PV actuels de la cible.Les dégâts de Décomposition ne sont pas mortels et ne déclenchent pas les effets d'objets.",
+      "descriptionEn": "Inflict damage over time to a target, dealing damage based on their current health.Decay's damage is non-lethal and does not apply item procs.",
+      "statsFr": ["+8 Pouvoir spirituel", "+65 PV bonus", "12s Durée", "30s Temps de récupération"],
+      "statsEn": ["+8 Spirit Power", "+65 Bonus Health", "12s Duration", "30s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/decay.png",
       "icon": "./icons/items/api/decay.png",
       "legacyIcon": "./icons/items/decay.png"
@@ -1375,6 +1570,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Applique de la résistance spirituelle et de la résistance aux effets négatifs ainsi qu'une aura sur une cible alliée qui inflige des dégâts à ses adversaires proportionnels à ses PV max. Les effets négatifs existants sur",
+      "descriptionEn": "Apply Spirit Resist, Debuff Resist and an aura on a friendly target that deals damage to enemies proportional to their max health. Existing debuffs on the target are reduced.Can be self cast.",
+      "statsFr": ["+100 PV bonus", "10s Durée", "35s Temps de récupération"],
+      "statsEn": ["+100 Bonus Health", "10s Duration", "35s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/scourge.png",
       "icon": "./icons/items/api/scourge.png"
     },
@@ -1390,6 +1588,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Applique un étourdissement après 2 s. Sa durée est augmentée contre les cibles dans les airs.Augmente la gravité de la cible pendant la durée de l'étourdissement.",
+      "descriptionEn": "Apply a Stun after 2s. Stun duration is increased against airborne targets.Increases the target's gravity for the duration of the stun.",
+      "statsFr": ["+75 PV bonus", "+5% Portée de capacité"],
+      "statsEn": ["+75 Bonus Health", "+5% Ability Range"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/knockdown.png",
       "icon": "./icons/items/api/knockdown.png",
       "legacyIcon": "./icons/items/knockdown.png"
@@ -1406,6 +1607,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Téléportez-vous sur une unité ennemie et faites-la tomber. La cible subit des dégâts, est ralentie et désarmée.",
+      "descriptionEn": "Teleport to an enemy target and pull them to the ground. Dealing damage, Move speed reduction and Disarm.",
+      "statsFr": ["+15% Dégâts des armes", "+8 Pouvoir spirituel", "35s Temps de récupération", "3s Durée de l'effet négatif"],
+      "statsEn": ["+15% Weapon Damage", "+8 Spirit Power", "35s Cooldown", "3s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/phantom_strike.png",
       "icon": "./icons/items/api/phantom_strike.png"
     },
@@ -1421,6 +1625,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Vous téléporte droit devant et augmente votre résistance aux balles.",
+      "descriptionEn": "Teleport straight ahead, gaining Bullet Resist.",
+      "statsFr": ["6s Durée de l'effet positif", "16s Temps de récupération"],
+      "statsEn": ["6s Buff Duration", "16s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/warp_stone.png",
       "icon": "./icons/items/api/warp_stone.png"
     },
@@ -1434,10 +1641,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "slowing_hex"
-      ],
+      "upgradesFrom": ["slowing_hex"],
       "descriptionFr": "Lance une grenade aspirante qui attire les unités ennemies dans une petite zone, et leur applique une malédiction de ralentissement. L'utilisation secondaire permet de cibler une unité directement.",
+      "descriptionEn": "Throw a vacuum grenade, pulling all enemies into a small area and applying Slowing Hex. Alt Cast to Target Unit Directly.",
+      "statsFr": ["+8% Portée de capacité", "4s Durée", "0.5s Durée du lien", "42s Temps de récupération", "-36% Distance de l'élan"],
+      "statsEn": ["+8% Ability Range", "4s Duration", "0.5s Tether Duration", "42s Cooldown", "-36% Dash Distance"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/vortex_web.png",
       "icon": "./icons/items/api/vortex_web.png"
     },
@@ -1453,6 +1661,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Réinitialise les temps de récupération de toutes vos capacités et restaure toutes vos charges.",
+      "descriptionEn": "Reset the cooldown of all your abilities and restore all your charges.",
+      "statsFr": ["300s Temps de récupération"],
+      "statsEn": ["300s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/refresher.png",
       "icon": "./icons/items/api/refresher.png"
     },
@@ -1468,6 +1679,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Réinitialise le temps de récupération de la capacité imprégnée non ultime.Le temps de récupération de cet objet augmente en fonction du temps de récupération de la capacité imprégnée.",
+      "descriptionEn": "Reset the cooldown of the imbued non-ultimate ability.This item's cooldown is increased by the cooldown of the imbued ability.",
+      "statsFr": ["+5% Résistance spirituelle", "+5% Résistance aux balles", "100% Temps de récupération de la capacité imprégnée"],
+      "statsEn": ["+5% Spirit Resist", "+5% Bullet Resist", "100% Imbued Ability Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/echo_shard.png",
       "icon": "./icons/items/api/echo_shard.png"
     },
@@ -1483,6 +1697,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Inflige périodiquement des dégâts spirituels aux deux occultistes adverses les plus proches.",
+      "descriptionEn": "Periodically deals spirit damage to the closest two enemies nearby.",
+      "statsFr": ["+100 PV bonus", "+18% Résistance aux attaques de mêlée", "1.4s Temps de récupération"],
+      "statsEn": ["+100 Bonus Health", "+18% Melee Resist", "1.4s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/torment_pulse.png",
       "icon": "./icons/items/api/torment_pulse.png"
     },
@@ -1498,6 +1715,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+200 PV bonus", "+15% Résistance aux balles", "90s Temps de récupération", "-60% Réduction des dégâts", "-60% Soins reçus"],
+      "statsEn": ["+200 Bonus Health", "+15% Bullet Resist", "90s Cooldown", "-60% Damage Reduction", "-60% Incoming Healing"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/cheat_death.png",
       "icon": "./icons/items/api/cheat_death.png"
     },
@@ -1511,10 +1731,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "sprint_boots"
-      ],
+      "upgradesFrom": ["sprint_boots"],
       "descriptionFr": "Vous devenez invisible. Quand vous subissez des dégâts pendant l'effet, votre position est brièvement révélée.",
+      "descriptionEn": "Become Stealthed. Whenever you take damage while Stealthed you get briefly revealed.",
+      "statsFr": ["+5 Régénération en dehors du combat", "5s Durée de l'embuscade"],
+      "statsEn": ["+5 Out of Combat Regen", "5s Ambush Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/shadow_weave.png",
       "icon": "./icons/items/api/shadow_weave.png"
     },
@@ -1530,6 +1751,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Élancez-vous haut dans les airs et activez une protection. De là-haut, vous pouvez réactiver l'objet pour descendre plus rapidement.Ne peut pas être utilisé pendant 5 s si une unité occultiste adverse vous attaque.",
+      "descriptionEn": "Launch yourself high into the air and grant yourself a Barrier. While in the air, you can use the active again to drop down faster.Cannot be used for 5s if attacked by enemy Hero.",
+      "statsFr": ["45s Temps de récupération", "8s Durée de protection", "+50% Contrôle aérien"],
+      "statsEn": ["45s Cooldown", "8s Barrier Duration", "+50% Air Control"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/majestic_leap.png",
       "icon": "./icons/items/api/majestic_leap.png"
     },
@@ -1543,10 +1767,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "healing_rite"
-      ],
+      "upgradesFrom": ["healing_rite"],
       "descriptionFr": "Vous soigne ainsi que les unités alliées proches.",
+      "descriptionEn": "Heal yourself and nearby allies.",
+      "statsFr": ["+5% Portée de capacité", "8 Pouvoir spirituel", "60s Temps de récupération", "2s Durée de régénération"],
+      "statsEn": ["+5% Ability Range", "8 Spirit Power", "60s Cooldown", "2s Regen Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/healing_nova.png",
       "icon": "./icons/items/api/healing_nova.png"
     },
@@ -1562,6 +1787,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Quand une unité adverse utilise une capacité à moins de 32m m de vous, vous accumulez une charge de restauration. La consommation de toutes les charges vous soigne et restaurera 3 points d'endurance selon le nombre de ch",
+      "descriptionEn": "When an enemy uses an ability within 32mm range from you, store one Restoration Stack. Consume all stacks to heal yourself and replenish up to 3 stamina based on how many stacks you have.",
+      "statsFr": ["+8% Résistance spirituelle", "20s Temps de récupération", "25 Charges max.", "3 Restauration d'endurance max."],
+      "statsEn": ["+8% Spirit Resist", "20s Cooldown", "25 Max Stacks", "3 Max Stamina Restore"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/restorative_locket.png",
       "icon": "./icons/items/api/restorative_locket.png"
     },
@@ -1577,6 +1805,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Régénère les PV et augmente la vitesse de course de la cible. L'effet est dissipé si la cible subit des dégâts d'occultistes ou d'objectifs adverses. Autociblage possible.",
+      "descriptionEn": "Grant Regen and Sprint Speed to the target. Gets dispelled if you take damage from enemy players or objectives. Can be self-cast.",
+      "statsFr": ["70s Temps de récupération", "20s Durée de régénération"],
+      "statsEn": ["70s Cooldown", "20s Regen Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/healing_rite.png",
       "icon": "./icons/items/api/healing_rite.png",
       "legacyIcon": "./icons/items/healing_rite.png"
@@ -1591,10 +1822,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "spirit_lifesteal"
-      ],
+      "upgradesFrom": ["spirit_lifesteal"],
       "descriptionFr": "Vous confère du vol de vie spirituel et du pouvoir spirituel.",
+      "descriptionEn": "Gain Spirit Lifesteal and Spirit Power.",
+      "statsFr": ["+13% Vol de vie spirituel", "+10% Résistance spirituelle", "+100 PV bonus", "+6 Pouvoir spirituel", "30s Temps de récupération"],
+      "statsEn": ["+13% Spirit Lifesteal", "+10% Spirit Resist", "+100 Bonus Health", "+6 Spirit Power", "30s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/infuser.png",
       "icon": "./icons/items/api/infuser.png"
     },
@@ -1608,10 +1840,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": true,
-      "upgradesFrom": [
-        "grit"
-      ],
+      "upgradesFrom": ["grit"],
       "descriptionFr": "Confère à la cible une protection et de la vitesse de déplacement temporaire. Peut être utilisée sur l'unité incantatrice.Le temps de récupération est réduit de moitié en cas de lancement sur une autre unité.",
+      "descriptionEn": "Provide the target with a Barrier and temporary Move Speed. Can be self-cast.Cooldown is reduced by half when cast on someone else.",
+      "statsFr": ["+8% Portée de capacité", "+1.5 Régénération en dehors du combat", "60s Temps de récupération", "6s Durée de l'effet positif"],
+      "statsEn": ["+8% Ability Range", "+1.5 Out of Combat Regen", "60s Cooldown", "6s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/guardian_ward.png",
       "icon": "./icons/items/api/guardian_ward.png"
     },
@@ -1625,10 +1858,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "guardian_ward"
-      ],
+      "upgradesFrom": ["guardian_ward"],
       "descriptionFr": "Annule tous les effets négatifs (sauf les étourdissements) appliqués à une cible et lui accorde une protection et de la vitesse de déplacement. Peut être utilisée sur soi-même. Le temps de récupération est réduit de moit",
+      "descriptionEn": "Remove all non-stun debuffs from the target and provide them with a Barrier and Move Speed. Can be self-cast. Cooldown is reduced by half when cast on someone else.",
+      "statsFr": ["+10% Portée de capacité", "+1.5 Régénération en dehors du combat", "45s Temps de récupération", "6s Durée de l'effet positif"],
+      "statsEn": ["+10% Ability Range", "+1.5 Out of Combat Regen", "45s Cooldown", "6s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/divine_barrier.png",
       "icon": "./icons/items/api/divine_barrier.png"
     },
@@ -1644,6 +1878,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Jette une flasque qui explose à l'impact et crée une zone où les dégâts spirituels par seconde augmente et où la résistance aux balles des adversaires diminue.50 % moins efficace contre les unités non occultistes.",
+      "descriptionEn": "Throw a flask that explodes on contact, creating an area that does increasing spirit damage per second and reduces enemy Bullet Resist.50% less effective vs non-heroes.",
+      "statsFr": ["10 Pouvoir spirituel", "95 DPS max.", "5s Durée", "30s Temps de récupération"],
+      "statsEn": ["10 Spirit Power", "95 Max DPS", "5s Duration", "30s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/alchemical_fire.png",
       "icon": "./icons/items/api/alchemical_fire.png",
       "legacyIcon": "./icons/items/alchemical_fire.png"
@@ -1660,6 +1897,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Capacité active : vous sacrifiez continuellement vos PV pour améliorer votre cadence de tir, votre résistance aux effets négatifs et votre vitesse de déplacement.",
+      "descriptionEn": "Toggle: Continually sacrifice Health to improve fire rate, Debuff Resistance and Move Speed.",
+      "statsFr": ["+8% Résist. aux effets négatifs", "+8% Résistance spirituelle", "+4 Régénération en dehors du combat", "+35% Cadence de tir", "+35% Résistance aux effets négatifs"],
+      "statsEn": ["+8% Debuff Resist", "+8% Spirit Resist", "+4 Out of Combat Regen", "+35% Fire Rate", "+35% Debuff Resist"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/blood_tribute.png",
       "icon": "./icons/items/api/blood_tribute.png"
     },
@@ -1675,6 +1915,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Augmente votre vitesse de déplacement et votre résistance aux ralentissements.",
+      "descriptionEn": "Gain bonus Move Speed and Slow Resistance.",
+      "statsFr": ["+6% Dégâts des armes", "35% Distance de glissade", "+6% Résistance aux balles", "5s Durée", "16s Temps de récupération"],
+      "statsEn": ["+6% Weapon Damage", "35% Slide Distance", "+6% Bullet Resist", "5s Duration", "16s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/fleetfoot.png",
       "icon": "./icons/items/api/fleetfoot.png",
       "legacyIcon": "./icons/items/fleetfoot.png"
@@ -1689,10 +1932,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_stamina"
-      ],
+      "upgradesFrom": ["extra_stamina"],
       "descriptionFr": "L'élan propulseur augmentera votre cadence de tir et la taille de votre chargeur jusqu'au rechargement suivant. L'effet dure jusqu'à 7 secondes.",
+      "descriptionEn": "When you Dash-Jump you gain Fire Rate and bonus Ammo until your next reload. Lasts up to 7s.",
+      "statsFr": ["+1 Endurance", "+12% Récupération d'endurance", "7s Durée"],
+      "statsEn": ["+1 Stamina", "+12% Stamina Recovery", "7s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/kinetic_dash.png",
       "icon": "./icons/items/api/kinetic_dash.png",
       "legacyIcon": "./icons/items/kinetic_dash.png"
@@ -1707,10 +1951,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_stamina"
-      ],
+      "upgradesFrom": ["extra_stamina"],
       "descriptionFr": "Après avoir effectué un élan propulseur, la prochaine capacité que vous lancerez dans les 7 s qui suivent bénéficiera d'un bonus de portée, de durée et de pouvoir spirituel.",
+      "descriptionEn": "After you Dash-Jump, the next ability you use within 7s will have bonus Range, Duration, and Spirit Power.",
+      "statsFr": ["+1 Endurance", "+12% Récupération d'endurance", "7s Fenêtre de lancement"],
+      "statsEn": ["+1 Stamina", "+12% Stamina Recovery", "7s Cast Window"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/arcane_surge.png",
       "icon": "./icons/items/api/arcane_surge.png"
     },
@@ -1724,10 +1969,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "debuff_reducer"
-      ],
+      "upgradesFrom": ["debuff_reducer"],
       "descriptionFr": "Supprime temporairement les effets de statut négatifs et confère l'immunité contre les étourdissements, réductions au silence, endormissements, enracinements et désarmements. Ne peut pas être utilisée pendant un étourdis",
+      "descriptionEn": "Temporarily suppress negative status effects and become immune to Stun, Silence, Sleep, Root, and Disarm. Cannot be used while Stunned or Slept.",
+      "statsFr": ["+25% Résistance aux effets négatifs", "+125 PV bonus", "60s Temps de récupération"],
+      "statsEn": ["+25% Debuff Resist", "+125 Bonus Health", "60s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/unstoppable.png",
       "icon": "./icons/items/api/unstoppable.png",
       "legacyIcon": "./icons/items/unstoppable.png"
@@ -1742,10 +1988,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "extra_health"
-      ],
+      "upgradesFrom": ["extra_health"],
       "descriptionFr": "Vous grandissez et obtenez de la résistance aux balles, de la résistance spirituelle et des dégâts de mêlée. Les unités ennemies à proximité subissent un ralentissement et leur vitesse d'élan est réduite.",
+      "descriptionEn": "Grow larger in size, gaining bullet resist, spirit resist, and melee damage. Nearby enemies suffer from slow and have reduced dash speed.",
+      "statsFr": ["25% PV de base", "+15% Dégâts des armes", "7s Durée", "37s Temps de récupération", "20% Échelle du modèle"],
+      "statsEn": ["25% Base Health", "+15% Weapon Damage", "7s Duration", "37s Cooldown", "20% Model Scale"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/colossus.png",
       "icon": "./icons/items/api/colossus.png"
     },
@@ -1761,6 +2008,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Libère une explosion de glace qui s'étend et inflige des dégâts spirituels et ralentit les cibles à l'impact.",
+      "descriptionEn": "Release an expanding ice blast that deals spirit damage and Slows targets it hits.",
+      "statsFr": ["+6% Résistance spirituelle", "25s Temps de récupération"],
+      "statsEn": ["+6% Spirit Resist", "25s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/cold_front.png",
       "icon": "./icons/items/api/cold_front.png"
     },
@@ -1774,10 +2024,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "cold_front"
-      ],
+      "upgradesFrom": ["cold_front"],
       "descriptionFr": "Libère une explosion de glace qui s'étend et inflige des dégâts spirituels, congèle, puis ralentit la cible touchée.Les cibles ralenties voient leur régénération d'endurance gelée.",
+      "descriptionEn": "Release an expanding ice blast that deals spirit damage, Freezing and then Slowing targets it hits.Slowed targets have their stamina regen frozen",
+      "statsFr": ["+10% Résistance spirituelle", "24s Temps de récupération"],
+      "statsEn": ["+10% Spirit Resist", "24s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/arctic_blast.png",
       "icon": "./icons/items/api/arctic_blast.png"
     },
@@ -1793,6 +2044,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Entrez instantanément dans un état de vide et devenez invulnérable pendant une courte durée.",
+      "descriptionEn": "Instantly enter a void state and become Invulnerable for a short duration.",
+      "statsFr": ["37s Temps de récupération", "5s Durée de l'effet positif"],
+      "statsEn": ["37s Cooldown", "5s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/ethereal_shift.png",
       "icon": "./icons/items/api/ethereal_shift.png",
       "legacyIcon": "./icons/items/ethereal_shift.png"
@@ -1809,6 +2063,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Maudit une cible adverse. Elle est interrompue, réduite au silence, désarmée et elle ne peut pas utiliser ses objets. Supprime tous les effets positifs autres que ceux accordés par les capacités ultimes.Vous infligez moi",
+      "descriptionEn": "Curses an enemy - interrupting, Silencing, Disarming, and preventing item usage. Removes all non-ultimate buffs.Your own Damage Output is reduced for the duration.",
+      "statsFr": ["55s Temps de récupération", "3.25s Durée", "-25% Pénalité de dégâts"],
+      "statsEn": ["55s Cooldown", "3.25s Duration", "-25% Damage Penalty"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/curse.png",
       "icon": "./icons/items/api/cursed_relic.png"
     },
@@ -1824,6 +2081,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Imprègne une capacité pour prolonger sa durée.",
+      "descriptionEn": "Imbue an ability to increase its Duration.",
+      "statsFr": ["+22% Durée de capacité"],
+      "statsEn": ["+22% Ability Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/duration_extender.png",
       "icon": "./icons/items/api/duration_extender.png",
       "legacyIcon": "./icons/items/duration_extender.png"
@@ -1838,10 +2098,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "duration_extender"
-      ],
+      "upgradesFrom": ["duration_extender"],
       "descriptionFr": "Prolonge les effets de vos capacités et objets.",
+      "descriptionEn": "Increases the duration of your abilities and items.",
+      "statsFr": ["+8% Résistance aux balles", "+28% Durée de capacité"],
+      "statsEn": ["+8% Bullet Resist", "+28% Ability Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/superior_duration.png",
       "icon": "./icons/items/api/superior_duration.png"
     },
@@ -1857,6 +2118,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Chaque victime vous confère une charge permanente de cadence de tir (jusqu'à 8 charges cumulables). La mort entraine la perte d'une charge.",
+      "descriptionEn": "Each hero kill grants permanent Fire Rate (up to a max of 8 times). Death results in the loss of 1 stack.",
+      "statsFr": ["+80% Dégâts des armes", "-13% PV max."],
+      "statsEn": ["+80% Weapon Damage", "-13% Max Health"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/glass_cannon.png",
       "icon": "./icons/items/api/glass_cannon.png",
       "legacyIcon": "./icons/items/glass_cannon.png"
@@ -1871,10 +2135,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": true,
-      "upgradesFrom": [
-        "bullet_lifesteal"
-      ],
+      "upgradesFrom": ["bullet_lifesteal"],
       "descriptionFr": "Accorde de la cadence de tir, de la résistance spirituelle et de la vitesse de déplacement. Supprime la pénalité de vitesse de déplacement lors des tirs, mais vous réduit au silence et empêche l'utilisation et la régénér",
+      "descriptionEn": "Grants Fire Rate, Spirit Resistance and Move Speed, and removes the Move Speed penalty while shooting, but Silences you and disables stamina usage and regeneration.",
+      "statsFr": ["+14% Vol de vie des balles", "+100 PV bonus", "+6% Dégâts des armes", "18s Temps de récupération", "6.5s Durée"],
+      "statsEn": ["+14% Bullet Lifesteal", "+100 Bonus Health", "+6% Weapon Damage", "18s Cooldown", "6.5s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/fury_trance.png",
       "icon": "./icons/items/api/fury_trance.png"
     },
@@ -1888,10 +2153,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": true,
-      "upgradesFrom": [
-        "bullet_lifesteal"
-      ],
+      "upgradesFrom": ["bullet_lifesteal"],
       "descriptionFr": "Confère le vol de vie, une augmentation de la cadence de tir et des munitions. Ces dernières ne sont pas limitées par la taille max. de votre chargeur.",
+      "descriptionEn": "Grants Lifesteal, Fire Rate, and Ammo. This added Ammo is not limited by your max magazine size.",
+      "statsFr": ["+13% Vol de vie des balles", "+10% Résistance aux balles", "+100 PV bonus", "+6% Dégâts des armes", "75% Munitions"],
+      "statsEn": ["+13% Bullet Lifesteal", "+10% Bullet Resist", "+100 Bonus Health", "+6% Weapon Damage", "75% Ammo"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/vampiric_burst.png",
       "icon": "./icons/items/api/vampiric_burst.png"
     },
@@ -1905,10 +2171,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "melee_lifesteal"
-      ],
+      "upgradesFrom": ["melee_lifesteal"],
       "descriptionFr": "Votre attaque de mêlée applique un ralentissement et vous soigne d'un pourcentage des dégâts de mêlée infligés plus un montant fixe. Soigne à hauteur de 40 % pour les dégâts infligés aux non-occultistes. Le temps de récu",
+      "descriptionEn": "Your Melee Attack applies Movement Slow and heals you for a percentage of the Melee Damage dealt plus a fixed amount. This heal is 40% effective vs non-heroes. Cooldown is 1.5x as long for Light Melee hits.",
+      "statsFr": ["+16% Dégâts de mêlée", "+125 PV bonus", "2.5s Durée de ralentissement", "4s Temps de récupération"],
+      "statsEn": ["+16% Melee Damage", "+125 Bonus Health", "2.5s Slow Duration", "4s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/lifestrike.png",
       "icon": "./icons/items/api/lifestrike.png"
     },
@@ -1924,6 +2191,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vos attaques de mêlée légère ou lourde infligent des dégâts spirituels supplémentaires aux occultistes et réduisent leur résistance spirituelle. Le temps de récupération est multiplié par 2 pour les attaques de mêlée lég",
+      "descriptionEn": "When you perform a Light or Heavy Melee attack against a hero, deal extra spirit damage with the attack and reduce the target's Spirit Resist.Cooldown is 2x longer for Light Melee hits.",
+      "statsFr": ["6s Durée", "8s Temps de récupération"],
+      "statsEn": ["6s Duration", "8s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/spirit_strike.png",
       "icon": "./icons/items/api/spirit_strike.png",
       "legacyIcon": "./icons/items/spirit_strike.png"
@@ -1938,10 +2208,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "spirit_strike"
-      ],
+      "upgradesFrom": ["spirit_strike"],
       "descriptionFr": "Vos attaques de mêlée légère ou lourde infligent des dégâts spirituels supplémentaires aux occultistes et volent de la résistance spirituelle et du pouvoir spirituel.Les effets sont réduits de 30 % pour les attaques de m",
+      "descriptionEn": "When you perform a Light or Heavy Melee attack against a hero, the attack deals extra spirit damage and steals Spirit Resist and Spirit Power.Effects are reduced by 30% for Light Melee hits.",
+      "statsFr": ["+7% Dégâts de mêlée", "+75 PV bonus", "10s Durée", "6s Temps de récupération"],
+      "statsEn": ["+7% Melee Damage", "+75 Bonus Health", "10s Duration", "6s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/spirit_snatch.png",
       "icon": "./icons/items/api/spirit_snatch.png"
     },
@@ -1957,6 +2228,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochaine attaque de mêlée lourde inflige des dégâts supplémentaires.",
+      "descriptionEn": "Your next Heavy Melee attack against an enemy deals increased damage.",
+      "statsFr": ["50% Portée d'atq. de mêlée lourde", "+10% Dégâts de mêlée", "+6% Résistance aux balles", "5s Temps de récupération"],
+      "statsEn": ["50% Heavy Melee Distance", "+10% Melee Damage", "+6% Bullet Resist", "5s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/melee_charge.png",
       "icon": "./icons/items/api/melee_charge.png"
     },
@@ -1970,10 +2244,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "melee_charge"
-      ],
+      "upgradesFrom": ["melee_charge"],
       "descriptionFr": "Vos dégâts de mêlée rechargent vos munitions et appliquent un effet négatif cumulable sur la résistance aux balles des adversaires. Les attaques de mêlée lourde appliquent 2 charges. En cas de charges max., la cible est ",
+      "descriptionEn": "Your melee damage will restore ammo and apply a stacking bullet resist debuff on enemies. Heavy melee applies 2 stacks. If the target reaches max stacks, they will be stunned.",
+      "statsFr": ["60% Portée d'atq. de mêlée lourde", "+22% Dégâts de mêlée", "+12% Résistance aux balles", "5s Temps de récupération", "0.75s Durée d'étourdissement"],
+      "statsEn": ["60% Heavy Melee Distance", "+22% Melee Damage", "+12% Bullet Resist", "5s Cooldown", "0.75s Stun Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/crushing_fists.png",
       "icon": "./icons/items/api/crushing_fists.png"
     },
@@ -1989,6 +2264,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Lorsque vous lancez une capacité ultime, vous obtenez un bouclier et, temporairement, du pouvoir spirituel.",
+      "descriptionEn": "Upon casting an ultimate ability gain a Barrier and temporary Spirit Power.",
+      "statsFr": ["+15% Durée de capacité", "+10% Réduction du temps de récupération de la capacité ultime", "20s Durée de l'effet positif", "40s Temps de récupération"],
+      "statsEn": ["+15% Ability Duration", "+10% Ultimate Cooldown Reduction", "20s Buff Duration", "40s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/diviners_kevlar.png",
       "icon": "./icons/items/api/diviners_kevlar.png"
     },
@@ -2002,10 +2280,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_regeneration"
-      ],
+      "upgradesFrom": ["mystic_regeneration"],
       "descriptionFr": "Soigne et accorde un bonus de vitesse de déplacement pendant un court lorsque vous lancez une capacité.",
+      "descriptionEn": "Heal and gain bonus Movement Speed for a short duration when you cast an ability.",
+      "statsFr": ["+90 PV bonus", "7s Durée de la régénération", "6s Temps de récupération", "3s Durée"],
+      "statsEn": ["+90 Bonus Health", "7s Regeneration Duration", "6s Cooldown", "3s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/radiant_regeneration.png",
       "icon": "./icons/items/api/radiant_regeneration.png"
     },
@@ -2019,10 +2298,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "improved_spirit"
-      ],
+      "upgradesFrom": ["improved_spirit"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+15% Pouvoir spirituel", "+30 Pouvoir spirituel", "+75 PV bonus", "+4 Régénération en dehors du combat"],
+      "statsEn": ["+15% Spirit Power", "+30 Spirit Power", "+75 Bonus Health", "+4 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/boundless_spirit.png",
       "icon": "./icons/items/api/boundless_spirit.png",
       "legacyIcon": "./icons/items/boundless_spirit.png"
@@ -2037,10 +2317,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "rapid_rounds"
-      ],
+      "upgradesFrom": ["rapid_rounds"],
       "descriptionFr": "Votre cadence de tir et votre vitesse de déplacement sont brièvement améliorées lorsqu'une de vos balles touche une unité occultiste.",
+      "descriptionEn": "Briefly gain Fire Rate and Move Speed when one of your bullets hits a hero.",
+      "statsFr": ["50% Distance de glissade", "+10% Cadence de tir", "4.5s Durée", "9s Temps de récupération"],
+      "statsEn": ["50% Slide Distance", "+10% Fire Rate", "4.5s Duration", "9s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/burst_fire.png",
       "icon": "./icons/items/api/burst_fire.png",
       "legacyIcon": "./icons/items/burst_fire.png"
@@ -2057,6 +2338,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+2.5 Régénération de PV", "+1.5 Régénération en dehors du combat"],
+      "statsEn": ["+2.5 Health Regen", "+1.5 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/extra_regen.png",
       "icon": "./icons/items/api/extra_regen.png",
       "legacyIcon": "./icons/items/extra_regen.png"
@@ -2071,10 +2355,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "extra_spirit"
-      ],
+      "upgradesFrom": ["extra_spirit"],
       "descriptionFr": "Imprègne une capacité de pouvoir spirituel permanent. Quand celle-ci est utilisée, vous obtenez un bonus de vitesse de déplacement qui continue même lorsque vous attaquez.",
+      "descriptionEn": "Imbue an ability with permanent Spirit Power. When that ability is used, gain bonus Move Speed and maintain full speed while attacking.",
+      "statsFr": ["8s Durée du bonus de vitesse", "14s Temps de récupération"],
+      "statsEn": ["8s Move Speed Duration", "14s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/surge_of_power.png",
       "icon": "./icons/items/api/surge_of_power.png",
       "legacyIcon": "./icons/items/surge_of_power.png"
@@ -2091,6 +2376,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Lorsque vous infligez des dégâts spirituels aux unités ennemies, vous réduisez également leur cadence de tir.",
+      "descriptionEn": "When you deal spirit damage to enemies, you also reduce their Fire Rate.",
+      "statsFr": ["+6 Pouvoir spirituel", "+8% Résistance aux balles"],
+      "statsEn": ["+6 Spirit Power", "+8% Bullet Resist"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/suppressor.png",
       "icon": "./icons/items/api/suppressor.png",
       "legacyIcon": "./icons/items/suppressor.png"
@@ -2107,6 +2395,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre capacité imprégnée gagne en puissance au fil du temps. Elle inflige des dégâts spirituels bonus, bénéficie d'un bonus de cadence de tir, et recharge votre arme à son lancement.",
+      "descriptionEn": "Your imbued ability charges up over time with bonus spirit damage, bonus fire rate, and reloads bullets on use.",
+      "statsFr": ["18s Temps de recharge"],
+      "statsEn": ["18s Charge-Up Time"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/quicksilver_reload.png",
       "icon": "./icons/items/api/quicksilver_reload.png",
       "legacyIcon": "./icons/items/quicksilver_reload.png"
@@ -2121,10 +2412,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "quicksilver_reload"
-      ],
+      "upgradesFrom": ["quicksilver_reload"],
       "descriptionFr": "Votre capacité imprégnée accumule des dégâts spirituels bonus ainsi qu'un bonus de cadence de tir au fil du temps, et vous rechargez votre arme lorsque vous utilisez la capacité. Jusqu'au prochain rechargement, vos balle",
+      "descriptionEn": "Your imbued ability charges up over time with bonus spirit damage, bonus fire rate, and reloads bullets on use. Until your next reload, your bullets deal bonus spirit damage based on your Spirit Power.",
+      "statsFr": ["+20% Mun. max.", "+7 Pouvoir spirituel", "100% recharg. balles", "14s Temps de recharge"],
+      "statsEn": ["+20% Max Ammo", "+7 Spirit Power", "100% Bullets Reloaded", "14s Charge-Up Time"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/mercurial_magnum.png",
       "icon": "./icons/items/api/mercurial_magnum.png"
     },
@@ -2140,6 +2432,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Augmente vos dégâts des armes lorsque vous tirez sans interruption.",
+      "descriptionEn": "Increases Weapon Damage as you continuously fire your weapon.",
+      "statsFr": ["+20% Mun. max."],
+      "statsEn": ["+20% Max Ammo"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/intensifying_magazine.png",
       "icon": "./icons/items/api/intensifying_magazine.png"
     },
@@ -2153,10 +2448,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "extended_magazine"
-      ],
+      "upgradesFrom": ["extended_magazine"],
       "descriptionFr": "Accorde de la résistance aux balles quand vos balles touchent une unité occultiste ennemie.Chaque tir ne peut accorder qu'une charge.",
+      "descriptionEn": "Grants Bullet Resist when your bullets hit an enemy hero. Each shot can only grant one stack.",
+      "statsFr": ["+35% Mun. max.", "+75 PV bonus", "+18% Dégâts des armes", "2% Résistance aux balles par charge", "24s Durée de la charge"],
+      "statsEn": ["+35% Max Ammo", "+75 Bonus Health", "+18% Weapon Damage", "2% Bullet Resist per Stack", "24s Stack Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/escalating_resilience.png",
       "icon": "./icons/items/api/escalating_resilience.png"
     },
@@ -2170,10 +2466,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "rapid_rounds"
-      ],
+      "upgradesFrom": ["rapid_rounds"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+20% Cadence de tir"],
+      "statsEn": ["+20% Fire Rate"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/swift_striker.png",
       "icon": "./icons/items/api/swift_striker.png"
     },
@@ -2189,6 +2486,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Traverser un voile cosmique vous rend invisible, vous soigne et augmente votre vitesse de déplacement.",
+      "descriptionEn": "Walking through a cosmic veil grants you Stealth, Heal and increased Move Speed.",
+      "statsFr": ["+125 PV bonus", "6 Pouvoir spirituel", "8s Durée de l'invisibilité", "15s Temps de récupération"],
+      "statsEn": ["+125 Bonus Health", "6 Spirit Power", "8s Invisibility Duration", "15s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/veil_walker.png",
       "icon": "./icons/items/api/veil_walker.png"
     },
@@ -2202,10 +2502,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "grit"
-      ],
+      "upgradesFrom": ["grit"],
       "descriptionFr": "Vous accorde une protection lorsque vous êtes la cible d'un étourdissement, d'une prise au piège, d'une immobilisation, d'un endormissement ou d'une réduction au silence.",
+      "descriptionEn": "Gain a Barrier when you are Stunned, Chained, Immobilized, Slept or Silenced.",
+      "statsFr": ["+1 Régénération en dehors du combat", "55s Temps de récupération", "10s Durée"],
+      "statsEn": ["+1 Out of Combat Regen", "55s Cooldown", "10s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/reactive_barrier.png",
       "icon": "./icons/items/api/reactive_barrier.png",
       "legacyIcon": "./icons/items/reactive_barrier.png"
@@ -2220,10 +2521,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "reactive_barrier"
-      ],
+      "upgradesFrom": ["reactive_barrier"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+10% Résistance aux balles", "+10% Résistance spirituelle", "+2 Régénération en dehors du combat", "55s Temps de récupération", "10s Durée"],
+      "statsEn": ["+10% Bullet Resist", "+10% Spirit Resist", "+2 Out of Combat Regen", "55s Cooldown", "10s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/indomitable.png",
       "icon": "./icons/items/api/indomitable.png"
     },
@@ -2239,6 +2541,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Votre prochain tir vous soigne en fonction de la cible touchée.",
+      "descriptionEn": "Your next bullet will heal you based on what target you hit.",
+      "statsFr": ["+6% Dégâts des armes", "6s Temps de récupération"],
+      "statsEn": ["+6% Weapon Damage", "6s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/restorative_shot.png",
       "icon": "./icons/items/api/restorative_shot.png",
       "legacyIcon": "./icons/items/restorative_shot.png"
@@ -2253,10 +2558,11 @@
       "tier": 2,
       "cost": 1600,
       "isActive": false,
-      "upgradesFrom": [
-        "extended_magazine"
-      ],
+      "upgradesFrom": ["extended_magazine"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+100% Mun. max.", "+14% Dégâts des armes"],
+      "statsEn": ["+100% Max Ammo", "+14% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/titanic_magazine.png",
       "icon": "./icons/items/api/titanic_magazine.png"
     },
@@ -2272,6 +2578,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Confère à votre arme des tirs multiples. Si vous touchez plus d'une unité occultiste par attaque, vous obtenez un bonus de dégâts des armes cumulable. Chaque cible ne peut être touchée qu'une fois par tir multiple.",
+      "descriptionEn": "Make your weapon fire multishot. Hitting more than one Hero per attack will grant a stacking weapon damage bonus. Targets can only be hit once per multishot.",
+      "statsFr": ["27s Temps de récupération", "5s Durée de l'effet positif", "5 Charges max.", "12s Durée d'une charge"],
+      "statsEn": ["27s Cooldown", "5s Buff Duration", "5 Max Stacks", "12s Stack Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/split_shot.png",
       "icon": "./icons/items/api/split_shot.png"
     },
@@ -2287,6 +2596,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Pendant le rechargement, appuyez sur Recharger pendant la phase de surbrillance pour terminer le rechargement instantanément et obtenir de la cadence de tir, des balles voleuses de vie et de la vitesse de déplacement.",
+      "descriptionEn": "While reloading, pressing Reload during the highlighted portion will instantly finish your reload and grant you Fire Rate, Bullet Lifesteal and Move Speed.",
+      "statsFr": ["+20% Mun. max.", "12s Temps de récupération", "7s Durée"],
+      "statsEn": ["+20% Max Ammo", "12s Cooldown", "7s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/active_reload.png",
       "icon": "./icons/items/api/active_reload.png",
       "legacyIcon": "./icons/items/active_reload.png"
@@ -2303,6 +2615,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Invoque un tapis volant qui vous emporte dans les airs. Pendant le vol, vous outrepassez les effets de ralentissement. Le tapis disparaitra si vous effectuez une action.Impossible de lancer une capacité lorsque le tapis ",
+      "descriptionEn": "Summon a Magic Carpet that will fly you away. While flying you are immune to slows and doing any action will dismiss the carpet. Cannot use abilities while the carpet is being summoned.",
+      "statsFr": ["+15% Durée de capacité", "+125 PV bonus", "+14 Pouvoir spirituel", "-15% Échelle de gravité", "+25% Contrôle aérien"],
+      "statsEn": ["+15% Ability Duration", "+125 Bonus Health", "+14 Spirit Power", "-15% Gravity Scale", "+25% Air Control"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/magic_carpet.png",
       "icon": "./icons/items/api/magic_carpet.png"
     },
@@ -2318,6 +2633,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "L'infliction de dégâts spirituels considérables sur une cible ennemie à moins de 5 s d'intervalle provoque une explosion qui la blesse et la brule davantage. Elle subit des dégâts au fil du temps et reçoit moins de soins",
+      "descriptionEn": "Dealing significant spirit damage to an enemy within 5s causes an explosion dealing damage and a burn to that enemy. While burning, enemies take damage over time and receive reduced healing.The cooldown is per enemy, so ",
+      "statsFr": ["+6% Portée de capacité", "20s Durée de l'immunité", "8s Durée de l'effet négatif", "-70% Soins reçus"],
+      "statsEn": ["+6% Ability Range", "20s Immunity Duration", "8s Debuff Duration", "-70% Incoming Healing"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/spirit_burn.png",
       "icon": "./icons/items/api/spirit_burn.png"
     },
@@ -2331,10 +2649,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_slow"
-      ],
+      "upgradesFrom": ["mystic_slow"],
       "descriptionFr": "Les dégâts de votre capacité ultime appliquent un étourdissement et infligent des dégâts spirituels bonus après un bref délai.",
+      "descriptionEn": "Damage from your ultimate applies a stun and deals bonus spirit damage after a short delay.",
+      "statsFr": ["24% Vit. de déplacement par infliction de dég. spirituels", "+50 PV bonus", "3s Délai avant l'effet"],
+      "statsEn": ["24% Move Speed on Spirit Damage", "+50 Bonus Health", "3s Delay Before Effect"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/lightning_scroll.png",
       "icon": "./icons/items/api/lightning_scroll.png"
     },
@@ -2350,6 +2669,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Quand vous recevez des dégâts spirituels importants, le temps de récupération d'une de vos capacités choisie aléatoirement est réduit.",
+      "descriptionEn": "Taking heavy hits of spirit damage from an enemy reduces a random ability cooldown.",
+      "statsFr": ["+22% Résistance spirituelle", "+14 Pouvoir spirituel", "1s Temps de récupération", "75 Seuil de dégâts"],
+      "statsEn": ["+22% Spirit Resist", "+14 Spirit Power", "1s Cooldown", "75 Damage Threshold"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/witchmail.png",
       "icon": "./icons/items/api/witchmail.png"
     },
@@ -2363,10 +2685,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "healing_booster"
-      ],
+      "upgradesFrom": ["healing_booster"],
       "descriptionFr": "L'application de soins sur vous ou une unité alliée donne à la cible un bonus de cadence de tir et de la bonus move speed.Ne s'applique pas à la régénération innée, ni au vol passif spirituel ou de balles.",
+      "descriptionEn": "Applying heal to yourself or an ally grants the target bonus fire rate and bonus move speed.Does not apply on innate Regen or passive Bullet/Spirit Lifesteals.",
+      "statsFr": ["+25% Soins prodigués", "+10% Résistance spirituelle", "+6 Régénération de PV", "+4 Régénération en dehors du combat", "7s Durée de l'effet positif"],
+      "statsEn": ["+25% Outgoing Healing", "+10% Spirit Resist", "+6 Health Regen", "+4 Out of Combat Regen", "7s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/healing_tempo.png",
       "icon": "./icons/items/api/healing_tempo.png"
     },
@@ -2380,10 +2703,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "high_velocity_mag"
-      ],
+      "upgradesFrom": ["high_velocity_mag"],
       "descriptionFr": "Vos balles ont une chance de toujours toucher leur cible, transperçant les unités ennemies et ignorant leur résistance aux balles.",
+      "descriptionEn": "Your Bullets have a chance to become unavoidable, piercing through enemies and ignoring their Bullet Resistance.",
+      "statsFr": ["+60% Vitesse des balles", "+8% Dégâts des armes"],
+      "statsEn": ["+60% Bullet Velocity", "+8% Weapon Damage"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/armor_piercing_rounds.png",
       "icon": "./icons/items/api/armor_piercer.png"
     },
@@ -2399,6 +2723,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Accorde une chance de dévier les balles qui arrivent sur vous en empêchant tous les dégâts des armes ou tous les effets à l'impact des balles.",
+      "descriptionEn": "Gain a chance to either deflect incoming bullets, preventing all weapon damage or prevent all on-hit effects from bullets.",
+      "statsFr": ["+130 PV bonus"],
+      "statsEn": ["+130 Bonus Health"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/plated_armor.png",
       "icon": "./icons/items/api/plated_armor.png"
     },
@@ -2412,10 +2739,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "debuff_reducer"
-      ],
+      "upgradesFrom": ["debuff_reducer"],
       "descriptionFr": "Les prochains dégâts spirituels importants que vous subirez seront considérablement réduits.",
+      "descriptionEn": "The next instance of high spirit damage you take is significantly reduced.",
+      "statsFr": ["+18% Résistance spirituelle", "+25% Résistance aux effets négatifs", "+90 PV bonus", "175 Seuil de dégâts", "9s Temps de récupération"],
+      "statsEn": ["+18% Spirit Resist", "+25% Debuff Resist", "+90 Bonus Health", "175 Damage Threshold", "9s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/spellbreaker.png",
       "icon": "./icons/items/api/spellbreaker.png"
     },
@@ -2429,10 +2757,11 @@
       "tier": 4,
       "cost": 6400,
       "isActive": false,
-      "upgradesFrom": [
-        "enduring_speed"
-      ],
+      "upgradesFrom": ["enduring_speed"],
       "descriptionFr": "",
+      "descriptionEn": "",
+      "statsFr": ["+50% Résistance aux ralentissements", "+25% Résistance aux attaques de mêlée", "+8 Régénération de PV", "4s Durée"],
+      "statsEn": ["+50% Slow Resist", "+25% Melee Resist", "+8 Health Regen", "4s Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/juggernaut.png",
       "icon": "./icons/items/api/juggernaut.png"
     },
@@ -2448,6 +2777,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "À chaque fois que vous lancez une capacité ou un objet pendant un combat, vous obtenez un bonus cumulable qui améliore la cadence de tir et la vitesse de rechargement. Chaque charge réinitialise la durée.",
+      "descriptionEn": "While in-combat whenever you cast an ability or item, gain a stacking buff that improves fire rate and reload speed. Each stack refreshes the duration.",
+      "statsFr": ["+5% Réduction du temps de récupération des capacités", "6 Charges max.", "18s Durée de l'effet positif"],
+      "statsEn": ["+5% Ability Cooldown Reduction", "6 Max Stacks", "18s Buff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/spell_slinger.png",
       "icon": "./icons/items/api/spellslinger.png"
     },
@@ -2463,6 +2795,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "Vous ouvrez une blessure quand vous infligez des dégâts des armes à bout portant, ce qui vous accorde de la bonus move speed. Les unités ennemies blessées subissent des dégâts spirituels au fil du temps, leur résistance ",
+      "descriptionEn": "Dealing weapon damage at close range opens a wound and grants you bonus move speed. Wounded enemies take spirit damage over time, have reduced bullet resist, and are revealed through walls.",
+      "statsFr": ["-50% Distance des bruits de pas", "+50 PV bonus", "6s Temps de récupération", "5s Durée de l'effet négatif"],
+      "statsEn": ["-50% Footstep Sound Distance", "+50 Bonus Health", "6s Cooldown", "5s Debuff Duration"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/backstabber.png",
       "icon": "./icons/items/api/stalker.png"
     },
@@ -2476,10 +2811,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "high_velocity_mag"
-      ],
+      "upgradesFrom": ["high_velocity_mag"],
       "descriptionFr": "Votre prochaine attaque permettra de tirer deux fois d'affilée, avec des dégâts et une vitesse des balles accrus. Cette attaque consomme des munitions supplémentaires.",
+      "descriptionEn": "Your next attack will fire twice in quick succession with increased damage and velocity. This attack consumes extra ammo.",
+      "statsFr": ["+60% Vitesse des balles", "+8% Dégâts des armes", "+100% Vitesse des balles", "2 Munitions supplémentaires consommées", "8s Temps de récupération"],
+      "statsEn": ["+60% Bullet Velocity", "+8% Weapon Damage", "+100% Bullet Velocity", "2 Extra Ammo Consumed", "8s Cooldown"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/express_shot.png",
       "icon": "./icons/items/api/express_shot.png"
     },
@@ -2493,10 +2829,11 @@
       "tier": 3,
       "cost": 3200,
       "isActive": false,
-      "upgradesFrom": [
-        "mystic_reach"
-      ],
+      "upgradesFrom": ["mystic_reach"],
       "descriptionFr": "Imprégnez une capacité d'une portée augmentée. Quand vous infligez des dégâts avec cette capacité, les dégâts des armes par unité occultiste touchée augmentent. Son effet est réduit sur les non-occultistes.",
+      "descriptionEn": "Imbue an ability with increased range. Dealing damage with that ability grants you increased weapon damage per unique hero hit. Has reduced effect on non-heroes.",
+      "statsFr": ["20s Durée", "+5% Dég. des armes (non-occultistes)", "8 Limite de cumul pour les non-occultistes"],
+      "statsEn": ["20s Duration", "+5% Non-Hero Weapon Damage", "8 Non-Hero Stack Limit"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/alchemical_seal.png",
       "icon": "./icons/items/api/ballistic_enchantment.png"
     },
@@ -2512,6 +2849,9 @@
       "isActive": false,
       "upgradesFrom": [],
       "descriptionFr": "L'infliction de dégâts des armes importants accorde une recharge de chacune de vos capacités chargées.",
+      "descriptionEn": "Dealing significant weapon damage replenishes a charge for each of your charged abilities.",
+      "statsFr": ["+20% Mun. max.", "+10% Dégâts des armes", "25s Temps de récupération", "3.5s Laps de temps"],
+      "statsEn": ["+20% Max Ammo", "+10% Weapon Damage", "25s Cooldown", "3.5s Time Frame"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/weapon/recharging_rounds.png",
       "icon": "./icons/items/api/recharging_rush.png"
     },
@@ -2527,6 +2867,9 @@
       "isActive": true,
       "upgradesFrom": [],
       "descriptionFr": "Obtenez âmes au fil du temps tant que vous êtes en vie.",
+      "descriptionEn": "Gain souls over time, as long as you are alive.",
+      "statsFr": ["-15% Pénalité de dégâts", "+1 Régénération en dehors du combat"],
+      "statsEn": ["-15% Damage Penalty", "+1 Out of Combat Regen"],
       "shopImage": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/spirit/goose_egg.png",
       "icon": "./icons/items/api/golden_goose_egg.png"
     }

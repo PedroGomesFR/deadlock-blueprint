@@ -1,0 +1,243 @@
+{
+ "source": "scripts/vision-replay.cjs on the full_*.jpg frames (1 per minute) of the sapphire_infernus_full game log",
+ "frames": [
+  {
+   "name": "0000_134358",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "rat_king", "wraith", "paige", "haze"]
+  },
+  {
+   "name": "0029_134459",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0058_134600",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0087_134700",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0116_134801",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", null, "rat_king", "haze"]
+  },
+  {
+   "name": "0145_134902",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null]
+  },
+  {
+   "name": "0174_135003",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0203_135104",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0232_135205",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", null, "haze"]
+  },
+  {
+   "name": "0261_135306",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0290_135407",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", null, "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0319_135508",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", null, "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null]
+  },
+  {
+   "name": "0348_135608",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", null, "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null]
+  },
+  {
+   "name": "0377_135709",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", null, "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0406_135810",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", null],
+   "enemySlots": ["apollo", "warden", null, null, "rat_king", "haze"]
+  },
+  {
+   "name": "0435_135911",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", null, "pocket", "mirage", null],
+   "enemySlots": [null, "warden", null, null, null, "haze"]
+  },
+  {
+   "name": "0464_140012",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null]
+  },
+  {
+   "name": "0493_140113",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": ["apollo", null, "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0522_140214",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": [null, "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0551_140315",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0580_140416",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0609_140517",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
+   "enemySlots": ["apollo", null, "paige", "wraith", "rat_king", null]
+  },
+  {
+   "name": "0638_140617",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": [null, "vindicta", "infernus", "sinclair", "paradox", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"]
+  },
+  {
+   "name": "0667_140718",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": ["apollo", null, "paige", null, null, "haze"]
+  },
+  {
+   "name": "0696_140819",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", null, "haze"]
+  },
+  {
+   "name": "0725_140920",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
+   "enemySlots": [null, null, "paige", "wraith", "warden", "haze"]
+  },
+  {
+   "name": "0754_141021",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": [null, "vindicta", null, null, "seven", null],
+   "enemySlots": [null, "warden", null, null, "yamato", null]
+  },
+  {
+   "name": "0783_141122",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": [null, "warden", "paige", "wraith", null, "haze"]
+  },
+  {
+   "name": "0812_141223",
+   "mode": "hud",
+   "highlighted": null,
+   "allySlots": ["celeste", "vindicta", null, "pocket", "mirage", null],
+   "enemySlots": ["viscous", "warden", null, null, "yamato", null]
+  },
+  {
+   "name": "0841_141324",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", null],
+   "enemySlots": [null, null, "paige", null, "warden", "haze"]
+  },
+  {
+   "name": "0870_141425",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+   "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null]
+  },
+  {
+   "name": "0899_141526",
+   "mode": "hud",
+   "highlighted": "infernus",
+   "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, "billy"],
+   "enemySlots": ["apollo", "warden", "paige", "wraith", null, "haze"]
+  },
+  {
+   "name": "0928_141627",
+   "mode": "other",
+   "highlighted": null,
+   "allySlots": null,
+   "enemySlots": null
+  },
+  {
+   "name": "0957_141727",
+   "mode": "other",
+   "highlighted": null,
+   "allySlots": null,
+   "enemySlots": null
+  }
+ ]
+}

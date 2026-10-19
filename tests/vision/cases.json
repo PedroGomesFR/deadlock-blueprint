@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "name": "sapphire_early_0536",
+      "description": "Sapphire side (my team on the left in blue), 5:36: my highlighted portrait, every portrait alive, 3 padlocked slots.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/sapphire_early_0536_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_early_0536_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_early_0536_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+        "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"],
+        "slots": ["extra_spirit", ".", ".", ".", ".", "lock", "extra_regen", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": null
+      }
+    },
+    {
+      "name": "sapphire_dead_enemy_1545",
+      "description": "15:45: Haze dead (respawn timer over a black portrait) reads as unreadable, not as Haze.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/sapphire_dead_enemy_1545_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_dead_enemy_1545_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_dead_enemy_1545_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+        "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null],
+        "slots": ["extra_regen", "return_fire", "swift_striker", ".", ".", "lock", "reactive_barrier", "improved_spirit", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 2346
+      }
+    },
+    {
+      "name": "sapphire_full_inventory",
+      "description": "10 items + 2 padlocks.",
+      "knownIssues": ["ally slot 5 is Mirage, read as Paradox on this frame (the lineup vote corrects it)"],
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/sapphire_full_inventory_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_full_inventory_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_full_inventory_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
+        "enemySlots": ["apollo", null, "paige", "wraith", "rat_king", null],
+        "slots": ["extra_regen", "reactive_barrier", "improved_spirit", "titanic_magazine", ".", "lock", "high_velocity_mag", "return_fire", "swift_striker", "debuff_remover", "lock", "lock"],
+        "locked": 3,
+        "souls": 452
+      }
+    },
+    {
+      "name": "sapphire_late",
+      "description": "Late game, several dead heroes, 10 items.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/sapphire_late_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_late_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_late_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_death_cam",
+      "description": "Death cam: the killer's HUD and inventory, no highlighted portrait of mine.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/sapphire_death_cam_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_death_cam_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_death_cam_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": [null, "vindicta", null, null, "seven", null],
+        "enemySlots": [null, "warden", null, null, null, null],
+        "slots": ["extra_regen", "enduring_speed", "slowing_hex", "lifestrike", ".", "lock", "stalker", "spirit_shielding", "rapid_recharge", "crushing_fists", ".", "lock"],
+        "locked": 2,
+        "souls": null
+      }
+    },
+    {
+      "name": "end_screen",
+      "description": "End of match: no HUD, nothing read.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/end_screen_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/end_screen_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/end_screen_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "other",
+        "highlighted": null,
+        "allySlots": null,
+        "enemySlots": null,
+        "slots": [".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+        "locked": 0,
+        "souls": null
+      }
+    },
+    {
+      "name": "amber_late_2322",
+      "description": "Amber side (my team on the left in amber), 23:22, two dead heroes.",
+      "knownIssues": ["enemy slot 1 is Pocket with a skin missing from the templates, read as Doorman; Doorman (slot 3) is then left empty on this frame"],
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/amber_late_2322_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/amber_late_2322_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/amber_late_2322_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["mo_and_krill", "graves", "infernus", null, "haze", "deadman_danny"],
+        "enemySlots": ["doorman", "apollo", null, "seven", "lady_geist", null],
+        "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", ".", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "."],
+        "locked": 0,
+        "souls": 2335
+      }
+    },
+    {
+      "name": "amber_shop_open",
+      "description": "Shop open: the inventory and the souls are read 40 / 50 px higher, no top bar.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/amber_shop_open_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/amber_shop_open_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/amber_shop_open_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "shop",
+        "highlighted": null,
+        "allySlots": null,
+        "enemySlots": null,
+        "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", "toxic_bullets", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "lock"],
+        "locked": 1,
+        "souls": 4650
+      }
+    },
+    {
+      "name": "amber_many_dead_2927",
+      "description": "29:27, 6 dead heroes: only the live portraits are read.",
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/amber_many_dead_2927_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/amber_many_dead_2927_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/amber_many_dead_2927_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["mo_and_krill", "graves", "infernus", null, null, "deadman_danny"],
+        "enemySlots": [null, null, "doorman", null, null, null],
+        "slots": ["slowing_hex", "return_fire", "suppressor", "pristine_emblem", "recharging_rush", "express_shot", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "toxic_bullets", "lock"],
+        "locked": 1,
+        "souls": 3580
+      }
+    },
+    {
+      "name": "amber_late_3501",
+      "description": "35:01.",
+      "knownIssues": ["inventory slot 4 not recognized (vitality item)"],
+      "heroId": "infernus",
+      "parts": [
+        {
+          "file": "frames/amber_late_3501_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/amber_late_3501_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/amber_late_3501_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": [null, null, "infernus", "victor", "haze", "deadman_danny"],
+        "enemySlots": [null, "apollo", null, "seven", null, "billy"],
+        "slots": ["swift_striker", "suppressor", "healbane", "?vitality", "express_shot", "spirit_rend", "improved_spirit", "titanic_magazine", "reactive_barrier", "toxic_bullets", "metal_skin", "lock"],
+        "locked": 1,
+        "souls": 3386
+      }
+    }
+  ]
+}

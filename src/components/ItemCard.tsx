@@ -2,6 +2,7 @@ import React from 'react';
 import { DeadlockItem } from '../data/deadlockData';
 import { Check, Zap } from 'lucide-react';
 import { ItemArtworkIcon } from './DeadlockIcons';
+import { useI18n } from '../i18n';
 
 interface ItemCardProps {
   item: DeadlockItem;
@@ -19,36 +20,40 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   compact = false,
   highlightReasons,
 }) => {
+  const { t } = useI18n();
   const categoryStyles = {
     weapon: {
       border: 'border-orange-500/40 hover:border-orange-400',
       bg: 'from-orange-950/45 via-deadlock-panel to-deadlock-panel',
       badge: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-      label: 'Arme',
+      label: t('category.weapon'),
     },
     vitality: {
       border: 'border-emerald-500/40 hover:border-emerald-400',
       bg: 'from-emerald-950/45 via-deadlock-panel to-deadlock-panel',
       badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      label: 'Vitalité',
+      label: t('category.vitality'),
     },
     spirit: {
       border: 'border-purple-500/40 hover:border-purple-400',
       bg: 'from-purple-950/45 via-deadlock-panel to-deadlock-panel',
       badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      label: 'Spirit',
+      label: t('category.spirit'),
     },
   }[item.category];
 
-  // Clean French name only! (English + details shown in tooltip on hover)
-  const primaryFrName = item.name.split('(')[0].trim();
+  // Short name in the interface language (the French data adds the English name in brackets, shown on hover)
+  const primaryName = item.name.split('(')[0].trim();
+  const tooltip = [`${item.name} • ${t('souls', String(item.cost))}`, item.hint, item.stats.join(' | ')]
+    .filter(Boolean)
+    .join('\n');
 
   // Ultra-Clean Visual Tile (Used on Main Page & Overlay)
   if (compact) {
     return (
       <button
         onClick={() => onToggleOwned(item.id)}
-        title={`${item.name} • ${item.cost} Âmes\n${item.frHint}\n${item.stats.join(' | ')}`}
+        title={tooltip}
         className={`w-full text-left p-2 rounded-xl border transition-all flex items-center justify-between gap-2.5 ${
           isOwned
             ? 'bg-emerald-950/40 border-emerald-500/70 opacity-60'
@@ -71,11 +76,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                   isOwned ? 'line-through text-slate-400' : 'text-white'
                 }`}
               >
-                {primaryFrName}
+                {primaryName}
               </span>
               {item.isActive && (
                 <span className="px-1 py-0.2 text-[9px] font-extrabold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/40 shrink-0">
-                  Actif
+                  {t('item.active')}
                 </span>
               )}
             </div>
@@ -92,16 +97,17 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </div>
         <div className="text-right shrink-0 pl-1">
           <span className="text-xs font-extrabold text-teal-300">{item.cost}</span>
-          <span className="text-[9px] text-teal-500 block leading-none">Âmes</span>
+          <span className="text-[9px] text-teal-500 block leading-none">{t('souls.unit')}</span>
         </div>
       </button>
     );
   }
 
-  // Detailed Card (Only used in secondary "Détails Objets" tab)
+  // Detailed Card (Only used in secondary "Item details" tab)
   return (
     <div
       onClick={() => onToggleOwned(item.id)}
+      title={item.stats.join('\n') || undefined}
       className={`group relative cursor-pointer rounded-xl border p-3 transition-all duration-200 bg-gradient-to-br ${
         isOwned
           ? 'from-emerald-950/40 to-deadlock-panel border-emerald-500/60 opacity-65'
@@ -118,11 +124,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                   isOwned ? 'line-through text-emerald-300' : 'text-white'
                 }`}
               >
-                {primaryFrName}
+                {primaryName}
               </h4>
               {item.isActive && (
                 <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/50 flex items-center gap-0.5 shrink-0">
-                  <Zap className="w-2.5 h-2.5" /> Actif
+                  <Zap className="w-2.5 h-2.5" /> {t('item.active')}
                 </span>
               )}
             </div>
@@ -137,7 +143,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </div>
       </div>
 
-      <p className="text-xs text-amber-200/95 mb-1.5 leading-snug">{item.frHint}</p>
+      <p className="text-xs text-amber-200/95 mb-1.5 leading-snug">{item.hint}</p>
+      {item.stats.length > 0 && (
+        <p className="text-[10px] text-slate-400 mb-1.5 leading-snug">{item.stats.join(' • ')}</p>
+      )}
 
       {highlightReasons && highlightReasons.length > 0 && (
         <div className="text-[11px] text-emerald-300 font-medium">

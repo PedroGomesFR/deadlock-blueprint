@@ -15,8 +15,15 @@ export interface VisionDetectionResult {
   unmatchedSlotsCount?: number; // occupied slots whose icon matched no template (left unknown)
   lockedSlotsCount?: number; // inventory slots still locked (padlock icon)
   hudVisible?: boolean; // in-game top bar (team score boxes) visible
+  shopOpen?: boolean; // shop (B) open: inventory and souls read at their shop position
+  inventorySlots?: InventorySlotReading[]; // what each of the 12 slots looked like (game log, diagnostics)
   highlightedHeroId?: string; // hero of the highlighted (own) portrait in the top bar
   abilityHeroId?: string; // hero matched by the ability icons (less reliable, cooldown numbers fool it)
+  allySlots?: (string | null)[]; // hero of each of the 6 ally portraits (left), null when unreadable
+  enemySlots?: (string | null)[]; // hero of each of the 6 enemy portraits (right)
+  mySlotIndex?: number; // ally slot used as mine for the lane (-1 when unknown)
+  frameWidth?: number; // size of the analysed frame (16:9 only is supported)
+  frameHeight?: number;
   detectedSouls?: number;
   detectedLaneColor?: LaneColor;
   rawText: string;
@@ -26,6 +33,18 @@ export interface VisionDetectionResult {
   timestamp: string;
   hudPreviewUrl?: string;
   debugLogs: string[];
+}
+
+export interface InventorySlotReading {
+  slot: string; // "1.1" .. "2.6" (row.column)
+  // item: recognized; cooldown: item last recognized in this slot, confirmed despite the cooldown sweep;
+  // unknown: occupied but not recognized (itemId = best candidate)
+  state: 'empty' | 'locked' | 'item' | 'cooldown' | 'unknown';
+  category?: ItemCategory;
+  itemId?: string;
+  error?: number;
+  secondId?: string;
+  secondError?: number;
 }
 
 const HERO_ICONS = officialIconsMap.heroes as Record<string, string>;
@@ -130,9 +149,25 @@ let lastMintPixels = -1;
 let lastMintXSum = -1;
 let cachedDetectedSouls: number | undefined = undefined;
 
+/**
+ * OCR worker for the souls digits. Everything is local (copied into ./tesseract/ by scripts/copy-ocr-assets.mjs):
+ * no request to the Tesseract CDN, and the souls are read offline.
+ */
 function getDigitsOcrWorker(): Promise<Tesseract.Worker> {
   if (!ocrWorkerPromise) {
-    ocrWorkerPromise = Tesseract.createWorker('eng');
+    const local = (p: string) => new URL(`./tesseract/${p}`, document.baseURI).href;
+    ocrWorkerPromise = Tesseract.createWorker('eng', 1, {
+      workerPath: local('worker.min.js'),
+      corePath: local('core/'),
+      langPath: local('lang'),
+      workerBlobURL: false,
+      cacheMethod: 'none',
+      gzip: true,
+    });
+    // A failed start (missing files) must not stop every later attempt
+    ocrWorkerPromise.catch(() => {
+      ocrWorkerPromise = null;
+    });
   }
   return ocrWorkerPromise;
 }
@@ -183,12 +218,6 @@ function getAbilityIconSrc(abilityName: string): string | undefined {
   );
 }
 
-/** Heroes the ability icons can recognize (the others are only found by their portrait). */
-export const ABILITY_TEMPLATE_HERO_IDS = new Set(
-  HEROES_DB.filter((hero) =>
-    (hero.builds[0]?.abilitiesDetails ?? []).some((ab) => getAbilityIconSrc(ab.name))
-  ).map((hero) => hero.id)
-);
 
 async function getAbilityTemplates(): Promise<AbilityMaskTemplate[]> {
   if (cachedAbilityTemplates) return cachedAbilityTemplates;
@@ -241,6 +270,21 @@ async function getAbilityTemplates(): Promise<AbilityMaskTemplate[]> {
 const isSapphireBlue = (d: Uint8ClampedArray, i: number) => d[i + 2] > 175 && d[i + 2] - d[i] > 85;
 const isAmberGold = (d: Uint8ClampedArray, i: number) =>
   d[i] > 175 && d[i + 1] > 100 && d[i] - d[i + 2] > 105;
+// Own-portrait banner of the Sapphire team: darker than the score box, and never turquoise (a game effect on
+// teammates, (34,198,181), that passes isSapphireBlue)
+const isSapphireBanner = (d: Uint8ClampedArray, i: number) =>
+  d[i + 2] > 150 && d[i + 2] - d[i] > 70 && d[i + 2] - d[i + 1] > 40 && d[i + 1] - d[i] > 10;
+// One corner of the current hero's slot is enough when it is clearly in the team colour (the other one can be
+// covered by the hero art)
+const OWN_SLOT_SINGLE_CORNER_MIN = 0.6;
+
+// Dead hero: its portrait turns grey under a big red-orange respawn timer (~(235, 76, 30), rows 49..69 of the
+// portrait). Grey portraits were still matched, often to the wrong hero: a large part of the enemy lineup noise
+// late in a game. Measured on every portrait of 3 recorded games (x 5..66, y 45..76): alive <= 5 such pixels
+// (Apollo's red skin has more blue, Deadman Danny's goggles sit higher, low-HP bars are thin), dead >= 80.
+const RESPAWN_DIGIT_MIN_PIXELS = 30;
+const isRespawnDigitPixel = (d: Uint8ClampedArray, i: number) =>
+  d[i] > 220 && d[i + 1] > 45 && d[i + 1] < 115 && d[i + 2] < 60;
 
 /** Share of the pixels (every `step` bytes) passing `test`. */
 function colorRatio(
@@ -260,6 +304,10 @@ function colorRatio(
 // Padlock of a still-locked inventory slot, as a local-contrast mask (pixel brighter than its neighbourhood)
 // over the slot area x = 8..43, y = 8..43 (1920x1080). Extracted from a real capture: IoU between padlocks
 // 0.80-0.96, against empty slots (see-through, any background) <= 0.08.
+// Measured over a whole game (2 s captures): padlocked slots median 0.72-0.77 but pale or hidden padlocks
+// (shop, bright scenery, effects) fall lower; slots never padlocked stay <= 0.26 at any contrast. Contrast 8 and
+// IoU 0.35 miss 5 % of the frames (16 % with the former 12 / 0.5), never more than ~6 s in a row.
+const LOCK_CONTRAST = 8;
 const LOCK_MASK_ORIGIN = 8;
 const LOCK_MASK = [
   '.................####...............',
@@ -291,7 +339,10 @@ const LOCK_MASK = [
   '........######################......',
 ];
 const LOCK_MASK_ROW_OFFSET = 7; // first mask row is row 7 of the 36x36 slot area
-const LOCK_MIN_IOU = 0.5;
+const LOCK_MIN_IOU = 0.35;
+// A padlock seen in this slot during the last 10 s still counts while the slot holds no item: slots never
+// re-lock during a game, and an inventory missing its padlock reads as "not full" (the "⇄ Vendre" hint vanished)
+const LOCK_HOLD_MS = 10000;
 
 /** Is this inventory slot (top-left corner at 1920x1080 coordinates) a padlocked, not yet unlocked slot? */
 function isLockedSlot(
@@ -325,7 +376,7 @@ function isLockedSlot(
           n++;
         }
       }
-      const isFg = lumAt(x, y) - sum / n > 12;
+      const isFg = lumAt(x, y) - sum / n > LOCK_CONTRAST;
       const isMask = maskRow !== undefined && maskRow[tx] === '#';
       if (isFg && isMask) inter++;
       if (isFg || isMask) union++;
@@ -340,6 +391,60 @@ const MATCH_GRID = 20;
 const ITEM_MATCH_MAX_MAE = 20;
 // Tie-breaker in favour of the active build's items.
 const BUILD_ITEM_MAE_BONUS = 2;
+
+// Item on cooldown: a dark sweep covers the icon (mean luminance 31-48) but the coloured category corner stays.
+// Measured over a whole game: such slots have a variance of 223-2131, an empty slot < 10, and the empty slots whose
+// see-through background fakes a category corner are all brighter (>= 55).
+const COOLDOWN_SLOT_MAX_LUM = 50;
+const COOLDOWN_SLOT_MIN_VARIANCE = 200;
+// Cooldown-tolerant match: each pixel may match the icon or the icon darkened by the sweep. Only used to confirm
+// the item last recognized in that slot (never to guess one): over a whole game it was then the best candidate in
+// 619/626 cooldown frames, with an error of 5-15, while empty slots reach 17 against random items.
+const COOLDOWN_DARKENING = 0.35;
+const COOLDOWN_MATCH_MAX_ERROR = 20;
+
+// Item at the very start of its cooldown: the whole card is darkened, category corner included (vitality corner
+// (31,48,14) instead of (113,167,34)), so no category is found. Accepted only for a slot whose item is known, as a
+// dark textured card with a dimmed corner of that item's category hue. Replay of a whole game: late-game frames of a
+// full inventory read as "not full" 9 -> 2 / 168, and only slots really holding that item were concerned.
+const DARK_CARD_MAX_LUM = 55;
+const DARK_CARD_MIN_VARIANCE = 150;
+const DARK_CORNER_MAX_LUM = 90;
+const DARK_CORNER_MAX_CHROMA_DISTANCE = 0.1;
+// Chromaticity (r, g, b shares) of the bright category corners
+const CATEGORY_CORNER_CHROMA: Record<ItemCategory, [number, number, number]> = {
+  weapon: [0.55, 0.36, 0.09],
+  vitality: [0.36, 0.53, 0.11],
+  spirit: [0.34, 0.24, 0.42],
+};
+
+function isDimCategoryCorner(r: number, g: number, b: number, category: ItemCategory): boolean {
+  const sum = r + g + b;
+  if (sum <= 0 || 0.299 * r + 0.587 * g + 0.114 * b > DARK_CORNER_MAX_LUM) return false;
+  const [cr, cg, cb] = CATEGORY_CORNER_CHROMA[category];
+  return Math.hypot(r / sum - cr, g / sum - cg, b / sum - cb) <= DARK_CORNER_MAX_CHROMA_DISTANCE;
+}
+
+// An empty slot is uniform (variance < 10; a cooldown card is > 150): seen like that 6 scans in a row (~2 s), the
+// slot forgets its item (sold)
+const EMPTY_SLOT_MAX_VARIANCE = 50;
+const EMPTY_SCANS_TO_FORGET = 6;
+
+// Per inventory slot (row * 6 + col): last item recognized with certainty, when a padlock was last seen, and how
+// many scans in a row it has looked empty
+const slotLastItem: (string | null)[] = new Array(12).fill(null);
+const slotLastLockSeen: number[] = new Array(12).fill(-Infinity);
+const slotEmptyStreak: number[] = new Array(12).fill(0);
+
+// Shop (B) open: the top bar disappears and the bottom-left HUD moves up. Measured on real 1920x1080
+// captures: inventory rows at y = 906 / 968 instead of 946 / 1008, souls digits at y = 842..876 instead of
+// 892..926 (same x for both).
+const SHOP_INVENTORY_DY = -40;
+const SHOP_SOULS_DY = -50;
+
+/** Souls digits (mint-cyan) of the souls counter. */
+const isSoulsDigitPixel = (r: number, g: number, b: number) => g > 200 && b > 165 && r < 205 && g - r > 20;
+const MIN_SOULS_DIGIT_PIXELS = 18;
 
 /**
  * Area-averaged (box filter) downsample of an RGBA image to 20x20. Templates and screen slots go through
@@ -383,6 +488,27 @@ function areaDownsample(src: Uint8ClampedArray, srcW: number, srcH: number): Uin
   return out;
 }
 
+/** Mean RGB error of a 20x20 slot against a template, each pixel matching either the icon or the icon darkened by a cooldown sweep. */
+function cooldownTolerantError(tData: Uint8ClampedArray, mData: Uint8ClampedArray): number {
+  let diff = 0;
+  let cnt = 0;
+  for (let py = 2; py < 18; py++) {
+    for (let px = 2; px < 18; px++) {
+      if (px >= 10 && py <= 10 && px - 9 >= py) continue;
+      const idx = (py * 20 + px) * 4;
+      let lit = 0;
+      let dark = 0;
+      for (let c = 0; c < 3; c++) {
+        lit += Math.abs(tData[idx + c] - mData[idx + c]);
+        dark += Math.abs(tData[idx + c] * COOLDOWN_DARKENING - mData[idx + c]);
+      }
+      diff += Math.min(lit, dark) / 3;
+      cnt++;
+    }
+  }
+  return diff / cnt;
+}
+
 async function getItemTemplates(): Promise<ItemIconTemplate[]> {
   if (cachedItemTemplates) return cachedItemTemplates;
   const templates: ItemIconTemplate[] = [];
@@ -407,6 +533,9 @@ async function getItemTemplates(): Promise<ItemIconTemplate[]> {
         resolve();
       };
       img.onerror = () => resolve();
+      // Icons of items added after this release come from the repository (src/data/dataSource.ts): without
+      // CORS their pixels could not be read
+      if (/^https?:/.test(src)) img.crossOrigin = 'anonymous';
       img.src = src;
     });
 
@@ -422,6 +551,27 @@ async function getItemTemplates(): Promise<ItemIconTemplate[]> {
   await Promise.all(tasks);
   cachedItemTemplates = templates;
   return templates;
+}
+
+/**
+ * Forgets what the scanner remembers between frames (last item of each slot, padlocks seen, souls read):
+ * used by the replay harness (scripts/vision-replay.cjs) to analyse unrelated frames independently.
+ */
+export function resetScannerState(): void {
+  slotLastItem.fill(null);
+  slotLastLockSeen.fill(-Infinity);
+  slotEmptyStreak.fill(0);
+  lastMintPixels = -1;
+  lastMintXSum = -1;
+  cachedDetectedSouls = undefined;
+}
+
+/** Resolves once the background souls OCR is done (replay harness: the next scan of the frame reads the souls). */
+export async function waitForOcrIdle(timeoutMs = 15000): Promise<void> {
+  const start = Date.now();
+  while (isOcrBusy && Date.now() - start < timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
 }
 
 // Reusable tiny scratch canvases to avoid DOM allocation overhead on 350ms fast loop
@@ -510,6 +660,7 @@ export async function analyzeDeadlockScreen(
       // The player's team is always on the left in its own colour: Sapphire Blue | Amber Gold when playing
       // Sapphire, Amber Gold | Sapphire Blue when playing Amber. Both layouts must be accepted.
       let isDeadlockTopBarVisible = false;
+      let isMyTeamAmber = false;
       try {
         const leftBarData = fullCtx.getImageData(
           Math.round((w * 855) / 1920),
@@ -531,12 +682,46 @@ export async function analyzeDeadlockScreen(
           colorRatio(leftBarData, isAmberGold, 16) >= 0.35 &&
           colorRatio(rightBarData, isSapphireBlue, 16) >= 0.35;
         isDeadlockTopBarVisible = sapphireLayout || amberLayout;
+        isMyTeamAmber = amberLayout;
       } catch {
         // Ignore
       }
 
+      // 0B. SHOP (B) OPEN? The top bar is hidden and the souls digits (mint-cyan, x=110..208, y=892..924 in the HUD)
+      // sit 50 px higher. Language-independent, and the inventory below them moves up by 40 px.
+      const readSoulsRegion = (dy: number) => {
+        const sx = Math.round((w * 110) / 1920);
+        const sy = Math.round((h * (892 + dy)) / 1080);
+        const sw = Math.max(1, Math.round((w * 98) / 1920));
+        const sh = Math.max(1, Math.round((h * 32) / 1080));
+        const data = fullCtx.getImageData(sx, sy, sw, sh).data;
+        let mintPixels = 0;
+        let mintXSum = 0;
+        for (let py = 0; py < sh; py++) {
+          for (let px = 0; px < sw; px++) {
+            const idx = (py * sw + px) * 4;
+            if (isSoulsDigitPixel(data[idx], data[idx + 1], data[idx + 2])) {
+              mintPixels++;
+              mintXSum += px;
+            }
+          }
+        }
+        return { data, sw, sh, mintPixels, mintXSum };
+      };
+      let soulsRegion = readSoulsRegion(0);
+      let isShopOpen = false;
+      if (!isDeadlockTopBarVisible && soulsRegion.mintPixels < MIN_SOULS_DIGIT_PIXELS) {
+        const shopSoulsRegion = readSoulsRegion(SHOP_SOULS_DY);
+        if (shopSoulsRegion.mintPixels >= MIN_SOULS_DIGIT_PIXELS) {
+          isShopOpen = true;
+          soulsRegion = shopSoulsRegion;
+        }
+      }
+      const invDy = isShopOpen ? SHOP_INVENTORY_DY : 0;
+      if (isShopOpen) debugLogs.push(`Boutique ouverte : inventaire lu ${-SHOP_INVENTORY_DY} px plus haut`);
+
       // 1. ULTRA-FAST OWNED INVENTORY ITEMS SCANNER (12 Bottom-Left Slots: 2 rows x 6 cols)
-      // Runs on EVERY frame (even when the Shop 'B' is open!) in < 3ms
+      // Runs on EVERY frame in < 3ms, also with the Shop 'B' open (the whole grid is then `invDy` higher)
       // Calibrated on 1920x1080: x = 26 + col * 62, y = 944 + row * 62, size = 52x52
       const detectedOwnedItemIds: string[] = [];
       const occupiedCategoryCounts: Record<ItemCategory, number> = {
@@ -552,6 +737,7 @@ export async function analyzeDeadlockScreen(
       let totalOccupiedSlots = 0;
       let unmatchedSlotsCount = 0;
       let lockedSlotsCount = 0;
+      const slotReadings: InventorySlotReading[] = [];
       const buildItemSet = new Set<string>(buildItemIds);
 
       if (abCtx && itemTemplates.length > 0) {
@@ -559,17 +745,41 @@ export async function analyzeDeadlockScreen(
         const scaleX = w / 1920;
         const scaleY = h / 1080;
         const invX0 = Math.round(10 * scaleX);
-        const invY0 = Math.round(930 * scaleY);
+        const invY0 = Math.round((930 + invDy) * scaleY);
         const invW = Math.min(w - invX0, Math.round(400 * scaleX));
         const invH = h - invY0;
         const invData = fullCtx.getImageData(invX0, invY0, invW, invH).data;
-        const isSlotLocked = (row: number, col: number) =>
-          isLockedSlot(invData, invW, invX0, invY0, 26 + col * 62, 944 + row * 62, scaleX, scaleY);
+        const scanTime = performance.now();
+        // Slot without item: padlocked if a padlock is seen now or was seen there during the last LOCK_HOLD_MS.
+        // Seen uniformly empty for a while, it forgets its last item (sold).
+        const readEmptySlot = (row: number, col: number, slotIndex: number, variance: number) => {
+          const slot = `${row + 1}.${col + 1}`;
+          // Only on a real game screen: during the shop's fade-out the grid is read at the wrong height and every
+          // slot looks empty, which made a slot forget its item on cooldown
+          if (!isDeadlockTopBarVisible && !isShopOpen) {
+            slotEmptyStreak[slotIndex] = 0;
+          } else if (variance < EMPTY_SLOT_MAX_VARIANCE) {
+            slotEmptyStreak[slotIndex]++;
+            if (slotEmptyStreak[slotIndex] >= EMPTY_SCANS_TO_FORGET) slotLastItem[slotIndex] = null;
+          } else {
+            slotEmptyStreak[slotIndex] = 0;
+          }
+          if (isLockedSlot(invData, invW, invX0, invY0, 26 + col * 62, 944 + invDy + row * 62, scaleX, scaleY)) {
+            slotLastLockSeen[slotIndex] = scanTime;
+          }
+          if (scanTime - slotLastLockSeen[slotIndex] < LOCK_HOLD_MS) {
+            lockedSlotsCount++;
+            slotReadings.push({ slot, state: 'locked' });
+          } else {
+            slotReadings.push({ slot, state: 'empty' });
+          }
+        };
 
         for (let row = 0; row < 2; row++) {
           for (let col = 0; col < 6; col++) {
+            const slotIndex = row * 6 + col;
             const ix = Math.round((w * (26 + col * 62)) / 1920);
-            const iy = Math.round((h * (944 + row * 62)) / 1080);
+            const iy = Math.round((h * (944 + invDy + row * 62)) / 1080);
             const isz = Math.round((w * 52) / 1920);
 
             abCtx.clearRect(0, 0, 20, 20);
@@ -577,10 +787,16 @@ export async function analyzeDeadlockScreen(
             const sData = abCtx.getImageData(0, 0, 20, 20).data;
 
             // Step 1A: Detect Top-Right Category Corner Triangle (Orange=Weapon, Green=Vitality, Purple=Spirit)
+            const slot = `${row + 1}.${col + 1}`;
             let trR = 0,
               trG = 0,
               trB = 0,
               trN = 0;
+            // All corner pixels, numerals included: hue of a corner dimmed by the start of a cooldown
+            let cornerR = 0,
+              cornerG = 0,
+              cornerB = 0,
+              cornerN = 0;
             for (let py = 1; py <= 6; py++) {
               for (let px = 13; px <= 18; px++) {
                 if (px - 12 >= py) {
@@ -589,6 +805,10 @@ export async function analyzeDeadlockScreen(
                   const g = sData[idx + 1];
                   const b = sData[idx + 2];
                   const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                  cornerR += r;
+                  cornerG += g;
+                  cornerB += b;
+                  cornerN++;
                   // Skip dark Roman numeral pixels ('I', 'II', 'III', 'IV') inside the corner badge
                   if (lum > 70) {
                     trR += r;
@@ -614,11 +834,6 @@ export async function analyzeDeadlockScreen(
               }
             }
 
-            if (!slotCat) {
-              if (isSlotLocked(row, col)) lockedSlotsCount++;
-              continue;
-            }
-
             // Step 1B: Verify inner card body luminance & contrast (excluding top-right triangle)
             let lumSum = 0;
             let lumSq = 0;
@@ -638,20 +853,48 @@ export async function analyzeDeadlockScreen(
             const meanLum = lumSum / innerN;
             const variance = lumSq / innerN - meanLum * meanLum;
 
-            // Every real Deadlock item card (including dark icons like Healbane/Decay) has high contrast (variance > 600)
-            if (meanLum <= 45 || variance <= 600) {
-              if (isSlotLocked(row, col)) lockedSlotsCount++;
+            // Item at the very start of its cooldown: the whole card, category corner included, is darkened so no
+            // category is found. Only for a slot whose item is known, with the dimmed corner of that item's category.
+            const lastItem = slotLastItem[slotIndex];
+            const lastCategory = lastItem ? ITEMS_DB[lastItem]?.category : undefined;
+            if (
+              !slotCat &&
+              lastItem &&
+              lastCategory &&
+              meanLum <= DARK_CARD_MAX_LUM &&
+              variance > DARK_CARD_MIN_VARIANCE &&
+              isDimCategoryCorner(cornerR / cornerN, cornerG / cornerN, cornerB / cornerN, lastCategory)
+            ) {
+              totalOccupiedSlots++;
+              occupiedCategoryCounts[lastCategory]++;
+              matchedCategoryCounts[lastCategory]++;
+              slotLastLockSeen[slotIndex] = -Infinity;
+              slotEmptyStreak[slotIndex] = 0;
+              if (!detectedOwnedItemIds.includes(lastItem)) detectedOwnedItemIds.push(lastItem);
+              debugLogs.push(`Slot ${slot} [${lastCategory}] ⏳ ${lastItem} en recharge (carte assombrie)`);
+              slotReadings.push({ slot, state: 'cooldown', category: lastCategory, itemId: lastItem });
+              continue;
+            }
+
+            // Every real Deadlock item card (including dark icons like Healbane/Decay) has high contrast (variance > 600);
+            // an item on cooldown is darker but keeps its category corner and some contrast
+            const isItemCard = meanLum > 45 && variance > 600;
+            const isCooldownCard = meanLum <= COOLDOWN_SLOT_MAX_LUM && variance > COOLDOWN_SLOT_MIN_VARIANCE;
+            if (!slotCat || (!isItemCard && !isCooldownCard)) {
+              readEmptySlot(row, col, slotIndex, variance);
               continue;
             }
 
             totalOccupiedSlots++;
             occupiedCategoryCounts[slotCat]++;
+            slotLastLockSeen[slotIndex] = -Infinity;
+            slotEmptyStreak[slotIndex] = 0;
 
             // Step 1C: Match against itemTemplates of the SAME category (Weapon/Vitality/Spirit).
             // The icon artwork sits 2px lower and is 54px wide inside the 52px slot box used above
             // (calibrated on a real 1920x1080 capture: average error of correct matches 30 -> 9).
             const mx = Math.round((w * (26 + col * 62)) / 1920);
-            const my = Math.round((h * (946 + row * 62)) / 1080);
+            const my = Math.round((h * (946 + invDy + row * 62)) / 1080);
             const msz = Math.round((w * 54) / 1920);
             const mData = areaDownsample(fullCtx.getImageData(mx, my, msz, msz).data, msz, msz);
 
@@ -692,13 +935,47 @@ export async function analyzeDeadlockScreen(
             }
 
             const accepted = bestItem !== null && bestEffectiveMAE <= ITEM_MATCH_MAX_MAE;
+            let recognizedItem: string | null = accepted ? bestItem : null;
+            let cooldownError: number | undefined;
+            if (accepted) {
+              slotLastItem[slotIndex] = bestItem;
+            } else {
+              // Item on cooldown: confirm the item last recognized in this slot, if it is still the best candidate
+              // once the dark sweep is tolerated
+              if (lastItem && lastCategory === slotCat) {
+                let bestTolerantItem: string | null = null;
+                let bestTolerantError = Infinity;
+                for (const tpl of itemTemplates) {
+                  if (tpl.category !== slotCat) continue;
+                  const error = cooldownTolerantError(tpl.rgba, mData);
+                  if (error < bestTolerantError) {
+                    bestTolerantError = error;
+                    bestTolerantItem = tpl.itemId;
+                  }
+                }
+                if (bestTolerantItem === lastItem && bestTolerantError <= COOLDOWN_MATCH_MAX_ERROR) {
+                  recognizedItem = lastItem;
+                  cooldownError = bestTolerantError;
+                }
+              }
+            }
+
             debugLogs.push(
-              `Slot ${row + 1}.${col + 1} [${slotCat}] ${accepted ? '✓' : '✗'} ${bestItem} (${bestEffectiveMAE.toFixed(
-                1
-              )}) • 2e : ${secondItem} (${secondEffectiveMAE.toFixed(1)})`
+              `Slot ${slot} [${slotCat}] ${accepted ? '✓' : cooldownError !== undefined ? '⏳' : '✗'} ${
+                cooldownError !== undefined ? `${recognizedItem} en recharge (${cooldownError.toFixed(1)}) • brut : ` : ''
+              }${bestItem} (${bestEffectiveMAE.toFixed(1)}) • 2e : ${secondItem} (${secondEffectiveMAE.toFixed(1)})`
             );
-            if (accepted && bestItem && !detectedOwnedItemIds.includes(bestItem)) {
-              detectedOwnedItemIds.push(bestItem);
+            slotReadings.push({
+              slot,
+              state: accepted ? 'item' : cooldownError !== undefined ? 'cooldown' : 'unknown',
+              category: slotCat,
+              itemId: recognizedItem ?? bestItem ?? undefined,
+              error: cooldownError ?? bestEffectiveMAE,
+              secondId: secondItem ?? undefined,
+              secondError: secondEffectiveMAE,
+            });
+            if (recognizedItem) {
+              if (!detectedOwnedItemIds.includes(recognizedItem)) detectedOwnedItemIds.push(recognizedItem);
               matchedCategoryCounts[slotCat]++;
             }
           }
@@ -719,32 +996,12 @@ export async function analyzeDeadlockScreen(
         }
       }
 
-      // 2. NON-BLOCKING SOULS COUNTER SCANNER (Bottom-Left Mint-Cyan Digits: x=110..208, y=892..924)
+      // 2. NON-BLOCKING SOULS COUNTER SCANNER (region found in step 0B: HUD or shop position)
       // Only invokes Tesseract OCR in the background when the mint-cyan pixel fingerprint actually changes!
       try {
-        const sx = Math.round((w * 110) / 1920);
-        const sy = Math.round((h * 892) / 1080);
-        const sw = Math.max(1, Math.round((w * 98) / 1920));
-        const sh = Math.max(1, Math.round((h * 32) / 1080));
+        const { data: rawSouls, sw, sh, mintPixels, mintXSum } = soulsRegion;
 
-        const rawSouls = fullCtx.getImageData(sx, sy, sw, sh).data;
-        let mintPixels = 0;
-        let mintXSum = 0;
-
-        for (let py = 0; py < sh; py++) {
-          for (let px = 0; px < sw; px++) {
-            const idx = (py * sw + px) * 4;
-            const r = rawSouls[idx];
-            const g = rawSouls[idx + 1];
-            const b = rawSouls[idx + 2];
-            if (g > 200 && b > 165 && r < 205 && g - r > 20) {
-              mintPixels++;
-              mintXSum += px;
-            }
-          }
-        }
-
-        if (mintPixels >= 18) {
+        if (mintPixels >= MIN_SOULS_DIGIT_PIXELS) {
           const fingerprintChanged =
             Math.abs(mintPixels - lastMintPixels) > 2 || Math.abs(mintXSum - lastMintXSum) > 35;
 
@@ -766,10 +1023,7 @@ export async function analyzeDeadlockScreen(
               for (let py = 0; py < sh; py++) {
                 for (let px = 0; px < sw; px++) {
                   const idx = (py * sw + px) * 4;
-                  const r = rawSouls[idx];
-                  const g = rawSouls[idx + 1];
-                  const b = rawSouls[idx + 2];
-                  if (g > 200 && b > 165 && r < 205 && g - r > 20) {
+                  if (isSoulsDigitPixel(rawSouls[idx], rawSouls[idx + 1], rawSouls[idx + 2])) {
                     soulsCtx.fillRect(pad + px * 2, pad + py * 2, 2, 2);
                   }
                 }
@@ -804,6 +1058,9 @@ export async function analyzeDeadlockScreen(
       let bestAbilityIoU = 0;
       const allyHeroesBySlot: (string | null)[] = [null, null, null, null, null, null];
       const enemyHeroesBySlot: (string | null)[] = [null, null, null, null, null, null];
+      // Portraits under a respawn timer (dead hero): read, but not trusted for the lineups
+      const allyDead: boolean[] = new Array(6).fill(false);
+      const enemyDead: boolean[] = new Array(6).fill(false);
       let myAllySlotIdx = -1;
 
       if (isDeadlockTopBarVisible) {
@@ -981,6 +1238,22 @@ export async function analyzeDeadlockScreen(
           }
         }
 
+        const isRespawning = (baseX1920: number) => {
+          const data = fullCtx.getImageData(
+            Math.round((w * (baseX1920 + 5)) / 1920),
+            Math.round((h * 45) / 1080),
+            Math.max(1, Math.round((w * 61) / 1920)),
+            Math.max(1, Math.round((h * 31) / 1080))
+          ).data;
+          let n = 0;
+          for (let i = 0; i < data.length; i += 4) if (isRespawnDigitPixel(data, i)) n++;
+          return n >= RESPAWN_DIGIT_MIN_PIXELS * (w / 1920) * (h / 1080);
+        };
+        for (let i = 0; i < 6; i++) {
+          allyDead[i] = isRespawning(339 + i * 88);
+          enemyDead[i] = isRespawning(1071 + i * 88);
+        }
+
         const usedHeroes = new Set<string>();
         const allPairs: {
           side: 'ally' | 'enemy';
@@ -1015,25 +1288,50 @@ export async function analyzeDeadlockScreen(
 
         // The local player's own portrait sits on a solid team-colour box (amber or blue) whose top corners
         // stick out of the round portrait; teammates' corners show the map behind them.
-        // Measured on a real 1920x1080 capture: own slot 0.87-0.97, teammates <= 0.11.
+        // Measured on a real 1920x1080 capture: own slot 0.87-0.97, teammates <= 0.11. But scenery lit in the
+        // team colour fakes it (game log: own slot 0.73-0.86, a teammate 0.93-1.00 on an orange wall), so only
+        // my team's colour (left score box) counts, and among several candidates the current hero's slot wins.
         const highlightedSlots: number[] = [];
         const cornerW = Math.max(1, Math.round((w * 12) / 1920));
         const cornerH = Math.max(1, Math.round((h * 30) / 1080));
-        const isTeamColor = (d: Uint8ClampedArray, i: number) => isAmberGold(d, i) || isSapphireBlue(d, i);
+        // The Sapphire banner is darker than the score box (~(78,115,182) vs (100,135,197)) and the hero art can
+        // cover a corner (Infernus' flame): over a whole Sapphire game the former test found my slot in 29/864
+        // frames and a teammate's turquoise glow in 49. Banner blue + one corner for the current hero's slot: 645.
+        const isTeamColor = isMyTeamAmber ? isAmberGold : isSapphireBanner;
+        const currentHeroSlot = allyHeroesBySlot.indexOf(currentMyHeroId);
         for (let i = 0; i < 6; i++) {
           const x0 = 339 + i * 88;
-          const left = fullCtx.getImageData(Math.round((w * x0) / 1920), 0, cornerW, cornerH).data;
-          const right = fullCtx.getImageData(Math.round((w * (x0 + 58)) / 1920), 0, cornerW, cornerH).data;
-          if (colorRatio(left, isTeamColor) >= 0.5 && colorRatio(right, isTeamColor) >= 0.5) {
+          const left = colorRatio(
+            fullCtx.getImageData(Math.round((w * x0) / 1920), 0, cornerW, cornerH).data,
+            isTeamColor
+          );
+          const right = colorRatio(
+            fullCtx.getImageData(Math.round((w * (x0 + 58)) / 1920), 0, cornerW, cornerH).data,
+            isTeamColor
+          );
+          if (
+            (left >= 0.5 && right >= 0.5) ||
+            (i === currentHeroSlot && Math.max(left, right) >= OWN_SLOT_SINGLE_CORNER_MIN)
+          ) {
             highlightedSlots.push(i);
           }
         }
-        if (highlightedSlots.length === 1) myAllySlotIdx = highlightedSlots[0];
+        if (highlightedSlots.length === 1) {
+          myAllySlotIdx = highlightedSlots[0];
+        } else if (highlightedSlots.length > 1) {
+          myAllySlotIdx = highlightedSlots.find((i) => allyHeroesBySlot[i] === currentMyHeroId) ?? -1;
+        }
+        if (highlightedSlots.length > 1) {
+          debugLogs.push(`Portrait surligné ambigu (slots ${highlightedSlots.map((i) => i + 1).join(', ')})`);
+        }
 
         debugLogs.push(
           `Portraits alliés : ${allyHeroesBySlot
-            .map((id, i) => `${i + 1}:${id ?? '?'}${i === myAllySlotIdx ? '★' : ''}`)
+            .map((id, i) => `${i + 1}:${id ?? '?'}${i === myAllySlotIdx ? '★' : ''}${allyDead[i] ? '✝' : ''}`)
             .join(' ')}`
+        );
+        debugLogs.push(
+          `Portraits ennemis : ${enemyHeroesBySlot.map((id, i) => `${i + 1}:${id ?? '?'}${enemyDead[i] ? '✝' : ''}`).join(' ')}`
         );
       }
 
@@ -1065,6 +1363,7 @@ export async function analyzeDeadlockScreen(
       let detectedLaneEnemyIds: string[] = [];
       let detectedTeamEnemyIds: string[] = [];
       let detectedLaneColor: LaneColor | undefined = undefined;
+      let mySlotIndex = -1;
 
       if (isDeadlockTopBarVisible && detectedHeroId && validAllies.length > 0) {
         // The app's (match-locked) hero first: while dead, the highlight may follow the spectated teammate
@@ -1076,6 +1375,7 @@ export async function analyzeDeadlockScreen(
             ? myAllySlotIdx
             : allyHeroesBySlot.indexOf(detectedHeroId);
         if (mySlotIdx === -1) mySlotIdx = 0;
+        mySlotIndex = mySlotIdx;
 
         const pairIdx = Math.floor(mySlotIdx / 2);
         const partnerSlotIdx = mySlotIdx % 2 === 0 ? mySlotIdx + 1 : mySlotIdx - 1;
@@ -1128,8 +1428,16 @@ export async function analyzeDeadlockScreen(
         unmatchedSlotsCount,
         lockedSlotsCount,
         hudVisible: isDeadlockTopBarVisible,
+        shopOpen: isShopOpen,
+        inventorySlots: slotReadings,
         highlightedHeroId,
         abilityHeroId: abilityDetectedHeroId,
+        // Dead heroes (respawn timer over a grey portrait) count as unreadable for the lineup votes
+        allySlots: isDeadlockTopBarVisible ? allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id)) : undefined,
+        enemySlots: isDeadlockTopBarVisible ? enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id)) : undefined,
+        mySlotIndex,
+        frameWidth: w,
+        frameHeight: h,
         detectedSouls: cachedDetectedSouls,
         detectedLaneColor,
         rawText: [
