@@ -200,7 +200,7 @@ export const MESSAGES_FR = {
     "Si tu l'actives, l'application garde sur ton PC un journal de tes 5 dernières parties (texte + captures du HUD, ~30 Mo par partie). Il ne quitte ton PC que si tu cliques sur « Signaler un problème » et joins toi-même le fichier. Modifiable à tout moment dans les Réglages.",
   'onboarding.enableLogs': 'Activer les journaux',
   'onboarding.noLogs': 'Non merci',
-  'onboarding.resolutionNote': 'Compatible toutes tailles d’écran (1080p, 2K 1440p/1600p, 4K, 16:9, 16:10, 21:9 ultrawide).',
+  'onboarding.resolutionNote': 'Calibré sur le 16:9 (1080p, 1440p, 4K). Le 16:10, l’ultra-large et le fenêtré avec bordures sont expérimentaux.',
 
   // Signalement
   'report.title': 'Signaler un problème',

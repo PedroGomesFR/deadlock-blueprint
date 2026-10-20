@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.1] — 2026-10-20
+
+### Fixed
+- **Your hero kept changing and your items were wiped every few seconds** when the app could not find your highlighted portrait (Rat King: his crown covers the corners it looked at). The hero then came from the ability icons, which read Rat King as Pocket or Paradox, and every switch wiped the owned items. Your portrait is now found from the edges of its frame, which hero art does not cover, and the ability icons can no longer switch between heroes.
+- **A hero locked from the previous match made the app ignore your inventory for the whole next match** (your new hero's portrait was taken for a teammate you were spectating). The new match is now detected, and your new hero locked.
+- The scan could stop for good if opening the capture of the game window never answered, and one failed opening switched the app to the heavy thumbnail capture until it was restarted. It now gives up after 5 s and tries again.
+- The capture uses the same Windows capture as before 1.4.0 again (1.4.0 switched to Windows.Graphics.Capture, which draws a yellow border around the game on Windows 10).
+
+### Changed
+- Captures larger than 2560×1600 are scaled down while captured (4K: 2560×1440): the scanner reads at 1920×1080 anyway, and a 4K frame cost four times the work.
+- 16:10, ultrawide, 4:3 and windowed with borders are marked as experimental: their layouts have only been checked on simulated frames.
+- Game logs: the full image of a capture that is not 16:9 is saved as captured, to show where its HUD really is.
+
 ## [1.4.0] — 2026-10-19
 
 First public version.

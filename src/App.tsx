@@ -632,7 +632,12 @@ export function App() {
           buildItemIds,
           isDiagnosticsOpen
         );
-        logScan(detection, frame.image);
+        // The game log must never keep a scan from being applied
+        try {
+          logScan(detection, frame.image);
+        } catch (err) {
+          console.warn('Journal de partie :', err);
+        }
       } finally {
         releaseGameFrame(frame);
       }

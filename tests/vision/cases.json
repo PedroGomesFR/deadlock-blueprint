@@ -96,7 +96,7 @@
     },
     {
       "name": "sapphire_late",
-      "description": "Late game, several dead heroes, 10 items.",
+      "description": "Late game, several dead heroes, 10 items. Blue sky behind the whole top bar: no portrait is claimed as mine, the sky colours the gaps between portraits like the frame of mine.",
       "heroId": "infernus",
       "parts": [
         {
@@ -117,7 +117,7 @@
       ],
       "expect": {
         "mode": "hud",
-        "highlighted": "infernus",
+        "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
@@ -325,7 +325,7 @@
       "expect": {
         "frame": "2560x1440",
         "mode": "hud",
-        "highlighted": "infernus",
+        "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
@@ -346,7 +346,7 @@
       "expect": {
         "frame": "2560x1600",
         "mode": "hud",
-        "highlighted": "infernus",
+        "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
@@ -367,7 +367,7 @@
       "expect": {
         "frame": "3440x1440",
         "mode": "hud",
-        "highlighted": "infernus",
+        "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
@@ -388,12 +388,69 @@
       "expect": {
         "frame": "2576x1487",
         "mode": "hud",
-        "highlighted": "infernus",
+        "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
+      }
+    },
+    {
+      "name": "amber_rat_king_0032",
+      "description": "Amber side, 0:32, playing Rat King while the app still holds the last match's hero: Rat King's crown and ears cover the top corners of my portrait's frame, which the former own-portrait test needed (it never found Rat King, and the ability icons then read Pocket or Paradox).",
+      "heroId": "infernus",
+      "parts": [
+        { "file": "frames/amber_rat_king_0032_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_rat_king_0032_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_rat_king_0032_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "rat_king",
+        "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "enemySlots": ["mirage", "mo_and_krill", "vindicta", "grey_talon", "billy", "mina"],
+        "slots": [".", ".", ".", ".", ".", "lock", ".", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 600
+      }
+    },
+    {
+      "name": "amber_rat_king_0709",
+      "description": "Same match, 7:09: Rat King with 2 items, two enemies dead. Other players' nameplates blanked out of the inventory crop.",
+      "heroId": "infernus",
+      "parts": [
+        { "file": "frames/amber_rat_king_0709_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_rat_king_0709_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_rat_king_0709_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "rat_king",
+        "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 191
+      }
+    },
+    {
+      "name": "amber_rat_king_0709_2k_1440p",
+      "description": "The 7:09 frame at 2560x1440: my portrait's frame (3 px strips at 1080p) still found once the frame is scaled down to 1920x1080.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
+      "parts": [
+        { "file": "frames/amber_rat_king_0709_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_rat_king_0709_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_rat_king_0709_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": "rat_king",
+        "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 191
       }
     }
   ]

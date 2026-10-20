@@ -185,7 +185,7 @@ export const MESSAGES_EN: Messages = {
     'If you turn this on, the app keeps a log of your last 5 matches on your PC (text + HUD captures, ~30 MB per match). It only leaves your PC if you click "Report a problem" and attach the file yourself. You can change this any time in Settings.',
   'onboarding.enableLogs': 'Turn on game logs',
   'onboarding.noLogs': 'No thanks',
-  'onboarding.resolutionNote': 'Supports all screen sizes (1080p, 2K 1440p/1600p, 4K, 16:9, 16:10, 21:9 ultrawide).',
+  'onboarding.resolutionNote': 'Calibrated on 16:9 (1080p, 1440p, 4K). 16:10, ultrawide and windowed with borders are experimental.',
 
   'report.title': 'Report a problem',
   'report.body':

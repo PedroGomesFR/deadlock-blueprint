@@ -7,7 +7,8 @@
  * puis encodées en JPEG et envoyées en base64, et leur mémoire native n'était libérée qu'au bon vouloir du
  * GC du processus principal : plusieurs Go de RAM sur un PC avec beaucoup de fenêtres.
  *
- * Si le flux est indisponible, repli sur l'ancienne capture par miniature (`captureScreen`).
+ * Si le flux ne s'ouvre pas plusieurs fois de suite, repli sur l'ancienne capture par miniature (`captureScreen`)
+ * pendant une minute, puis nouvel essai du flux.
  */
 import type { CaptureSourceInfo } from '../electron';
 
@@ -31,14 +32,45 @@ const ImageCaptureCtor = (
 const SOURCE_REFRESH_MS = 3000;
 // A minimized window delivers no frame: give up on this scan instead of blocking the scan loop
 const GRAB_TIMEOUT_MS = 1500;
+// The scan loop waits for each scan: picking the source or opening the stream must not block it either
+const OPEN_TIMEOUT_MS = 5000;
+// The stream could not be opened this many times in a row (the window closed in between, or no capture on this
+// machine): the heavy thumbnail capture for a minute, then the stream again
+const STREAM_FAILURES_BEFORE_FALLBACK = 3;
+const FALLBACK_DURATION_MS = 60000;
+// Capture size: 16:9 screens up to 1440p arrive at their own size (4K at 2560x1440), 16:10 (2560x1600) and
+// ultrawide (3440x1440 -> 2560x1072) with their HUD at about the 1080p scale or more. The scanner normalizes every
+// frame to 1920x1080: a 4K frame would cost four times the pixels for the same reading.
+const MAX_CAPTURE_WIDTH = 2560;
+const MAX_CAPTURE_HEIGHT = 1600;
 
 let stream: MediaStream | null = null;
 let grabber: FrameGrabber | null = null;
 let activeSource: CaptureSourceInfo | null = null;
 let activePreferredId = '';
 let lastRefresh = 0;
-let refreshing = false;
-let streamUnavailable = !ImageCaptureCtor || !navigator.mediaDevices?.getUserMedia;
+// One source refresh at a time: two streams opened together, the first one was never closed
+let refreshInFlight: Promise<void> | null = null;
+const streamSupported = Boolean(ImageCaptureCtor && navigator.mediaDevices?.getUserMedia);
+let streamFailures = 0;
+let fallbackUntil = 0;
+
+/** `promise`, or an error after `ms` (the promise itself keeps running). */
+function withTimeout<T>(promise: Promise<T>, ms: number, what: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${what} : pas de réponse après ${ms} ms`)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
 
 function closeStream(): void {
   stream?.getTracks().forEach((t) => t.stop());
@@ -56,14 +88,29 @@ async function openStream(source: CaptureSourceInfo): Promise<void> {
       mandatory: {
         chromeMediaSource: 'desktop',
         chromeMediaSourceId: source.id,
-        maxWidth: 5120,
-        maxHeight: 2880,
+        maxWidth: MAX_CAPTURE_WIDTH,
+        maxHeight: MAX_CAPTURE_HEIGHT,
         maxFrameRate: 5,
       },
     },
   } as unknown as MediaStreamConstraints;
-  const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+  const request = navigator.mediaDevices.getUserMedia(constraints);
+  let newStream: MediaStream;
+  try {
+    newStream = await withTimeout(request, OPEN_TIMEOUT_MS, 'Ouverture du flux');
+  } catch (err) {
+    // A stream that opens after the timeout is closed straight away
+    request.then(
+      (late) => late.getTracks().forEach((t) => t.stop()),
+      () => {}
+    );
+    throw err;
+  }
   const track = newStream.getVideoTracks()[0];
+  if (!track) {
+    newStream.getTracks().forEach((t) => t.stop());
+    throw new Error('Flux sans piste vidéo');
+  }
   // Window closed (Deadlock quit): reopen on the next best source at the next scan
   track.addEventListener('ended', () => {
     if (stream === newStream) closeStream();
@@ -71,17 +118,30 @@ async function openStream(source: CaptureSourceInfo): Promise<void> {
   stream = newStream;
   grabber = new ImageCaptureCtor!(track);
   activeSource = source;
+  streamFailures = 0;
 }
 
-async function refreshSource(preferredSourceId: string): Promise<void> {
+async function updateSource(preferredSourceId: string): Promise<void> {
   activePreferredId = preferredSourceId;
   lastRefresh = Date.now();
-  const best = await window.electronAPI!.findCaptureSource(preferredSourceId || undefined);
+  const best = await withTimeout(
+    window.electronAPI!.findCaptureSource(preferredSourceId || undefined),
+    OPEN_TIMEOUT_MS,
+    'Choix de la source'
+  );
   if (!best) {
     closeStream();
   } else if (best.id !== activeSource?.id) {
     await openStream(best);
   }
+}
+
+/** Picks the best source and opens the stream on it if it changed; a refresh already running is shared. */
+function refreshSource(preferredSourceId: string): Promise<void> {
+  refreshInFlight ??= updateSource(preferredSourceId).finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
 }
 
 /** Next frame or null after GRAB_TIMEOUT_MS; a frame arriving after the timeout is closed right away. */
@@ -116,13 +176,10 @@ async function grabFromStream(preferredSourceId: string): Promise<GameFrame | nu
   const refreshDue = Date.now() - lastRefresh > SOURCE_REFRESH_MS;
   if (preferredSourceId !== activePreferredId || (!grabber && refreshDue)) {
     await refreshSource(preferredSourceId);
-  } else if (grabber && refreshDue && !refreshing) {
-    refreshing = true;
-    refreshSource(preferredSourceId)
-      .catch(() => closeStream())
-      .finally(() => {
-        refreshing = false;
-      });
+  } else if (grabber && refreshDue) {
+    // The current stream keeps serving frames while the best source is checked in the background. A failed check
+    // keeps it; a failed opening of another source has already closed it (openStream), the next scan retries.
+    refreshSource(preferredSourceId).catch(() => {});
   }
   const source = activeSource;
   if (!grabber || !source) return null;
@@ -136,19 +193,25 @@ async function grabFromStream(preferredSourceId: string): Promise<GameFrame | nu
 export async function grabGameFrame(preferredSourceId = ''): Promise<GameFrame | null> {
   if (!window.electronAPI) return null;
 
-  if (!streamUnavailable) {
+  if (streamSupported && Date.now() >= fallbackUntil) {
     try {
       return await grabFromStream(preferredSourceId);
     } catch (err) {
-      // getUserMedia refused on this machine: use the heavier thumbnail capture from now on
-      console.warn('Capture par flux indisponible, repli sur les miniatures :', err);
-      streamUnavailable = true;
       closeStream();
+      // Tried again at the next source refresh (a few seconds): the window may have closed in between
+      if (++streamFailures < STREAM_FAILURES_BEFORE_FALLBACK) return null;
+      console.warn('Capture par flux indisponible, repli sur les miniatures pendant une minute :', err);
+      streamFailures = 0;
+      fallbackUntil = Date.now() + FALLBACK_DURATION_MS;
     }
   }
 
-  const res = await window.electronAPI.captureScreen(preferredSourceId || undefined);
-  if (!res.success || !res.dataUrl) return null;
+  const res = await withTimeout(
+    window.electronAPI.captureScreen(preferredSourceId || undefined),
+    OPEN_TIMEOUT_MS,
+    'Capture par miniature'
+  ).catch(() => null);
+  if (!res?.success || !res.dataUrl) return null;
   return {
     image: res.dataUrl,
     sourceName: res.sourceName || 'Écran de jeu',

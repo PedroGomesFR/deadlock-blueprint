@@ -24,6 +24,14 @@ v8.setFlagsFromString('--expose_gc');
 const collectGarbage = vm.runInNewContext('gc');
 let lastFallbackGc = 0;
 
+// Capture with the classic Windows capturers (DXGI screen duplication, GDI window capture), not Windows.Graphics.Capture
+// (WGC): every recorded game and the scanner's calibration use them, and WGC logs "ProcessFrame failed" on the game
+// window, fails on some windows (wgc_capturer_win.cc -2147024809), and draws a yellow border around the captured
+// game on Windows 10. The frame size comes from the stream's constraints (screenCapture.ts) with either capturer.
+app.commandLine.appendSwitch(
+  'disable-features',
+  'AllowWgcScreenCapturer,AllowWgcScreenZeroHz,AllowWgcWindowCapturer,AllowWgcWindowZeroHz,WebRtcAllowWgcDesktopCapturer'
+);
 // Suppress noisy Chromium stderr logs
 app.commandLine.appendSwitch('log-level', '3');
 
@@ -287,11 +295,13 @@ ipcMain.handle('capture-screen', async (_event, preferredSourceId) => {
     const gamingDisplayId = String(gamingDisplay.id);
     const gamingPx = getDisplayPixelSize(gamingDisplay);
 
+    // Same size limit as the live stream (screenCapture.ts): a thumbnail is taken of every window and screen,
+    // and 4K ones would be 4 times heavier for the same reading
     const sources = await desktopCapturer.getSources({
       types: ['window', 'screen'],
       thumbnailSize: {
-        width: Math.max(1920, Math.min(3840, gamingPx.width || 1920)),
-        height: Math.max(1080, Math.min(2160, gamingPx.height || 1080)),
+        width: Math.max(1920, Math.min(2560, gamingPx.width || 1920)),
+        height: Math.max(1080, Math.min(1600, gamingPx.height || 1080)),
       },
       fetchWindowIcons: false,
     });

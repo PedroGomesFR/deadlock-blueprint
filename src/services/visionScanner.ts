@@ -22,7 +22,7 @@ export interface VisionDetectionResult {
   allySlots?: (string | null)[]; // hero of each of the 6 ally portraits (left), null when unreadable
   enemySlots?: (string | null)[]; // hero of each of the 6 enemy portraits (right)
   mySlotIndex?: number; // ally slot used as mine for the lane (-1 when unknown)
-  frameWidth?: number; // size of the analysed frame (16:9 only is supported)
+  frameWidth?: number; // size of the captured frame (analysed once normalized to 1920x1080); unset if not analysed
   frameHeight?: number;
   detectedSouls?: number;
   detectedLaneColor?: LaneColor;
@@ -274,9 +274,15 @@ const isAmberGold = (d: Uint8ClampedArray, i: number) =>
 // teammates, (34,198,181), that passes isSapphireBlue)
 const isSapphireBanner = (d: Uint8ClampedArray, i: number) =>
   d[i + 2] > 150 && d[i + 2] - d[i] > 70 && d[i + 2] - d[i + 1] > 40 && d[i + 1] - d[i] > 10;
-// One corner of the current hero's slot is enough when it is clearly in the team colour (the other one can be
-// covered by the hero art)
-const OWN_SLOT_SINGLE_CORNER_MIN = 0.6;
+// Own portrait: its team-colour box is ~76 px wide (x0-3 .. x0+72), coloured at y = 4..24, while the hero art is
+// clipped to the 70 px slot. Rows, and the share of team-colour pixels the 3 px strips just outside the slot need.
+const OWN_BOX_Y = 4;
+const OWN_BOX_H = 21;
+const OWN_BOX_STRIP_MIN = 0.5;
+// Gap between two portraits (5 px, from 7 px outside the slot): team-coloured scenery colours it too
+const OWN_BOX_GAP_MAX = 0.3;
+// For the current hero's slot, one well coloured side with a clean edge is enough (a hit flash pales the other)
+const OWN_BOX_SINGLE_SIDE_MIN = 0.75;
 
 // Dead hero: its portrait turns grey under a big red-orange respawn timer (~(235, 76, 30), rows 49..69 of the
 // portrait). Grey portraits were still matched, often to the wrong hero: a large part of the enemy lineup noise
@@ -579,6 +585,16 @@ export async function waitForOcrIdle(timeoutMs = 15000): Promise<void> {
 let sharedFullCanvas: HTMLCanvasElement | null = null;
 let shared20x20Canvas: HTMLCanvasElement | null = null;
 let shared20x27Canvas: HTMLCanvasElement | null = null;
+// sharedFullCanvas holds the last analysed frame (false while analysing, or when the frame was too small)
+let normalizedFrameReady = false;
+
+/**
+ * The last analysed frame, normalized to 1920x1080 like every coordinate of the scanner (game log crops), or null
+ * when that frame was not analysed. Valid until the next analysis.
+ */
+export function getLastNormalizedFrame(): HTMLCanvasElement | null {
+  return normalizedFrameReady ? sharedFullCanvas : null;
+}
 
 /**
  * How the game's HUD inside a captured frame of size (rawW x rawH) maps onto our 1920x1080 reference canvas.
@@ -653,12 +669,8 @@ function buildHudCandidates(rawW: number, rawH: number): HudLayout[] {
     }
     add('stretched', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
   }
-
-  // Fallback windowed title-bar offsets (e.g. borderless window with a title bar at the top)
-  const tb = Math.round((31 * rawH) / 1080);
-  if (rawH - tb >= 300) {
-    add('titlebar', 0, tb, rawW, rawH - tb, rawW / 1920, (rawH - tb) / 1080);
-  }
+  // Every frame of at least 400x300 (smaller ones are not analysed) keeps its full-frame candidate
+  if (list.length === 0) add('stretched', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
 
   if (lastProvenLayout && lastProvenLayout.rawW === rawW && lastProvenLayout.rawH === rawH) {
     const idx = list.findIndex((c) => c.name === lastProvenLayout!.name);
@@ -746,10 +758,10 @@ function countSoulsMintPixelsOn1080pCanvas(ctx: CanvasRenderingContext2D, dy: nu
 }
 
 /**
- * Projects any captured game frame onto a 1920x1080 canvas so the scanner and match logger work identically
- * on 1080p, 2K (2560x1440 / 2560x1600 / 3440x1440), 4K, 720p, 16:10, 21:9, 32:9, 4:3, and windowed mode.
+ * Projects any captured game frame onto a 1920x1080 canvas so the scanner works identically on 1080p, 2K
+ * (2560x1440 / 2560x1600 / 3440x1440), 4K, 720p, 16:10, 21:9, 32:9, 4:3, and windowed mode.
  */
-export function drawNormalizedFrame(
+function drawNormalizedFrame(
   img: HTMLImageElement | ImageBitmap,
   ctx: CanvasRenderingContext2D
 ): { layout: HudLayout; topBarVisible: boolean; isMyTeamAmber: boolean } {
@@ -759,6 +771,8 @@ export function drawNormalizedFrame(
   // Fast check on the primary layout
   drawHudLayout(img, ctx, primary);
   let topBar = checkTopBarOn1080pCanvas(ctx);
+  // 16:9 (the usual case): a single layout, nothing else to try
+  if (candidates.length === 1) return { layout: primary, topBarVisible: topBar.visible, isMyTeamAmber: topBar.amber };
   if (topBar.visible) {
     // On ultrawide, check if the bottom-left HUD is shifted to the 16:9 safe zone instead of the left edge
     if (primary.name === 'ultrawide') {
@@ -830,6 +844,7 @@ export async function analyzeDeadlockScreen(
 
   return new Promise((resolve) => {
     const onFrame = (img: HTMLImageElement | ImageBitmap) => {
+      normalizedFrameReady = false;
       const rawW = img.width;
       const rawH = img.height;
 
@@ -890,6 +905,7 @@ export async function analyzeDeadlockScreen(
 
       // 0. NORMALIZE ANY SCREEN SIZE / ASPECT RATIO TO 1920x1080 & VERIFY IF TOP TEAM BARS ARE VISIBLE
       const normalized = drawNormalizedFrame(img, fullCtx);
+      normalizedFrameReady = true;
       const isDeadlockTopBarVisible = normalized.topBarVisible;
       const isMyTeamAmber = normalized.isMyTeamAmber;
       if (rawW !== 1920 || rawH !== 1080) {
@@ -1495,36 +1511,40 @@ export async function analyzeDeadlockScreen(
           }
         }
 
-        // The local player's own portrait sits on a solid team-colour box (amber or blue) whose top corners
-        // stick out of the round portrait; teammates' corners show the map behind them.
-        // Measured on a real 1920x1080 capture: own slot 0.87-0.97, teammates <= 0.11. But scenery lit in the
-        // team colour fakes it (game log: own slot 0.73-0.86, a teammate 0.93-1.00 on an orange wall), so only
-        // my team's colour (left score box) counts, and among several candidates the current hero's slot wins.
+        // The local player's own portrait sits on a team-colour box (amber or blue) slightly wider than its slot
+        // (x0-3 .. x0+72), coloured at y = 4..24 above and beside the portrait; teammates' egg-shaped portraits show
+        // the map there. The hero art is clipped to the 70 px slot, so the 3 px strips just outside it keep the team
+        // colour whatever covers the corners. The former test (12x30 top corners of the slot) read ~0.35 on Rat
+        // King's crown and ears, ~0.5 on Infernus' flame: it never found Rat King, and the hero then came from the
+        // ability icons (Pocket / Paradox, flipping every few seconds).
+        // Scenery in the team colour (blue sky, orange wall) colours the strips of every slot, but also the gap
+        // between two portraits: at least one side must show a clean edge. Measured on 57 own-slot and 285 teammate
+        // samples (5 games, both teams, Infernus, Vindicta, Rat King): own strips 0.75-1.00, teammates <= 0.52 out of
+        // team-coloured scenery; own slot found in 44 frames instead of 28, never a wrong one. The rest have no
+        // team-coloured box (critical HP: red banner, hit flash: pale) or a blue sky behind every portrait.
+        // Only my team's colour (left score box) counts. The Sapphire banner is darker than the score box
+        // (~(78,115,182) vs (100,135,197)), and a teammate's turquoise glow (34,198,181) is not banner blue.
         const highlightedSlots: number[] = [];
-        const cornerW = Math.max(1, Math.round((w * 12) / 1920));
-        const cornerH = Math.max(1, Math.round((h * 30) / 1080));
-        // The Sapphire banner is darker than the score box (~(78,115,182) vs (100,135,197)) and the hero art can
-        // cover a corner (Infernus' flame): over a whole Sapphire game the former test found my slot in 29/864
-        // frames and a teammate's turquoise glow in 49. Banner blue + one corner for the current hero's slot: 645.
         const isTeamColor = isMyTeamAmber ? isAmberGold : isSapphireBanner;
+        const teamShare = (x: number, width: number) =>
+          colorRatio(fullCtx.getImageData(x, OWN_BOX_Y, width, OWN_BOX_H).data, isTeamColor);
         const currentHeroSlot = allyHeroesBySlot.indexOf(currentMyHeroId);
+        const boxReadings: string[] = [];
         for (let i = 0; i < 6; i++) {
           const x0 = 339 + i * 88;
-          const left = colorRatio(
-            fullCtx.getImageData(Math.round((w * x0) / 1920), 0, cornerW, cornerH).data,
-            isTeamColor
-          );
-          const right = colorRatio(
-            fullCtx.getImageData(Math.round((w * (x0 + 58)) / 1920), 0, cornerW, cornerH).data,
-            isTeamColor
-          );
-          if (
-            (left >= 0.5 && right >= 0.5) ||
-            (i === currentHeroSlot && Math.max(left, right) >= OWN_SLOT_SINGLE_CORNER_MIN)
-          ) {
-            highlightedSlots.push(i);
-          }
+          const left = teamShare(x0 - 3, 3);
+          const right = teamShare(x0 + 70, 3);
+          if (left < OWN_BOX_STRIP_MIN && right < OWN_BOX_STRIP_MIN) continue;
+          const cleanLeft = left >= OWN_BOX_STRIP_MIN && teamShare(x0 - 10, 5) <= OWN_BOX_GAP_MAX;
+          const cleanRight = right >= OWN_BOX_STRIP_MIN && teamShare(x0 + 76, 5) <= OWN_BOX_GAP_MAX;
+          const isOwnBox =
+            (left >= OWN_BOX_STRIP_MIN && right >= OWN_BOX_STRIP_MIN && (cleanLeft || cleanRight)) ||
+            (i === currentHeroSlot &&
+              ((cleanLeft && left >= OWN_BOX_SINGLE_SIDE_MIN) || (cleanRight && right >= OWN_BOX_SINGLE_SIDE_MIN)));
+          if (isOwnBox) highlightedSlots.push(i);
+          boxReadings.push(`${i + 1}:${left.toFixed(2)}/${right.toFixed(2)}${cleanLeft || cleanRight ? '' : ' décor'}`);
         }
+        if (boxReadings.length > 0) debugLogs.push(`Cadre du portrait surligné (bords g/d) : ${boxReadings.join(' ')}`);
         if (highlightedSlots.length === 1) {
           myAllySlotIdx = highlightedSlots[0];
         } else if (highlightedSlots.length > 1) {
@@ -1665,7 +1685,8 @@ export async function analyzeDeadlockScreen(
       });
     };
 
-    const onError = () =>
+    const onError = () => {
+      normalizedFrameReady = false;
       resolve({
         detectedLaneEnemyIds: [],
         detectedTeamEnemyIds: [],
@@ -1681,13 +1702,25 @@ export async function analyzeDeadlockScreen(
         timestamp: new Date().toLocaleTimeString('fr-FR'),
         debugLogs,
       });
+    };
+
+    // An exception must never leave the scan without a result: from img.onload it would leave this promise
+    // pending forever, and the scan loop waits for it before the next scan
+    const analyse = (img: HTMLImageElement | ImageBitmap) => {
+      try {
+        onFrame(img);
+      } catch (err) {
+        debugLogs.push(`Erreur d'analyse : ${err instanceof Error ? err.message : String(err)}`);
+        onError();
+      }
+    };
 
     if (typeof frame !== 'string') {
-      onFrame(frame);
+      analyse(frame);
       return;
     }
     const img = new Image();
-    img.onload = () => onFrame(img);
+    img.onload = () => analyse(img);
     img.onerror = onError;
     img.src = frame;
   });

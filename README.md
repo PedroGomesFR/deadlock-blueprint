@@ -57,12 +57,11 @@ Download from the [**latest release**](https://github.com/PedroGomesFR/deadlock-
 
 | File | |
 | :--- | :--- |
-| `Deadlock-Blueprint-Setup-<version>.exe` | **Installer, recommended.** Installs for your user only (no admin rights) and **updates itself**. |
 | `Deadlock-Blueprint-<version>.exe` | Portable: one file, no install. Tells you when a new version is out. |
 
 > [!NOTE]
-> The executables are not code-signed (a certificate costs several hundred euros a year). On first launch Windows SmartScreen may say "Windows protected your PC": click **More info**, then **Run anyway**.
-> Each release is **built by GitHub Actions from the public source code** and lists the **SHA-256** of each file with a **VirusTotal** link. To check your download: `Get-FileHash .\Deadlock-Blueprint-Setup-<version>.exe` in PowerShell.
+> The executable is not code-signed (a certificate costs several hundred euros a year). On first launch Windows SmartScreen may say "Windows protected your PC": click **More info**, then **Run anyway**.
+> Each release is **built by GitHub Actions from the public source code** and lists the **SHA-256** of the file with a **VirusTotal** link. To check your download: `Get-FileHash .\Deadlock-Blueprint-<version>.exe` in PowerShell.
 
 ## Can I get banned?
 
@@ -92,9 +91,10 @@ Anti-cheat systems go after programs that read or modify a game's memory or auto
 
 | | |
 | :--- | :--- |
-| ✅ **16:9**: 1920×1080, 2560×1440, 3840×2160… | Calibrated on 1920×1080; other 16:9 resolutions are scaled. |
+| ✅ **16:9**: 1920×1080, 2560×1440, 3840×2160… | Calibrated on 1920×1080; other 16:9 resolutions are scaled to it. |
 | ✅ Fullscreen or borderless windowed | |
-| ⛔ Ultrawide (21:9, 32:9), 16:10, 4:3, windowed with borders | The app says so and **pauses detection** instead of showing wrong recommendations. Pick your hero and enemies by hand meanwhile. [Reporting your format](#-report-a-problem) helps add it. |
+| 🧪 16:10, ultrawide (21:9, 32:9), 4:3, windowed with borders | Experimental: the HUD is mapped onto the 16:9 layout, not yet checked on real captures of these formats. If detection fails, [report a problem](#-report-a-problem) with a game log. |
+| ⛔ Vertical screen, tiny window | The app says so and **pauses detection** instead of showing wrong recommendations. |
 | ⚠️ A changed HUD scale, colour filters | The HUD is not where the scanner looks: the app shows a hint when it finds no HUD for a few minutes. |
 
 Hero skins whose portrait differs a lot from the default one may be misread on some frames; the per-match vote usually recovers them.
@@ -128,7 +128,8 @@ Click the hero at the top left and pick the right one: it is locked for the matc
 <details>
 <summary><b>Nothing is detected</b></summary>
 
-- Check that the game window is called "Deadlock" and is not minimized, and that your resolution is 16:9 (see [Supported setups](#%EF%B8%8F-supported-setups)).
+- Check that the game window is called "Deadlock" and is not minimized, and that your screen format is supported (see [Supported setups](#%EF%B8%8F-supported-setups)).
+- Check that **Auto** (next to Scan, at the top) is on: it turns the automatic scan on and off.
 - Hero detection needs the top bar (both teams' scores). Modes without it, such as the training range, are not recognized.
 - The **Diagnostics** tab shows the captured source and what is recognized.
 </details>
@@ -167,7 +168,7 @@ npm run dev
 | `npm run dev` | Interface with hot reload (Vite) + Electron |
 | `npm test` | Rules, recorded games replayed through them, translations |
 | `npm run test:vision` | The real scanner on saved game frames (Electron) |
-| `npm run dist` | Installer and portable exe in `release/` |
+| `npm run dist` | Portable exe in `release/` |
 | `npm run update-builds` | New meta builds and item catalogue from deadlock-api.com (done every week by GitHub Actions) |
 
 See [**docs/CONTRIBUTING.md**](docs/CONTRIBUTING.md) to recalibrate the scanner, add a hero, translate, or publish a release. The HUD coordinates and calibration notes are in [`AGENTS.md`](AGENTS.md).

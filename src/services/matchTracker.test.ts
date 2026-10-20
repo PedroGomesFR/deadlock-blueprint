@@ -136,6 +136,44 @@ describe('lineups', () => {
   });
 });
 
+describe('my hero', () => {
+  // A new match after the last one's hero (unlocked by the new lineup): Rat King's portrait not found, his ability
+  // icons read as a teammate (Pocket) or as a hero of neither team (Paradox)
+  const RAT_KING_ALLIES = ['rem', 'pocket', 'venator', 'haze', 'rat_king', 'sinclair'];
+  const noHighlight = (abilityHeroId: string) =>
+    hud(['extra_regen'], { highlightedHeroId: undefined, abilityHeroId, allySlots: RAT_KING_ALLIES });
+
+  it('never flips between heroes on the ability icons, and the highlighted portrait still wins', () => {
+    const flipping = Array.from({ length: 60 }, (_, i) => noHighlight(i % 8 < 4 ? 'pocket' : 'paradox'));
+    const found = hud(['extra_regen'], { highlightedHeroId: 'rat_king', allySlots: RAT_KING_ALLIES });
+    const { state, updates } = run([...flipping, ...times(4, found)], snapshot({ heroLocked: false }));
+    const changes = updates.flatMap((u) => u.changes.filter((c) => c.startsWith('hero:')));
+    // the last match's hero (not on my team) once replaced by a teammate's icons, then my highlighted portrait
+    expect(changes).toEqual(['hero:pocket', 'hero:rat_king']);
+    expect(state.myHeroId).toBe('rat_king');
+    expect(state.heroLocked).toBe(true);
+  });
+
+  it('a hero locked from the last match does not keep the new match from being detected', () => {
+    const tracker = new MatchTracker();
+    const last = run(times(10, hud(['extra_regen'])), snapshot(), tracker, 0);
+    expect(last.state.heroLocked).toBe(true);
+    // Next match, after the menus: Vindicta highlighted, and the last match's hero now on the enemy team
+    const newAllies = ['vindicta', 'rem', 'victor', 'violet', 'abrams', 'celeste'];
+    const newEnemies = ['doorman', 'silver', 'billy', 'graves', 'pocket', 'infernus'];
+    const next = run(
+      times(20, hud(['extra_spirit'], { highlightedHeroId: 'vindicta', allySlots: newAllies, enemySlots: newEnemies })),
+      last.state,
+      tracker,
+      3500 + 60000
+    );
+    expect(next.updates.some((u) => u.log.some((l) => l.kind === 'restart'))).toBe(true);
+    expect(next.state.myHeroId).toBe('vindicta');
+    expect(next.state.heroLocked).toBe(true);
+    expect(next.state.ownedItems).toEqual(['extra_spirit']);
+  });
+});
+
 describe('inventory', () => {
   it('adds an item after 3 scans, removes it after ~2 s of absence', () => {
     const { state, updates } = run([...times(3, hud(['extra_regen'])), ...times(9, hud(['extra_spirit']))]);
@@ -228,6 +266,30 @@ describe('recorded games', () => {
     const everOwned = new Set(steps.flatMap((s) => s.state.ownedItems));
     // Items of the death-cam inventories in this game (see tests/vision: sapphire_death_cam)
     for (const id of ['lifestrike', 'stalker', 'crushing_fists']) expect(everOwned.has(id)).toBe(false);
+  });
+
+  it('amber_rat_king: the ability icons (Pocket / Paradox) never change my hero nor wipe my items', () => {
+    // 1.4.0 log, playing Rat King, highlighted portrait never found: the hero flipped 5 times in 4 minutes
+    const steps = replayJournal(readJournal('tests/replays/amber_rat_king.journal.log.gz'));
+    expect(steps.some((s) => s.state.myHeroId !== 'infernus')).toBe(false);
+    expect(steps.some((s) => s.clearOwned)).toBe(false);
+  });
+
+  it('amber_vindicta_stale_lock: a hero locked from the last match gives way to the new match\'s highlighted hero', () => {
+    // 1.4.0 log, playing Vindicta with Infernus locked from the previous match: Vindicta's highlight was taken for a
+    // spectated teammate, which blocked the lineup votes; the new match was never detected and the inventory was
+    // ignored on 64 % of the HUD frames
+    const steps = replayJournal(readJournal('tests/replays/amber_vindicta_stale_lock.journal.log.gz'));
+    const at = (i: number) => (steps[i].t - steps[0].t) / 1000;
+    const restarts = steps.flatMap((s, i) => (s.log.some((l) => l.kind === 'restart') ? [at(i)] : []));
+    expect(restarts).toHaveLength(1);
+    expect(restarts[0]).toBeLessThan(180);
+    const last = steps[steps.length - 1].state;
+    expect(last.myHeroId).toBe('vindicta');
+    expect(last.heroLocked).toBe(true);
+    const hud = steps.filter((s) => s.detection.hudVisible);
+    const watching = hud.filter((s) => s.state.heroLocked && s.detection.highlightedHeroId && s.detection.highlightedHeroId !== s.state.myHeroId);
+    expect(watching.length / hud.length).toBeLessThan(0.02);
   });
 
   it('sapphire_infernus_full: the portraits read by the current scanner give the right lineups', () => {

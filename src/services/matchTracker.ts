@@ -200,8 +200,19 @@ export class MatchTracker {
     // My hero: auto-detected once per match, then locked. While dead (death cam, spectating a teammate)
     // the screen shows other heroes; once locked, the hero only changes at the next match (new enemy
     // lineup) or when picked by hand.
+    // The ability icons are a weak fallback (icons for 18 heroes only, cooldown numbers fool them): playing Rat King,
+    // whose highlighted portrait was never found, they read Pocket or Paradox, and the hero flipped between the two
+    // every few seconds, wiping the owned items each time (15 times in 2.5 min). They may only replace a hero who
+    // is not on my team (the last match's) by one who is.
     let activeHeroId = state.myHeroId;
-    const heroEvidence = detection.highlightedHeroId ?? detection.abilityHeroId;
+    const alliesSoFar = this.allyVoter.result();
+    const abilityHeroId =
+      detection.abilityHeroId &&
+      alliesSoFar.includes(detection.abilityHeroId) &&
+      !alliesSoFar.includes(state.myHeroId)
+        ? detection.abilityHeroId
+        : undefined;
+    const heroEvidence = detection.highlightedHeroId ?? abilityHeroId;
     const stableHeroId = heroEvidence ? this.heroStabilizer.push(heroEvidence) : undefined;
     if (stableHeroId && !heroLocked) {
       // Only the highlighted portrait is trusted enough to lock (cooldown numbers fool the abilities)
@@ -230,15 +241,20 @@ export class MatchTracker {
     const heroOnScreen = detection.highlightedHeroId;
     const isWatchingOtherHero = heroLocked && heroOnScreen !== undefined && heroOnScreen !== activeHeroId;
 
-    // Portrait votes, only from my own point of view: not while watching another hero, and never from the
-    // death cam's killer HUD (its left side holds my enemies, its right side my team, me included)
+    // Portrait votes, only from my team's point of view: never from the death cam's killer HUD (its left side
+    // holds my enemies, its right side my team, me included). Spectating a teammate keeps my team on the left, so
+    // those frames vote: a hero locked from the last match took the new one's highlighted hero for a spectated
+    // teammate, no lineup was voted, and the new match was never detected (my inventory ignored on 64 % of a game).
+    // For the same reason my hero among the enemies only means the killer's view once my team's votes confirm it.
     const allySlots = detection.allySlots;
     const enemySlots = detection.enemySlots;
-    if (detection.hudVisible && allySlots && enemySlots && !isWatchingOtherHero) {
+    if (detection.hudVisible && allySlots && enemySlots) {
       const votedAllies = this.allyVoter.result();
       const votedEnemies = this.enemyVoter.result();
       const flipped =
-        enemySlots.includes(activeHeroId) || overlap(allySlots, votedEnemies) >= 2 || overlap(enemySlots, votedAllies) >= 2;
+        (votedAllies.includes(activeHeroId) && enemySlots.includes(activeHeroId)) ||
+        overlap(allySlots, votedEnemies) >= 2 ||
+        overlap(enemySlots, votedAllies) >= 2;
       if (!flipped) {
         this.allyVoter.push(allySlots);
         this.enemyVoter.push(enemySlots);

@@ -68,7 +68,7 @@ Then:
 
 ### Other screen formats (ultrawide, 16:10)
 
-All coordinates are scaled from 1920×1080 (`w / 1920`, `h / 1080`), which only holds for 16:9: the app pauses detection on other formats (`isSupportedFormat` in `matchTracker.ts`). Supporting one needs real captures of that format (a report with a game log): measure where the HUD elements are and how they scale (anchored to the corners or the centre, scaled by height), then map the coordinates by anchor instead of by plain scaling.
+The scanner draws every frame onto a 1920×1080 canvas before reading it (`drawNormalizedFrame` in `visionScanner.ts`): 16:9 at any size is plainly scaled, the other formats try several layouts (`buildHudCandidates`: HUD scaled by height and anchored to the corners on ultrawide, scaled by width on 16:10, 16:9 game view inside window borders…) and keep the one where the top bar, or the souls digits, are found. Only portrait or tiny captures pause detection (`isSupportedFormat` in `matchTracker.ts`). Those layouts were written from simulated frames (`simulateLayout` in `tests/vision/cases.json`), not from real captures: when a report comes with a game log of such a format, check where the HUD really is on its `full_*.jpg` images (the game log saves the normalized frame, so a wrong layout shows there) and fix the candidate.
 
 ## Adding a hero
 

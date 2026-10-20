@@ -55,12 +55,11 @@ Un panneau transparent, toujours au premier plan, affiche ton ordre de sorts et 
 
 | Fichier | |
 | :--- | :--- |
-| `Deadlock-Blueprint-Setup-<version>.exe` | **Installeur, conseillé.** S'installe pour ton utilisateur (sans droits administrateur) et **se met à jour tout seul**. |
 | `Deadlock-Blueprint-<version>.exe` | Portable : un seul fichier, sans installation. Te prévient quand une nouvelle version sort. |
 
 > [!NOTE]
-> Les exécutables ne sont pas signés (un certificat coûte plusieurs centaines d'euros par an). Au premier lancement, Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis sur **Exécuter quand même**.
-> Chaque version est **compilée par GitHub Actions à partir du code source public** et liste le **SHA-256** de chaque fichier avec un lien **VirusTotal**. Pour vérifier ton téléchargement : `Get-FileHash .\Deadlock-Blueprint-Setup-<version>.exe` dans PowerShell.
+> L'exécutable n'est pas signé (un certificat coûte plusieurs centaines d'euros par an). Au premier lancement, Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis sur **Exécuter quand même**.
+> Chaque version est **compilée par GitHub Actions à partir du code source public** et liste le **SHA-256** du fichier avec un lien **VirusTotal**. Pour vérifier ton téléchargement : `Get-FileHash .\Deadlock-Blueprint-<version>.exe` dans PowerShell.
 
 ## Peut-on être banni ?
 
@@ -90,9 +89,10 @@ Les anti-triche visent les programmes qui lisent ou modifient la mémoire d'un j
 
 | | |
 | :--- | :--- |
-| ✅ **16:9** : 1920×1080, 2560×1440, 3840×2160… | Calibré sur 1920×1080, les autres résolutions 16:9 sont mises à l'échelle. |
+| ✅ **16:9** : 1920×1080, 2560×1440, 3840×2160… | Calibré sur 1920×1080, les autres résolutions 16:9 y sont ramenées. |
 | ✅ Plein écran ou fenêtré sans bordure | |
-| ⛔ Ultra-large (21:9, 32:9), 16:10, 4:3, fenêtré avec bordures | L'application le signale et **met la détection en pause** au lieu d'afficher de mauvaises recommandations. Choisis ton héros et les ennemis à la main en attendant. [Signaler ton format](#-signaler-un-problème) aide à l'ajouter. |
+| 🧪 16:10, ultra-large (21:9, 32:9), 4:3, fenêtré avec bordures | Expérimental : le HUD est ramené à la disposition 16:9, pas encore vérifié sur de vraies captures de ces formats. Si la détection échoue, [signale un problème](#-signaler-un-problème) avec un journal de partie. |
+| ⛔ Écran vertical, toute petite fenêtre | L'application le signale et **met la détection en pause** au lieu d'afficher de mauvaises recommandations. |
 | ⚠️ Échelle du HUD modifiée, filtres de couleur | Le HUD n'est pas là où le scanner le cherche : l'application l'indique si elle ne trouve aucun HUD pendant plusieurs minutes. |
 
 Un skin de héros dont le portrait est très différent du portrait par défaut peut être mal lu sur certaines images ; le vote sur la partie le retrouve en général.
@@ -126,7 +126,8 @@ Clique sur le héros en haut à gauche et choisis le bon : il est verrouillé po
 <details>
 <summary><b>Rien n'est détecté</b></summary>
 
-- Vérifie que la fenêtre du jeu s'appelle bien « Deadlock », qu'elle n'est pas réduite et que ta résolution est en 16:9 (voir [Configurations prises en charge](#%EF%B8%8F-configurations-prises-en-charge)).
+- Vérifie que la fenêtre du jeu s'appelle bien « Deadlock », qu'elle n'est pas réduite et que ton format d'écran est pris en charge (voir [Configurations prises en charge](#%EF%B8%8F-configurations-prises-en-charge)).
+- Vérifie que **Auto** (à côté de Scan, en haut) est activé : il allume et éteint le scan automatique.
 - La détection des héros a besoin de la barre du haut (scores des deux équipes). Les modes sans cette barre, comme l'entraînement, ne sont pas reconnus.
 - L'onglet **Diagnostic** indique la source capturée et ce qui est reconnu.
 </details>
@@ -165,7 +166,7 @@ npm run dev
 | `npm run dev` | Interface avec rechargement à chaud (Vite) + Electron |
 | `npm test` | Règles, parties enregistrées rejouées, traductions |
 | `npm run test:vision` | Le vrai scanner sur des images de parties enregistrées (Electron) |
-| `npm run dist` | Installeur et exécutable portable dans `release/` |
+| `npm run dist` | Exécutable portable dans `release/` |
 | `npm run update-builds` | Builds méta et catalogue d'objets depuis deadlock-api.com (fait chaque semaine par GitHub Actions) |
 
 Voir [**docs/CONTRIBUTING.md**](docs/CONTRIBUTING.md) (en anglais) pour recalibrer le scanner, ajouter un héros, traduire ou publier une version. Les coordonnées du HUD et les choix de calibration sont dans [`AGENTS.md`](AGENTS.md).
