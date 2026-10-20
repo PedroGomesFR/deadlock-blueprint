@@ -3,7 +3,7 @@
 // à partir de https://api.deadlock-api.com. À relancer après chaque patch : `npm run update-builds`.
 //
 // Sorties :
-//   src/data/generated/itemsCatalog.json  — tous les objets de la boutique (noms, descriptions et stats FR/EN, prix,
+//   src/data/generated/itemsCatalog.json  — tous les objets de la boutique (noms, descriptions et stats FR/EN/IT, prix,
 //                                           palier, composants, icône)
 //   src/data/generated/metaBuilds.json    — par héros : build « Méta » (objets les plus achetés en haut rang),
 //                                           meilleur build publié (meilleur taux de victoire), ordre des sorts, et
@@ -12,7 +12,9 @@
 //   public/icons/abilities/api/<héros>_<touche>.png — icônes officielles des sorts (idem)
 //
 // Les deux JSON sont aussi téléchargés par l'application au démarrage (src/data/dataSource.ts) depuis la branche
-// main : SCHEMA_VERSION doit changer dès que leur forme change, sinon les versions déjà installées les refusent.
+// main : SCHEMA_VERSION doit changer dès que leur forme change d'une façon que les versions déjà installées ne
+// comprennent pas (champ renommé, retiré ou de type différent). Un champ en plus, que les anciennes versions ignorent
+// (nameIt…), ne la change pas : la changer couperait ces versions des données de la semaine.
 // `--check` valide les fichiers existants sans rien télécharger (CI).
 
 import fs from 'node:fs/promises';
@@ -199,10 +201,11 @@ function assertFields(label, obj, fields) {
 // 1. Catalogue d'objets
 // ---------------------------------------------------------------------------
 
-function buildCatalog(itemsFr, itemsEn) {
+function buildCatalog(itemsFr, itemsEn, itemsIt) {
   assertFields('items', itemsEn[0], ['id', 'class_name', 'name', 'item_slot_type', 'item_tier', 'cost', 'shopable', 'shop_image']);
 
   const frById = new Map(itemsFr.map((x) => [x.id, x]));
+  const itById = new Map(itemsIt.map((x) => [x.id, x]));
   const shop = itemsEn.filter((x) => x.shopable && x.item_tier >= 1 && x.item_tier <= 4);
 
   const idByClass = new Map();
@@ -218,6 +221,7 @@ function buildCatalog(itemsFr, itemsEn) {
   for (const it of shop) {
     const id = idByClass.get(it.class_name);
     const fr = frById.get(it.id) || it;
+    const itl = itById.get(it.id) || it;
     const nameFr = fr.name || it.name;
     const legacyFile = LEGACY_ICON_FILE[id] || `${id}.png`;
     items[id] = {
@@ -226,6 +230,7 @@ function buildCatalog(itemsFr, itemsEn) {
       className: it.class_name,
       nameFr,
       nameEn: it.name,
+      nameIt: itl.name || it.name,
       category: it.item_slot_type,
       tier: it.item_tier,
       cost: it.cost,
@@ -233,8 +238,10 @@ function buildCatalog(itemsFr, itemsEn) {
       upgradesFrom: (it.component_items || []).map((c) => idByClass.get(c)).filter(Boolean),
       descriptionFr: describe(fr.description).slice(0, 220),
       descriptionEn: describe(it.description).slice(0, 220),
+      descriptionIt: describe(itl.description).slice(0, 220),
       statsFr: statLines(fr),
       statsEn: statLines(it),
+      statsIt: statLines(itl),
       shopImage: it.shop_image,
       icon: `./icons/items/api/${id}.png`,
       legacyIcon: existsSync(path.join(LEGACY_ICON_DIR, legacyFile)) ? `./icons/items/${legacyFile}` : undefined,
@@ -461,17 +468,19 @@ async function main() {
   const minUnix = Math.floor(Date.now() / 1000) - WINDOW_DAYS * 86400;
 
   console.log('▶ Téléchargement des assets (objets, sorts, héros)…');
-  const [itemsFr, itemsEn, abilitiesFr, abilitiesEn, heroesFr, heroesEn] = await Promise.all([
+  const [itemsFr, itemsEn, itemsIt, abilitiesFr, abilitiesEn, abilitiesIt, heroesFr, heroesEn] = await Promise.all([
     fetchJson('/v1/assets/items/by-type/upgrade', { language: 'french' }),
     fetchJson('/v1/assets/items/by-type/upgrade', { language: 'english' }),
+    fetchJson('/v1/assets/items/by-type/upgrade', { language: 'italian' }),
     fetchJson('/v1/assets/items/by-type/ability', { language: 'french' }),
     fetchJson('/v1/assets/items/by-type/ability', { language: 'english' }),
+    fetchJson('/v1/assets/items/by-type/ability', { language: 'italian' }),
     fetchJson('/v1/assets/heroes', { language: 'french', only_active: true }),
     fetchJson('/v1/assets/heroes', { language: 'english', only_active: true }),
   ]);
   assertFields('heroes', heroesEn[0], ['id', 'name', 'items', 'player_selectable']);
 
-  const catalog = buildCatalog(itemsFr, itemsEn);
+  const catalog = buildCatalog(itemsFr, itemsEn, itemsIt);
   console.log(`  ${Object.keys(catalog.items).length} objets de boutique.`);
   if (catalog.missingClasses.length > 0) {
     console.log(`  Objets locaux retirés du jeu : ${catalog.missingClasses.map((c) => LOCAL_ID_BY_CLASS[c]).join(', ')}`);
@@ -483,6 +492,7 @@ async function main() {
 
   const abilityEnByClass = new Map(abilitiesEn.map((a) => [a.class_name, a]));
   const abilityFrById = new Map(abilitiesFr.map((a) => [a.id, a]));
+  const abilityItById = new Map(abilitiesIt.map((a) => [a.id, a]));
   const heroFrById = new Map(heroesFr.map((h) => [h.id, h]));
   const localHeroIds = await readLocalHeroIds();
 
@@ -522,14 +532,17 @@ async function main() {
       if (!ab) continue;
       slotByAbilityId.set(ab.id, key);
       const abFr = abilityFrById.get(ab.id);
+      const abIt = abilityItById.get(ab.id);
       const iconFile = `${localId}_${key}.png`;
       if (ab.image) abilityIcons.push({ file: path.join(ABILITY_ICON_DIR, iconFile), url: ab.image });
       abilities.push({
         key,
         nameEn: ab.name,
         nameFr: abFr?.name || ab.name,
+        nameIt: abIt?.name || ab.name,
         descriptionFr: describe(abFr?.description).slice(0, 260),
         descriptionEn: describe(ab.description).slice(0, 260),
+        descriptionIt: describe(abIt?.description).slice(0, 260),
         icon: ab.image ? `./icons/abilities/api/${iconFile}` : undefined,
       });
     }
@@ -645,7 +658,7 @@ function validateGenerated(catalogJson, metaJson) {
   const itemList = Object.values(items);
   if (itemList.length < 120) errors.push(`seulement ${itemList.length} objets`);
   for (const it of itemList) {
-    if (!it.nameFr || !it.nameEn) errors.push(`${it.id} : nom manquant`);
+    if (!it.nameFr || !it.nameEn || !it.nameIt) errors.push(`${it.id} : nom manquant`);
     if (![1, 2, 3, 4].includes(it.tier)) errors.push(`${it.id} : palier ${it.tier}`);
     if (!['weapon', 'vitality', 'spirit'].includes(it.category)) errors.push(`${it.id} : catégorie ${it.category}`);
     if (!(it.cost > 0)) errors.push(`${it.id} : prix ${it.cost}`);

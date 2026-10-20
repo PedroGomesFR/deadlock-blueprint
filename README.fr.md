@@ -46,8 +46,14 @@ Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconna�
 - **Jamais un objet que tu as déjà**, ni un composant déjà amélioré.
 - **Inventaire plein ?** Chaque recommandation indique **quel objet vendre** (le moins utile pour ton build), ou **lequel sera remplacé** s'il s'agit d'une amélioration.
 
+- **Lisible d'un coup d'œil** : grandes icônes d'objets, l'onglet de la boutique par sa couleur et son icône, et un bouton qui **copie le nom de l'objet** pour le coller dans la recherche de la boutique (presse-papiers uniquement, rien n'est tapé dans le jeu).
+
 ### 🎯 Overlay en jeu
 Un panneau transparent, toujours au premier plan, affiche ton ordre de sorts et tes 3 prochains achats. En **mode fantôme**, les clics le traversent et il ne gêne jamais ta visée.
+Son bouton ⚙ règle son **opacité** (pour moins cacher la minicarte) et sa **taille** (100 / 85 / 70 %). Les boutons sont masqués en mode fantôme, puisque les clics vont au jeu : <kbd>Alt</kbd> + <kbd>L</kbd> les fait revenir.
+
+### 🌍 Français, anglais, italien
+L'interface et les guides des héros sont en français, en anglais et en italien. Les noms, descriptions et stats des objets et des sorts viennent des textes officiels du jeu dans chaque langue.
 
 ## 📥 Installation
 

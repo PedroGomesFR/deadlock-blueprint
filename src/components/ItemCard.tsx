@@ -2,6 +2,7 @@ import React from 'react';
 import { DeadlockItem } from '../data/deadlockData';
 import { Check, Zap } from 'lucide-react';
 import { ItemArtworkIcon } from './DeadlockIcons';
+import { ShopTabMarker } from './ShopHelpers';
 import { useI18n } from '../i18n';
 
 interface ItemCardProps {
@@ -25,20 +26,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     weapon: {
       border: 'border-orange-500/40 hover:border-orange-400',
       bg: 'from-orange-950/45 via-deadlock-panel to-deadlock-panel',
-      badge: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-      label: t('category.weapon'),
     },
     vitality: {
       border: 'border-emerald-500/40 hover:border-emerald-400',
       bg: 'from-emerald-950/45 via-deadlock-panel to-deadlock-panel',
-      badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-      label: t('category.vitality'),
     },
     spirit: {
       border: 'border-purple-500/40 hover:border-purple-400',
       bg: 'from-purple-950/45 via-deadlock-panel to-deadlock-panel',
-      badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      label: t('category.spirit'),
     },
   }[item.category];
 
@@ -62,7 +57,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       >
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="relative shrink-0">
-            <ItemArtworkIcon itemId={item.id} category={item.category} size={38} />
+            <ItemArtworkIcon itemId={item.id} category={item.category} size={44} />
             {isOwned && (
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-black flex items-center justify-center">
                 <Check className="w-3 h-3 stroke-[3]" />
@@ -72,32 +67,30 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span
-                className={`text-xs font-bold truncate ${
+                className={`text-body font-bold truncate ${
                   isOwned ? 'line-through text-slate-400' : 'text-white'
                 }`}
               >
                 {primaryName}
               </span>
               {item.isActive && (
-                <span className="px-1 py-0.2 text-[9px] font-extrabold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/40 shrink-0">
+                <span className="px-1 py-0.2 text-small font-extrabold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/40 shrink-0">
                   {t('item.active')}
                 </span>
               )}
             </div>
             {highlightReasons && highlightReasons.length > 0 ? (
-              <p className="text-[10px] text-emerald-300 font-medium truncate">
+              <p className="text-small text-emerald-300 font-medium truncate">
                 ⚡ {highlightReasons[0]}
               </p>
             ) : (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded border inline-block mt-0.5 ${categoryStyles.badge}`}>
-                T{item.tier} • {categoryStyles.label}
-              </span>
+              <ShopTabMarker category={item.category} tier={item.tier} />
             )}
           </div>
         </div>
         <div className="text-right shrink-0 pl-1">
-          <span className="text-xs font-extrabold text-teal-300">{item.cost}</span>
-          <span className="text-[9px] text-teal-500 block leading-none">{t('souls.unit')}</span>
+          <span className="text-body font-extrabold text-teal-300">{item.cost}</span>
+          <span className="text-small text-teal-500 block leading-none">{t('souls.unit')}</span>
         </div>
       </button>
     );
@@ -116,40 +109,38 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     >
       <div className="flex items-center justify-between gap-2.5 mb-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <ItemArtworkIcon itemId={item.id} category={item.category} size={42} />
+          <ItemArtworkIcon itemId={item.id} category={item.category} size={48} />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h4
-                className={`font-bold text-sm truncate ${
+                className={`font-bold text-title truncate ${
                   isOwned ? 'line-through text-emerald-300' : 'text-white'
                 }`}
               >
                 {primaryName}
               </h4>
               {item.isActive && (
-                <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/50 flex items-center gap-0.5 shrink-0">
+                <span className="px-1.5 py-0.5 text-small font-bold uppercase bg-amber-500/25 text-amber-300 rounded border border-amber-500/50 flex items-center gap-0.5 shrink-0">
                   <Zap className="w-2.5 h-2.5" /> {t('item.active')}
                 </span>
               )}
             </div>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded border inline-block mt-0.5 ${categoryStyles.badge}`}>
-              T{item.tier} • {categoryStyles.label}
-            </span>
+            <ShopTabMarker category={item.category} tier={item.tier} />
           </div>
         </div>
 
-        <div className="px-2 py-1 rounded-lg bg-teal-950/80 border border-teal-500/40 text-teal-300 font-bold text-xs shrink-0">
+        <div className="px-2 py-1 rounded-lg bg-teal-950/80 border border-teal-500/40 text-teal-300 font-bold text-body shrink-0">
           {item.cost}
         </div>
       </div>
 
-      <p className="text-xs text-amber-200/95 mb-1.5 leading-snug">{item.hint}</p>
+      <p className="text-body text-amber-200/95 mb-1.5 leading-snug">{item.hint}</p>
       {item.stats.length > 0 && (
-        <p className="text-[10px] text-slate-400 mb-1.5 leading-snug">{item.stats.join(' • ')}</p>
+        <p className="text-small text-slate-400 mb-1.5 leading-snug">{item.stats.join(' • ')}</p>
       )}
 
       {highlightReasons && highlightReasons.length > 0 && (
-        <div className="text-[11px] text-emerald-300 font-medium">
+        <div className="text-small text-emerald-300 font-medium">
           ⚡ {highlightReasons[0]}
         </div>
       )}

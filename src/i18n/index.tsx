@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { MESSAGES_EN } from './en';
 import { MESSAGES_FR, type Messages } from './fr';
+import { MESSAGES_IT } from './it';
 import { type Lang, localeOf } from './lang';
 
 export type { Lang } from './lang';
@@ -10,7 +11,7 @@ type Params<K extends MessageKey> = Messages[K] extends (...args: infer A) => st
 /** t('buy.missing', '250'): the text of `key` in the current language, with its parameters. */
 export type Translate = <K extends MessageKey>(key: K, ...params: Params<K>) => string;
 
-const TABLES: Record<Lang, Messages> = { fr: MESSAGES_FR, en: MESSAGES_EN };
+const TABLES: Record<Lang, Messages> = { fr: MESSAGES_FR, en: MESSAGES_EN, it: MESSAGES_IT };
 
 export function makeTranslate(lang: Lang): Translate {
   const table = TABLES[lang];

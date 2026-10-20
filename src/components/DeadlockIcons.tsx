@@ -100,7 +100,7 @@ export const HeroPortraitIcon: React.FC<{ heroId: string; color: string; size?: 
           draggable={false}
         />
       ) : (
-        <span className="text-xs font-bold text-white">{heroName.slice(0, 2)}</span>
+        <span className="text-body font-bold text-white">{heroName.slice(0, 2)}</span>
       )}
     </div>
   );
@@ -137,9 +137,9 @@ export const PowerIcon: React.FC<{
           draggable={false}
         />
       ) : (
-        <span className="text-xs font-bold text-purple-300">{abilityKey}</span>
+        <span className="text-body font-bold text-purple-300">{abilityKey}</span>
       )}
-      <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-amber-500 text-black font-extrabold text-[10px] flex items-center justify-center border border-black shadow">
+      <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-amber-500 text-black font-extrabold text-small flex items-center justify-center border border-black shadow">
         {abilityKey}
       </span>
     </div>
@@ -185,7 +185,7 @@ export const ItemArtworkIcon: React.FC<{
           draggable={false}
         />
       ) : (
-        <span className="text-[10px] font-bold text-white">{itemId.slice(0, 2).toUpperCase()}</span>
+        <span className="text-small font-bold text-white">{itemId.slice(0, 2).toUpperCase()}</span>
       )}
     </div>
   );

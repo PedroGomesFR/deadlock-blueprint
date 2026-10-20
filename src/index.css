@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  /* Type scale: the only four text sizes of the interface (Tailwind text-small / text-body / text-title / text-heading).
+     src/typeScale.test.ts rejects any other font size in the components. */
+  :root {
+    --text-small: 11px; /* badges, captions, secondary lines */
+    --text-body: 12px; /* default text, buttons */
+    --text-title: 14px; /* item and card names, section titles */
+    --text-heading: 16px; /* dialog titles */
+  }
+
   body {
     user-select: none;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

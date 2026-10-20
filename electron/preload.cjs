@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSources: () => ipcRenderer.invoke('get-sources'),
   setOverlayMode: (enable) => ipcRenderer.invoke('set-overlay-mode', enable),
   setClickThrough: (enable) => ipcRenderer.invoke('set-click-through', enable),
+  setOverlayScale: (scale) => ipcRenderer.invoke('set-overlay-scale', scale),
+  copyText: (text) => ipcRenderer.invoke('copy-text', text),
   windowControl: (action) => ipcRenderer.invoke('window-control', action),
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),

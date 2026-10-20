@@ -60,38 +60,38 @@ export const ReportDialog: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-amber-300 flex items-center gap-1.5">
+          <h2 className="text-title font-extrabold text-amber-300 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> {t('report.title')}
           </h2>
           <button onClick={onClose} className="text-slate-400 hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-slate-300 leading-relaxed">{t('report.body')}</p>
+        <p className="text-body text-slate-300 leading-relaxed">{t('report.body')}</p>
         {hasLog ? (
-          <label className="flex items-start gap-2 text-xs text-slate-200 cursor-pointer">
+          <label className="flex items-start gap-2 text-body text-slate-200 cursor-pointer">
             <input type="checkbox" checked={includeLog} onChange={(e) => setIncludeLog(e.target.checked)} className="mt-0.5" />
             {t('report.includeLog')}
           </label>
         ) : (
-          <p className="text-[11px] text-slate-400">{logsEnabled ? '' : t('report.noLog')}</p>
+          <p className="text-small text-slate-400">{logsEnabled ? '' : t('report.noLog')}</p>
         )}
         <div className="flex items-center gap-2">
           <button
             onClick={create}
             disabled={busy || !api}
-            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-body font-bold disabled:opacity-50"
           >
             {busy ? t('report.creating') : t('report.create')}
           </button>
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-200"
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-body text-slate-200"
           >
             {t('report.cancel')}
           </button>
         </div>
-        {message && <p className="text-[11px] text-emerald-300 leading-relaxed">{message}</p>}
+        {message && <p className="text-small text-emerald-300 leading-relaxed">{message}</p>}
       </div>
     </div>
   );

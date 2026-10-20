@@ -21,7 +21,6 @@ import {
   Zap,
 } from 'lucide-react';
 import {
-  DeadlockItem,
   LaneColor,
   LaneMode,
   formatPercent,
@@ -59,11 +58,12 @@ import { grabGameFrame, releaseGameFrame } from './services/screenCapture';
 import type { AppInfo, ElectronSourceInfo, UpdateStatus } from './electron';
 import { ItemCard } from './components/ItemCard';
 import { HeroPortraitIcon, ItemArtworkIcon, PowerIcon } from './components/DeadlockIcons';
+import { CopyNameButton, ShopTabMarker } from './components/ShopHelpers';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { ReportContent, ReportDialog } from './components/ReportDialog';
 import { DiagnosticsTab } from './components/DiagnosticsTab';
-import { I18nContext, Translate, makeI18n } from './i18n';
+import { I18nContext, makeI18n } from './i18n';
 import { Lang, detectLang, readStoredLang, storeLang } from './i18n/lang';
 
 type MainTab = 'essential' | 'builds' | 'powers' | 'matchups' | 'logs';
@@ -73,36 +73,27 @@ interface LockedNextPurchase {
   itemId: string;
 }
 
-function getShopLocationBadge(
-  item: DeadlockItem,
-  t: Translate,
-  formatNumber: (n: number) => string
-): { tab: string; tierLabel: string; badgeClass: string; dotColor: string } {
-  const tierRoman = item.tier === 1 ? 'I' : item.tier === 2 ? 'II' : item.tier === 3 ? 'III' : 'IV';
-  const tierLabel = t('shop.tier', tierRoman, formatNumber(item.cost));
+// Overlay window only: its opacity (so it hides less of the minimap) and its size (page zoom, the window follows)
+const OVERLAY_OPACITY_KEY = 'dl_overlayOpacity';
+const OVERLAY_SCALE_KEY = 'dl_overlayScale';
+const OVERLAY_SCALES = [1, 0.85, 0.7];
+const OVERLAY_MIN_OPACITY = 0.3;
 
-  if (item.category === 'weapon') {
-    return {
-      tab: t('shop.tab.weapon'),
-      tierLabel,
-      badgeClass: 'bg-orange-500/20 border-orange-500/50 text-orange-200',
-      dotColor: '#f97316',
-    };
+function readStoredNumber(key: string, fallback: number, min: number, max: number): number {
+  try {
+    const value = parseFloat(localStorage.getItem(key) ?? '');
+    return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+  } catch {
+    return fallback;
   }
-  if (item.category === 'vitality') {
-    return {
-      tab: t('shop.tab.vitality'),
-      tierLabel,
-      badgeClass: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-200',
-      dotColor: '#22c55e',
-    };
+}
+
+function storeNumber(key: string, value: number): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Ignore
   }
-  return {
-    tab: t('shop.tab.spirit'),
-    tierLabel,
-    badgeClass: 'bg-purple-500/20 border-purple-500/50 text-purple-200',
-    dotColor: '#a855f7',
-  };
 }
 
 // Items marked as owned by hand ("Skip" / click), shared with the overlay window: the scanner never
@@ -333,6 +324,29 @@ export function App() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' });
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const isDiagnosticsOpen = activeTab === 'logs' && !isDedicatedOverlayWindow;
+
+  // Overlay controls. In ghost mode clicks go through to the game, so its buttons are hidden until Alt+L.
+  const [overlayOpacity, setOverlayOpacity] = useState(() =>
+    readStoredNumber(OVERLAY_OPACITY_KEY, 1, OVERLAY_MIN_OPACITY, 1)
+  );
+  const [overlayScale, setOverlayScale] = useState(() =>
+    readStoredNumber(OVERLAY_SCALE_KEY, 1, OVERLAY_SCALES[OVERLAY_SCALES.length - 1], 1)
+  );
+  const [isOverlaySettingsOpen, setIsOverlaySettingsOpen] = useState(false);
+  useEffect(() => {
+    if (isDedicatedOverlayWindow) window.electronAPI?.setOverlayScale(overlayScale);
+  }, [isDedicatedOverlayWindow, overlayScale]);
+  useEffect(() => {
+    if (isClickThrough) setIsOverlaySettingsOpen(false);
+  }, [isClickThrough]);
+  const changeOverlayOpacity = (value: number) => {
+    setOverlayOpacity(value);
+    storeNumber(OVERLAY_OPACITY_KEY, value);
+  };
+  const changeOverlayScale = (value: number) => {
+    setOverlayScale(value);
+    storeNumber(OVERLAY_SCALE_KEY, value);
+  };
 
   const myHero = useMemo(() => HEROES.find((h) => h.id === myHeroId) || HEROES[0], [HEROES, myHeroId]);
 
@@ -774,7 +788,7 @@ export function App() {
   const renderSlotPlan = (itemId: string, compact = false) => {
     const plan = slotPlans.get(itemId);
     if (!plan) return null;
-    const sizeClass = compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-1 text-[11px]';
+    const sizeClass = compact ? 'px-1.5 py-0.5 text-small' : 'px-2 py-1 text-small';
     if (plan.kind === 'full') {
       return (
         <div className={`rounded-lg border font-bold bg-red-500/15 border-red-400/50 text-red-200 ${sizeClass}`}>
@@ -796,7 +810,8 @@ export function App() {
       >
         <span className="shrink-0">{isUpgrade ? t('slot.replaces') : t('slot.sell')}</span>
         <ItemArtworkIcon itemId={other.id} category={other.category} size={compact ? 16 : 20} />
-        <span className="truncate">{other.name.split('(')[0].trim()}</span>
+        {/* The overlay's narrow rows wrap the name instead of cutting it */}
+        <span className={compact ? 'min-w-0' : 'truncate'}>{other.name.split('(')[0].trim()}</span>
       </div>
     );
   };
@@ -806,7 +821,7 @@ export function App() {
     const stat = getHeroItemStat(myHeroId, entry.item.id);
     const meta = getHeroMetaInfo(myHeroId);
     if (!stat || !meta) return null;
-    const pick = lang === 'en' ? `${Math.round(stat.pickRate * 100)}%` : `${Math.round(stat.pickRate * 100)} %`;
+    const pick = `${Math.round(stat.pickRate * 100)}${lang === 'fr' ? ' %' : '%'}`;
     const parts = [
       t('why.meta', pick, rankLabel(meta.badgeMin, lang), myHero.name),
       t('why.winRate', formatPercent(stat.winRate, lang)),
@@ -830,32 +845,48 @@ export function App() {
     return (
       <I18nContext.Provider value={i18n}>
         <div className="h-screen w-screen p-2 flex flex-col select-none bg-transparent overflow-hidden">
-          <div className="flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden">
+          <div
+            style={{ opacity: overlayOpacity }}
+            className="flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden"
+          >
             <div className="drag-region px-3 py-2 bg-gradient-to-r from-amber-950/80 via-[#15131c] to-[#15131c] border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={28} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-display text-xs font-extrabold text-amber-300 truncate">
+                    <span className="font-display text-body font-extrabold text-amber-300 truncate">
                       {myHero.name.toUpperCase()}
                     </span>
                     {currentSouls !== null && (
-                      <span className="text-[10px] font-bold text-teal-300 bg-teal-950/70 px-1.5 py-0.2 rounded border border-teal-500/40">
+                      <span className="text-small font-bold text-teal-300 bg-teal-950/70 px-1.5 py-0.2 rounded border border-teal-500/40">
                         {t('souls', formatNumber(currentSouls))}
                       </span>
                     )}
                   </div>
-                  <span className="text-[9px] text-slate-400 block leading-none">
-                    VS {laneEnemyIds.map(heroName).join(' + ') || 'Lane'}
+                  <span className="text-small text-slate-400 block leading-none">
+                    VS {laneEnemyIds.map(heroName).join(' + ') || t('enemies.laneBadge')}
                   </span>
                 </div>
               </div>
 
               <div className="no-drag flex items-center gap-1 shrink-0">
+                {!isClickThrough && (
+                  <button
+                    onClick={() => setIsOverlaySettingsOpen((open) => !open)}
+                    title={t('overlay.settingsTitle')}
+                    className={`p-1.5 rounded-lg border transition ${
+                      isOverlaySettingsOpen
+                        ? 'bg-amber-500 border-amber-300 text-black'
+                        : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
+                    }`}
+                  >
+                    <Settings className="w-3 h-3" />
+                  </button>
+                )}
                 <button
                   onClick={handleToggleClickThrough}
                   title={t('overlay.clickThroughTitle')}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 transition ${
+                  className={`px-2 py-1 rounded-lg text-small font-bold border flex items-center gap-1 transition ${
                     isClickThrough
                       ? 'bg-red-500/35 border-red-400 text-red-100'
                       : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
@@ -867,7 +898,7 @@ export function App() {
                 <button
                   onClick={() => window.electronAPI?.setOverlayMode(false)}
                   title={t('overlay.hideTitle')}
-                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-red-500/30 text-[10px] font-bold text-slate-200"
+                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-red-500/30 text-small font-bold text-slate-200"
                 >
                   ✕
                 </button>
@@ -875,20 +906,54 @@ export function App() {
             </div>
 
             {isClickThrough && (
-              <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-[10px] text-center text-red-200 font-semibold">
-                {t('overlay.ghostActive')} <kbd className="px-1 bg-black/50 rounded">Alt+L</kbd>
+              <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-small text-center text-red-200 font-semibold">
+                {t('overlay.ghostActive')} <kbd className="px-1 bg-black/50 rounded">Alt+L</kbd> {t('overlay.ghostUnlock')}
+              </div>
+            )}
+
+            {isOverlaySettingsOpen && !isClickThrough && (
+              <div className="no-drag px-3 py-2 bg-black/60 border-b border-white/10 space-y-2 text-small font-bold text-slate-300">
+                <label className="flex items-center gap-2">
+                  <span className="w-14 shrink-0">{t('overlay.opacity')}</span>
+                  <input
+                    type="range"
+                    min={OVERLAY_MIN_OPACITY * 100}
+                    max={100}
+                    step={5}
+                    value={Math.round(overlayOpacity * 100)}
+                    onChange={(e) => changeOverlayOpacity(Number(e.target.value) / 100)}
+                    className="flex-1 accent-amber-500"
+                  />
+                  <span className="w-10 text-right tabular-nums">{t('overlay.percent', Math.round(overlayOpacity * 100))}</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="w-14 shrink-0">{t('overlay.size')}</span>
+                  <div className="flex items-center bg-black/50 p-0.5 rounded-lg border border-white/10">
+                    {OVERLAY_SCALES.map((scale) => (
+                      <button
+                        key={scale}
+                        onClick={() => changeOverlayScale(scale)}
+                        className={`px-2 py-0.5 rounded-md transition ${
+                          overlayScale === scale ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {t('overlay.percent', Math.round(scale * 100))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
             <div className="no-drag px-2.5 py-2 bg-black/50 border-b border-white/10 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase text-purple-300">{t('overlay.abilities')}</span>
+              <span className="text-small font-bold uppercase text-purple-300">{t('overlay.abilities')}</span>
               <div className="flex items-center gap-1">
                 {activeBuild.abilitiesOrder.map((key, idx) => {
                   const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
                   return (
                     <React.Fragment key={key}>
                       <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={32} />
-                      {idx < 3 && <span className="text-slate-500 text-xs font-bold">›</span>}
+                      {idx < 3 && <span className="text-slate-500 text-body font-bold">›</span>}
                     </React.Fragment>
                   );
                 })}
@@ -897,12 +962,12 @@ export function App() {
 
             <div className="no-drag flex-1 overflow-y-auto p-2.5 space-y-2.5">
               <div className="space-y-1.5">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
+                <span className="text-small font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
                   <ShoppingCart className="w-3 h-3 text-emerald-400" /> {t('overlay.buyNow')}
                 </span>
                 {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
-                  const loc = getShopLocationBadge(entry.item, t, formatNumber);
                   const canAfford = currentSouls !== null && currentSouls >= entry.item.cost;
+                  const shortName = entry.item.name.split('(')[0].trim();
                   return (
                     <div
                       key={entry.item.id}
@@ -915,25 +980,23 @@ export function App() {
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded-full bg-amber-500 text-black font-extrabold text-[10px] flex items-center justify-center shrink-0">
+                        <span className="w-6 h-6 rounded-full bg-amber-500 text-black font-extrabold text-small flex items-center justify-center shrink-0">
                           #{idx + 1}
                         </span>
-                        <ItemArtworkIcon itemId={entry.item.id} category={entry.item.category} size={34} />
-                        <div className="min-w-0">
-                          <div className="text-xs font-extrabold text-white truncate">
-                            {entry.item.name.split('(')[0].trim()}
+                        <ItemArtworkIcon itemId={entry.item.id} category={entry.item.category} size={46} />
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="text-title font-extrabold text-white truncate">{shortName}</span>
+                            {!isClickThrough && <CopyNameButton name={shortName} />}
                           </div>
-                          <div className="text-[9px] font-bold flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: loc.dotColor }} />
-                            <span className="text-slate-300">{loc.tab}</span>
-                          </div>
+                          <ShopTabMarker category={entry.item.category} />
                           {renderSlotPlan(entry.item.id, true)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-xs font-extrabold text-teal-300 block">{entry.item.cost}</span>
+                        <span className="text-title font-extrabold text-teal-300 block">{formatNumber(entry.item.cost)}</span>
                         {canAfford && (
-                          <span className="text-[9px] font-extrabold text-emerald-300">{t('overlay.buy')}</span>
+                          <span className="text-small font-extrabold text-emerald-300">{t('overlay.buy')}</span>
                         )}
                       </div>
                     </div>
@@ -961,7 +1024,7 @@ export function App() {
               className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/80 border border-amber-500/40 transition"
             >
               <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={32} />
-              <span className="font-display text-xs sm:text-sm font-extrabold text-white">{myHero.name}</span>
+              <span className="font-display text-body sm:text-title font-extrabold text-white">{myHero.name}</span>
               {isHeroLocked && (
                 <span title={t('hero.lockedTitle')}>
                   <Lock className="w-3 h-3 text-amber-400" />
@@ -973,7 +1036,7 @@ export function App() {
             {laneMode === 'duo' && (
               <button
                 onClick={() => setOpenPopover(openPopover === 'ally' ? null : 'ally')}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/40 transition text-xs font-bold text-emerald-200"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/40 transition text-body font-bold text-emerald-200"
                 title={t('ally.title')}
               >
                 {allyHeroObj ? (
@@ -992,7 +1055,7 @@ export function App() {
                     key={b.id}
                     title={`${b.name}\n${b.subtitle}`}
                     onClick={() => setSelectedBuildId(b.id)}
-                    className={`px-2 py-1 rounded-md text-[11px] font-bold transition ${
+                    className={`px-2 py-1 rounded-md text-small font-bold transition ${
                       activeBuild.id === b.id ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'
                     }`}
                   >
@@ -1019,7 +1082,7 @@ export function App() {
                   <Swords className="w-4 h-4 text-red-400" />
                 )}
               </div>
-              <span className="text-xs font-bold text-white">
+              <span className="text-body font-bold text-white">
                 {t('enemies.button', laneEnemyIds.length, teamEnemyIds.length)}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-red-300" />
@@ -1029,7 +1092,7 @@ export function App() {
             <button
               onClick={() => setAutoScanEnabled((v) => !v)}
               title={t('autoscan.title')}
-              className={`px-2 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
+              className={`px-2 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
                 autoScanEnabled
                   ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
                   : 'bg-white/5 border-white/10 text-slate-400'
@@ -1042,7 +1105,7 @@ export function App() {
             <button
               onClick={() => performScreenScan()}
               title={t('scan.title')}
-              className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-[11px] flex items-center gap-1 transition"
+              className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-small flex items-center gap-1 transition"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>{t('scan.label')}</span>
@@ -1051,7 +1114,7 @@ export function App() {
             <button
               onClick={handleToggleOverlay}
               title={t('overlay.toggleTitle')}
-              className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 transition ${
+              className={`px-2.5 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
                 isOverlayMode
                   ? 'bg-purple-500 text-white border-purple-300 shadow-glow-spirit'
                   : 'bg-purple-600/20 hover:bg-purple-600/35 border-purple-400/50 text-purple-200'
@@ -1074,8 +1137,8 @@ export function App() {
           {openPopover === 'myHero' && (
             <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-amber-500/60 shadow-2xl z-50 space-y-2">
               <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-xs font-bold uppercase text-amber-300">{t('hero.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                <span className="text-body font-bold uppercase text-amber-300">{t('hero.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
                   ✕
                 </button>
               </div>
@@ -1100,7 +1163,7 @@ export function App() {
                     }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
-                    <span className="text-xs truncate">{h.name}</span>
+                    <span className="text-body truncate">{h.name}</span>
                   </button>
                 ))}
               </div>
@@ -1110,8 +1173,8 @@ export function App() {
           {openPopover === 'ally' && (
             <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-emerald-500/60 shadow-2xl z-50 space-y-2">
               <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-xs font-bold uppercase text-emerald-300">{t('ally.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                <span className="text-body font-bold uppercase text-emerald-300">{t('ally.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
                   ✕
                 </button>
               </div>
@@ -1132,7 +1195,7 @@ export function App() {
                     }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
-                    <span className="text-xs truncate">{h.name}</span>
+                    <span className="text-body truncate">{h.name}</span>
                   </button>
                 ))}
               </div>
@@ -1142,7 +1205,7 @@ export function App() {
           {openPopover === 'enemies' && (
             <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-red-500/60 shadow-2xl space-y-2.5 z-50">
               <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-xs font-bold uppercase text-red-300">{t('enemies.title', totalSelectedEnemies)}</span>
+                <span className="text-body font-bold uppercase text-red-300">{t('enemies.title', totalSelectedEnemies)}</span>
                 <div className="flex items-center gap-3">
                   {totalSelectedEnemies > 0 && (
                     <button
@@ -1150,12 +1213,12 @@ export function App() {
                         setLaneEnemyIds([]);
                         setTeamEnemyIds([]);
                       }}
-                      className="text-[11px] text-red-400 hover:underline"
+                      className="text-small text-red-400 hover:underline"
                     >
                       {t('enemies.clear')}
                     </button>
                   )}
-                  <button onClick={() => setOpenPopover(null)} className="text-xs text-slate-400">
+                  <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
                     ✕
                   </button>
                 </div>
@@ -1164,7 +1227,7 @@ export function App() {
               <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/10">
                 <button
                   onClick={() => setEnemyPopoverMode('lane')}
-                  className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
+                  className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
                     enemyPopoverMode === 'lane' ? 'bg-red-500 text-white' : 'text-slate-400'
                   }`}
                 >
@@ -1172,7 +1235,7 @@ export function App() {
                 </button>
                 <button
                   onClick={() => setEnemyPopoverMode('team')}
-                  className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold ${
+                  className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
                     enemyPopoverMode === 'team' ? 'bg-orange-500 text-black' : 'text-slate-400'
                   }`}
                 >
@@ -1198,9 +1261,9 @@ export function App() {
                     >
                       <HeroPortraitIcon heroId={eh.id} color={eh.accentColor} size={26} />
                       <div className="min-w-0">
-                        <span className="text-xs block truncate">{eh.name}</span>
-                        {isInLane && <span className="text-[9px] text-red-300 block">{t('enemies.laneBadge')}</span>}
-                        {isInTeam && <span className="text-[9px] text-orange-300 block">{t('enemies.teamBadge')}</span>}
+                        <span className="text-body block truncate">{eh.name}</span>
+                        {isInLane && <span className="text-small text-red-300 block">{t('enemies.laneBadge')}</span>}
+                        {isInTeam && <span className="text-small text-orange-300 block">{t('enemies.teamBadge')}</span>}
                       </div>
                     </button>
                   );
@@ -1228,7 +1291,7 @@ export function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
+                  className={`px-3 py-2 text-body font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
                     active
                       ? 'border-amber-400 text-amber-300 bg-amber-500/10'
                       : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -1243,14 +1306,14 @@ export function App() {
 
           <div className="flex items-center gap-2 py-1">
             {currentSouls !== null && (
-              <span className="px-2 py-0.5 rounded-lg bg-teal-950/60 border border-teal-500/40 text-[11px] text-teal-300 font-extrabold">
+              <span className="px-2 py-0.5 rounded-lg bg-teal-950/60 border border-teal-500/40 text-small text-teal-300 font-extrabold">
                 {t('souls.inPocket', formatNumber(currentSouls))}
               </span>
             )}
             {ownedItems.length > 0 && (
               <button
                 onClick={clearOwnedItems}
-                className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white flex items-center gap-1"
+                className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-small text-slate-400 hover:text-white flex items-center gap-1"
                 title={t('owned.resetTitle')}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -1264,7 +1327,7 @@ export function App() {
         {(showUpdateBanner || formatIssue || hudMissing) && (
           <div className="px-3 pt-2 space-y-2 shrink-0">
             {showUpdateBanner && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center justify-between gap-2 flex-wrap text-xs">
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
                 <span className="font-bold text-emerald-200">
                   {updateStatus.state === 'ready'
                     ? t('update.ready', updateStatus.version)
@@ -1299,22 +1362,22 @@ export function App() {
               <div className="max-w-5xl mx-auto px-3 py-2.5 rounded-xl bg-red-950/70 border-2 border-red-500/70 flex items-start gap-2.5">
                 <MonitorX className="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="text-xs font-extrabold uppercase text-red-200">{t('resolution.title')}</p>
-                  <p className="text-xs text-red-100">
+                  <p className="text-body font-extrabold uppercase text-red-200">{t('resolution.title')}</p>
+                  <p className="text-body text-red-100">
                     {t('resolution.body', formatIssue.width, formatIssue.height, aspectLabel(formatIssue.width, formatIssue.height))}
                   </p>
-                  <p className="text-[11px] text-red-200/90">{t('resolution.help')}</p>
+                  <p className="text-small text-red-200/90">{t('resolution.help')}</p>
                 </div>
                 <button
                   onClick={() => setIsReportOpen(true)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold text-red-100 shrink-0"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-small font-bold text-red-100 shrink-0"
                 >
                   {t('resolution.report')}
                 </button>
               </div>
             )}
             {!formatIssue && hudMissing && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-500/40 flex items-start gap-2 text-[11px] text-amber-100">
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-500/40 flex items-start gap-2 text-small text-amber-100">
                 <Info className="w-4 h-4 text-amber-300 shrink-0" />
                 <span>
                   <strong>{t('hud.notFoundTitle')}.</strong> {t('hud.notFoundBody')}
@@ -1343,21 +1406,21 @@ export function App() {
                         <ShoppingCart className="w-4 h-4" />
                       </span>
                       <div>
-                        <h2 className="font-display text-sm font-extrabold uppercase tracking-wider text-emerald-300">
+                        <h2 className="font-display text-title font-extrabold uppercase tracking-wider text-emerald-300">
                           {t('buy.title', inventoryLabel)}
                         </h2>
-                        <p className="text-[11px] text-slate-300">{t('buy.help')}</p>
+                        <p className="text-small text-slate-300">{t('buy.help')}</p>
                         {inventoryStatus && inventoryStatus.unmatched > 0 && (
-                          <p className="text-[11px] text-orange-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
+                          <p className="text-small text-orange-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
                         )}
-                        <p className="text-[11px] text-amber-300 font-semibold">
+                        <p className="text-small text-amber-300 font-semibold">
                           {activeBuild.name} — <span className="text-slate-400 font-normal">{activeBuild.subtitle}</span>
                         </p>
                       </div>
                     </div>
 
                     {currentSouls !== null && (
-                      <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-xs font-extrabold text-teal-200">
+                      <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-body font-extrabold text-teal-200">
                         {t('souls.detected', formatNumber(currentSouls))}
                       </div>
                     )}
@@ -1367,7 +1430,6 @@ export function App() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
                       const { item, isCounter } = entry;
-                      const loc = getShopLocationBadge(item, t, formatNumber);
                       const canAfford = currentSouls !== null && currentSouls >= item.cost;
                       const missingSouls =
                         currentSouls !== null && currentSouls < item.cost ? item.cost - currentSouls : null;
@@ -1392,7 +1454,7 @@ export function App() {
                             {/* Header: Order Badge + Affordability Status */}
                             <div className="flex items-center justify-between gap-1">
                               <span
-                                className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                                className={`px-2 py-0.5 rounded-md text-small font-extrabold uppercase ${
                                   idx === 0 ? 'bg-amber-400 text-black' : 'bg-white/15 text-slate-200'
                                 }`}
                               >
@@ -1406,46 +1468,38 @@ export function App() {
                               </span>
 
                               {canAfford ? (
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-[10px] uppercase">
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-small uppercase">
                                   {t('buy.affordable')}
                                 </span>
                               ) : missingSouls !== null ? (
-                                <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-amber-300 font-bold text-[10px]">
+                                <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-amber-300 font-bold text-small">
                                   {t('buy.missing', formatNumber(missingSouls))}
                                 </span>
-                              ) : (
-                                <span className="text-xs font-extrabold text-teal-300">{t('souls', String(item.cost))}</span>
-                              )}
+                              ) : null}
                             </div>
 
-                            {/* Item Icon + Name */}
-                            <div className="flex items-center gap-2.5">
-                              <ItemArtworkIcon itemId={item.id} category={item.category} size={46} />
-                              <div className="min-w-0 flex-1">
-                                <div className="font-bold text-sm text-white leading-tight">{shortName}</div>
-                                <div className="text-[11px] font-extrabold text-teal-300 mt-0.5">
-                                  {t('souls', formatNumber(item.cost))}
+                            {/* Item icon, name, price and shop tab (icon colour = tab colour) */}
+                            <div className="flex items-center gap-3">
+                              <ItemArtworkIcon itemId={item.id} category={item.category} size={56} />
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-start gap-1">
+                                  <span className="font-bold text-title text-white leading-tight flex-1 min-w-0">{shortName}</span>
+                                  <CopyNameButton name={shortName} />
+                                </div>
+                                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+                                  <span className="text-small font-extrabold text-teal-300">
+                                    {t('souls', formatNumber(item.cost))}
+                                  </span>
+                                  <ShopTabMarker category={item.category} tier={item.tier} />
                                 </div>
                               </div>
-                            </div>
-
-                            {/* Exact Shop Location Badge */}
-                            <div className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold flex flex-col gap-0.5 ${loc.badgeClass}`}>
-                              <div className="flex items-center gap-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: loc.dotColor }} />
-                                <span className="uppercase tracking-wide">
-                                  {t('shop.prefix')}
-                                  {loc.tab}
-                                </span>
-                              </div>
-                              <span className="text-[10px] opacity-90 pl-4">{loc.tierLabel}</span>
                             </div>
 
                             {renderSlotPlan(item.id)}
 
                             {/* Why this item: meta statistics of this hero */}
                             {why && (
-                              <p className="text-[10px] text-slate-400 leading-snug flex gap-1" title={t('buy.whyTitle')}>
+                              <p className="text-small text-slate-400 leading-snug flex gap-1" title={t('buy.whyTitle')}>
                                 <Info className="w-3 h-3 shrink-0 mt-px text-slate-500" />
                                 <span>{why}</span>
                               </p>
@@ -1453,7 +1507,7 @@ export function App() {
                           </div>
 
                           {/* Reason + Click to Skip / Advance */}
-                          <div className="pt-1 border-t border-white/10 flex items-center justify-between text-[11px]">
+                          <div className="pt-1 border-t border-white/10 flex items-center justify-between text-small">
                             <span
                               className={`truncate font-semibold ${isCounter ? 'text-orange-300' : 'text-slate-300'}`}
                               title={reasonText(entry)}
@@ -1472,7 +1526,7 @@ export function App() {
 
                 {/* Compact Power Order Strip */}
                 <div className="p-2.5 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-[11px] font-bold uppercase text-purple-300 flex items-center gap-1">
+                  <span className="text-small font-bold uppercase text-purple-300 flex items-center gap-1">
                     <Zap className="w-3.5 h-3.5 text-purple-400" /> {t('abilities.order')}
                   </span>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1483,9 +1537,9 @@ export function App() {
                         <React.Fragment key={key}>
                           <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-lg border border-white/5">
                             <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={30} />
-                            <span className="text-xs font-bold text-white">{spellName}</span>
+                            <span className="text-body font-bold text-white">{spellName}</span>
                           </div>
-                          {idx < 3 && <span className="text-slate-500 font-bold text-xs">→</span>}
+                          {idx < 3 && <span className="text-slate-500 font-bold text-body">→</span>}
                         </React.Fragment>
                       );
                     })}
@@ -1495,7 +1549,7 @@ export function App() {
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
                 {tacticalPlan.priorityItems.filter((rec) => !ownedItems.includes(rec.item.id)).length > 0 && (
                   <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
+                    <span className="text-body font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5 text-orange-400" />{' '}
                       {t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
                     </span>
@@ -1529,9 +1583,9 @@ export function App() {
                     const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !ownedItems.includes(id));
                     return (
                       <div key={col.key} className={`p-3 rounded-xl bg-deadlock-panel border ${col.accent} space-y-2`}>
-                        <h3 className="font-display text-xs font-extrabold uppercase tracking-wider">{col.title}</h3>
+                        <h3 className="font-display text-body font-extrabold uppercase tracking-wider">{col.title}</h3>
                         {unownedPhaseIds.length === 0 ? (
-                          <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 font-bold">
+                          <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-body text-emerald-300 font-bold">
                             {t('phases.done')}
                           </div>
                         ) : (
@@ -1558,7 +1612,7 @@ export function App() {
                 {/* Owned Items Archive at the bottom of the page */}
                 {ownedItems.length > 0 && (
                   <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold uppercase text-slate-400">{t('owned.title', ownedItems.length)}</span>
+                    <span className="text-small font-bold uppercase text-slate-400">{t('owned.title', ownedItems.length)}</span>
                     {ownedItems.map((id) => {
                       const it = ITEMS[id];
                       if (!it) return null;
@@ -1567,11 +1621,11 @@ export function App() {
                           key={id}
                           onClick={() => handleToggleOwnedItem(id)}
                           title={t('owned.removeTitle')}
-                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-950/50 border border-white/10 text-[11px] font-semibold text-slate-300 transition"
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-950/50 border border-white/10 text-small font-semibold text-slate-300 transition"
                         >
                           <ItemArtworkIcon itemId={it.id} category={it.category} size={18} />
                           <span>{it.name.split('(')[0].trim()}</span>
-                          <span className="text-[10px] text-slate-500">✕</span>
+                          <span className="text-small text-slate-500">✕</span>
                         </button>
                       );
                     })}
@@ -1590,10 +1644,10 @@ export function App() {
                     <div key={key} className="p-4 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-start gap-3">
                       <PowerIcon heroId={myHero.id} abilityKey={detail.key} abilityName={detail.name} size={52} />
                       <div className="space-y-1 flex-1">
-                        <span className="text-[10px] font-bold uppercase text-purple-300">{t('powers.max', index + 1, detail.key)}</span>
-                        <h3 className="font-bold text-sm text-white">{detail.name.split('(')[0].trim()}</h3>
-                        <p className="text-xs text-amber-200/90">{detail.priorityTip}</p>
-                        {detail.description && <p className="text-[11px] text-slate-400">{detail.description}</p>}
+                        <span className="text-small font-bold uppercase text-purple-300">{t('powers.max', index + 1, detail.key)}</span>
+                        <h3 className="font-bold text-title text-white">{detail.name.split('(')[0].trim()}</h3>
+                        <p className="text-body text-amber-200/90">{detail.priorityTip}</p>
+                        {detail.description && <p className="text-small text-slate-400">{detail.description}</p>}
                       </div>
                     </div>
                   );
@@ -1605,8 +1659,8 @@ export function App() {
             {activeTab === 'builds' && (
               <div className="space-y-4">
                 <div className="p-3 rounded-xl bg-deadlock-panel border border-amber-500/30">
-                  <h3 className="text-sm font-extrabold text-amber-300">{activeBuild.name}</h3>
-                  <p className="text-[11px] text-slate-300">{activeBuild.subtitle}</p>
+                  <h3 className="text-title font-extrabold text-amber-300">{activeBuild.name}</h3>
+                  <p className="text-small text-slate-300">{activeBuild.subtitle}</p>
                 </div>
                 {(
                   [
@@ -1617,7 +1671,7 @@ export function App() {
                   ] as const
                 ).map((phase) => (
                   <div key={phase.key} className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase text-amber-300">{phase.title}</h3>
+                    <h3 className="text-body font-bold uppercase text-amber-300">{phase.title}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeBuild.phases[phase.key].map((itemId) => {
                         const item = ITEMS[itemId];
@@ -1640,10 +1694,10 @@ export function App() {
             {activeTab === 'matchups' && (
               <div className="space-y-3">
                 <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/30 space-y-1.5">
-                  <h3 className="text-xs font-bold uppercase text-amber-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
-                  <p className="text-xs text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
+                  <h3 className="text-body font-bold uppercase text-amber-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
+                  <p className="text-body text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
                   {tacticalPlan.laneStrategy.allySynergyTip && (
-                    <p className="text-xs text-emerald-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
+                    <p className="text-body text-emerald-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
                   )}
                 </div>
 
@@ -1656,12 +1710,12 @@ export function App() {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">
+                        <span className="text-body font-bold text-white">
                           {alert.isInMyLane ? t('matchups.lane') : t('matchups.team')} VS {alert.enemyName}
                         </span>
-                        <span className="text-[10px] font-bold text-red-300">{t(DANGER_KEYS[alert.dangerLevel])}</span>
+                        <span className="text-small font-bold text-red-300">{t(DANGER_KEYS[alert.dangerLevel])}</span>
                       </div>
-                      <p className="text-xs text-emerald-300">{alert.keyRule}</p>
+                      <p className="text-body text-emerald-300">{alert.keyRule}</p>
                     </div>
                   ))}
                 </div>

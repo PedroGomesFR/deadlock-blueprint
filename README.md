@@ -48,8 +48,14 @@ Every 350 ms the app reads the image of the Deadlock window and recognizes:
 - **Never an item you already own**, nor a component already upgraded.
 - **Inventory full?** Each recommendation says **which item to sell** (the least useful for your build), or **which one it replaces** for an upgrade.
 
+- **Readable at a glance**: big item icons, the shop tab as its colour and icon, and a button that **copies the item name** to paste into the shop search (clipboard only, nothing is typed into the game).
+
 ### 🎯 In-game overlay
 A transparent panel, always on top, shows your ability order and your next 3 purchases. In **ghost mode** clicks go through it, so it never gets in the way of your aim.
+Its ⚙ button sets its **opacity** (so it hides less of the minimap) and its **size** (100 / 85 / 70 %). The buttons are hidden in ghost mode, since clicks go through to the game: <kbd>Alt</kbd> + <kbd>L</kbd> brings them back.
+
+### 🌍 English, French, Italian
+The interface and the hero guides are in English, French and Italian. Item and ability names, descriptions and stats come from the game's official texts in each language.
 
 ## 📥 Installation
 

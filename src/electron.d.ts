@@ -59,6 +59,10 @@ declare global {
       getSources: () => Promise<ElectronSourceInfo[]>;
       setOverlayMode: (enable?: boolean) => Promise<OverlayState>;
       setClickThrough: (enable?: boolean) => Promise<OverlayState>;
+      /** Overlay window only: zoom of its page, its window resized by the same factor. */
+      setOverlayScale: (scale: number) => Promise<number>;
+      /** Writes to the clipboard (item name for the shop search). */
+      copyText: (text: string) => Promise<boolean>;
       windowControl: (action: 'minimize' | 'maximize' | 'close') => Promise<void>;
       getAppInfo: () => Promise<AppInfo>;
       /** Opens a page of the project's GitHub repository (or deadlock-api.com) in the browser. */

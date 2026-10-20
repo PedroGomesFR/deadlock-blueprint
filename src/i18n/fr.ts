@@ -7,15 +7,14 @@ export const MESSAGES_FR = {
   'souls.detected': (n: string) => `Âmes détectées : ${n}`,
   'category.weapon': 'Arme',
   'category.vitality': 'Vitalité',
-  'category.spirit': 'Spirit',
+  'category.spirit': 'Esprit',
   'item.active': 'Actif',
 
   // Boutique
-  'shop.prefix': 'BOUTIQUE : ',
-  'shop.tab.weapon': 'ONGLET ARME (Orange)',
-  'shop.tab.vitality': 'ONGLET VITALITÉ (Vert)',
-  'shop.tab.spirit': 'ONGLET ESPRIT (Violet)',
-  'shop.tier': (roman: string, cost: string) => `Palier ${roman} (${cost} Âmes)`,
+  'shop.tabTitle': (tab: string) => `Dans la boutique : onglet ${tab}`,
+  'shop.tier': (roman: string) => `Palier ${roman}`,
+  'copy.title': (name: string) => `Copier « ${name} » (à coller dans la recherche de la boutique)`,
+  'copy.done': 'Copié !',
 
   // Inventaire plein / amélioration
   'slot.fullSellFirst': "⇄ Inventaire plein : vends un objet avant d'acheter",
@@ -30,7 +29,12 @@ export const MESSAGES_FR = {
   // Overlay
   'overlay.clickThroughTitle': 'Verrouiller/Déverrouiller la souris (Alt+L)',
   'overlay.hideTitle': "Masquer l'Overlay (Alt+O)",
-  'overlay.ghostActive': '🔒 Mode Fantôme actif —',
+  'overlay.ghostActive': '🔒 Mode fantôme : les clics vont au jeu.',
+  'overlay.ghostUnlock': 'débloque les boutons.',
+  'overlay.settingsTitle': "Réglages de l'overlay (opacité, taille)",
+  'overlay.opacity': 'Opacité',
+  'overlay.size': 'Taille',
+  'overlay.percent': (n: number) => `${n} %`,
   'overlay.abilities': 'Sorts :',
   'overlay.buyNow': 'À Acheter Tout de Suite',
   'overlay.buy': 'ACHETER !',

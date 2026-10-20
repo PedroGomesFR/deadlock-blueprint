@@ -9,7 +9,7 @@ import type { HeroBuildArchetype, LaneColor } from './deadlockData';
 
 type AbilityKey = '1' | '2' | '3' | '4';
 
-export interface EnBuildText {
+export interface TranslatedBuildText {
   name: string;
   subtitle: string;
   playstyle: string;
@@ -17,10 +17,10 @@ export interface EnBuildText {
   laneTips: HeroBuildArchetype['laneTips'];
 }
 
-export interface EnHeroText {
+export interface TranslatedHeroText {
   role: string;
   baseTips: string;
-  builds?: Record<string, EnBuildText>;
+  builds?: Record<string, TranslatedBuildText>;
   matchups?: Record<string, { summary: string; laneRule: string }>;
 }
 
@@ -51,7 +51,7 @@ export const EN_LANES: Record<LaneColor, { name: string; description: string; ta
   },
 };
 
-export const EN_HEROES: Record<string, EnHeroText> = {
+export const EN_HEROES: Record<string, TranslatedHeroText> = {
   vindicta: {
     role: 'Aerial marksman & soul executioner',
     baseTips:

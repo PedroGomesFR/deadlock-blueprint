@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, screen, shell, net } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, globalShortcut, screen, shell, net, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -41,6 +41,8 @@ let mainWindow = null;
 let overlayWindow = null;
 let isOverlayMode = false;
 let isClickThrough = false;
+// Size setting of the overlay (App.tsx): its page zoom, and the factor its window was resized by since it was created
+let overlayScale = 1;
 
 function getAppUrlOrFile(win) {
   const isDevServer = process.argv.includes('--dev');
@@ -152,6 +154,7 @@ function ensureOverlayWindow() {
     overlayWindow.loadFile(distIndex, { hash: 'overlay' });
   }
 
+  overlayScale = 1;
   overlayWindow.on('closed', () => {
     overlayWindow = null;
     isOverlayMode = false;
@@ -413,6 +416,36 @@ ipcMain.handle('set-overlay-mode', (_event, enable) => {
 ipcMain.handle('set-click-through', (_event, enable) => {
   toggleClickThrough(enable);
   return { isOverlayMode, isClickThrough };
+});
+
+/**
+ * Overlay size: zooms its page (the zoom stays on this window, checked with Electron 33: the main window, same
+ * origin, keeps 100%) and resizes the window by the same factor, top-right corner in place, so that the empty part
+ * of a bigger window does not catch the clicks meant for the game. A window the player resized keeps its proportions.
+ */
+function setOverlayScale(scale) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  const next = Math.min(1, Math.max(0.5, Number(scale) || 1));
+  const ratio = next / overlayScale;
+  overlayScale = next;
+  overlayWindow.webContents.setZoomFactor(next);
+  if (Math.abs(ratio - 1) < 0.01) return;
+  const bounds = overlayWindow.getBounds();
+  const width = Math.round(bounds.width * ratio);
+  const height = Math.round(bounds.height * ratio);
+  overlayWindow.setBounds({ x: bounds.x + bounds.width - width, y: bounds.y, width, height });
+}
+
+ipcMain.handle('set-overlay-scale', (event, scale) => {
+  if (overlayWindow && !overlayWindow.isDestroyed() && event.sender === overlayWindow.webContents) setOverlayScale(scale);
+  return overlayScale;
+});
+
+// "Copy the item name" (to paste it into the shop search): the clipboard only, nothing is sent to the game
+ipcMain.handle('copy-text', (_event, text) => {
+  if (typeof text !== 'string' || text.length === 0 || text.length > 200) return false;
+  clipboard.writeText(text);
+  return true;
 });
 
 // Match logs (src/services/matchLogger.ts): one folder per game under %APPDATA%\deadlock-tactical-autobuild\

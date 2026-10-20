@@ -1,13 +1,39 @@
 import { getCatalogData, getMetaData } from './dataSource';
-import { EN_GENERIC_BUILD, EN_HEROES, EN_LANES } from './deadlockData.en';
+import { EN_GENERIC_BUILD, EN_HEROES, EN_LANES, type TranslatedHeroText } from './deadlockData.en';
+import { IT_GENERIC_BUILD, IT_HEROES, IT_LANES } from './deadlockData.it';
 import type { Lang } from '../i18n/lang';
 
 // The data below is written in French (HEROES_DB, ITEMS_DB, DEADLOCK_LANES: used by the scanner and the
 // application logic). getHeroesDb / getItemsDb / getLanes give the same data, same ids, in the interface
-// language: English names and descriptions come from the generated catalogue (official game texts), the
-// English text of the hand-written guides from deadlockData.en.ts.
+// language: English and Italian names and descriptions come from the generated catalogue (official game texts),
+// the English and Italian text of the hand-written guides from deadlockData.en.ts / deadlockData.it.ts.
 
 export type ItemCategory = 'weapon' | 'vitality' | 'spirit';
+
+/**
+ * Item and ability names in the Italian guides are written in English: each one the game data knows is replaced by
+ * its official Italian name ("Reactive Barrier" -> "Barriera reattiva"), longest names first, whole names only.
+ */
+let italianGameNames: { names: Map<string, string>; re: RegExp | null } | null = null;
+
+function localizeGameNames(text: string): string {
+  if (!italianGameNames) {
+    const names = new Map<string, string>();
+    const items = (getCatalogData() as unknown as { items?: Record<string, { nameEn: string; nameIt?: string }> }).items ?? {};
+    for (const c of Object.values(items)) if (c.nameIt && c.nameIt !== c.nameEn) names.set(c.nameEn, c.nameIt);
+    const heroes =
+      (getMetaData() as unknown as { heroes?: Record<string, { abilities: { nameEn: string; nameIt?: string }[] }> }).heroes ?? {};
+    for (const meta of Object.values(heroes)) {
+      for (const a of meta.abilities) if (a.nameIt && a.nameIt !== a.nameEn && !names.has(a.nameEn)) names.set(a.nameEn, a.nameIt);
+    }
+    const alternatives = [...names.keys()]
+      .sort((a, b) => b.length - a.length)
+      .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    italianGameNames = { names, re: alternatives.length > 0 ? new RegExp(`(?<![\\w'])(${alternatives.join('|')})(?![\\w])`, 'g') : null };
+  }
+  const { names, re } = italianGameNames;
+  return re ? text.replace(re, (name) => names.get(name) ?? name) : text;
+}
 export type ItemTier = 1 | 2 | 3 | 4; // 800, 1600, 3200, 6400 souls
 export type LaneColor = 'yellow' | 'orange' | 'blue' | 'purple';
 export type LaneMode = 'solo' | 'duo';
@@ -142,9 +168,17 @@ export const DEADLOCK_LANES: {
   },
 ];
 
-const DEADLOCK_LANES_EN: typeof DEADLOCK_LANES = DEADLOCK_LANES.map((lane) => ({ ...lane, ...EN_LANES[lane.id] }));
+const LANES_BY_LANG: Record<Lang, typeof DEADLOCK_LANES> = {
+  fr: DEADLOCK_LANES,
+  en: DEADLOCK_LANES.map((lane) => ({ ...lane, ...EN_LANES[lane.id] })),
+  it: DEADLOCK_LANES.map((lane) => ({
+    ...lane,
+    ...IT_LANES[lane.id],
+    tacticalNote: localizeGameNames(IT_LANES[lane.id].tacticalNote),
+  })),
+};
 
-export const getLanes = (lang: Lang) => (lang === 'en' ? DEADLOCK_LANES_EN : DEADLOCK_LANES);
+export const getLanes = (lang: Lang) => LANES_BY_LANG[lang];
 
 /** Hand-written item texts of an older patch (prices 500/1250/3000/6200), kept for the items not renamed since. */
 type LegacyItem = Omit<DeadlockItem, 'nameFr' | 'nameEn' | 'hint'> & { frHint: string };
@@ -874,6 +908,10 @@ interface GeneratedCatalogItem {
   descriptionEn?: string;
   statsFr?: string[];
   statsEn?: string[];
+  // Italian: in the generated data since 1.4.2 (an older cached file has none: English instead)
+  nameIt?: string;
+  descriptionIt?: string;
+  statsIt?: string[];
   icon?: string;
   legacyIcon?: string;
 }
@@ -898,11 +936,11 @@ function buildItemsDb(lang: Lang): Record<string, DeadlockItem> {
       const nameEn = englishPart(legacy.name);
       db[legacy.id] = {
         ...rest,
-        name: lang === 'en' ? nameEn : legacy.name,
+        name: lang === 'fr' ? legacy.name : nameEn,
         nameFr: legacy.name.split('(')[0].trim(),
         nameEn,
-        hint: lang === 'en' ? '' : frHint,
-        stats: lang === 'en' ? [] : legacy.stats,
+        hint: lang === 'fr' ? frHint : '',
+        stats: lang === 'fr' ? legacy.stats : [],
       };
     }
     return db;
@@ -925,9 +963,15 @@ function buildItemsDb(lang: Lang): Record<string, DeadlockItem> {
       stats: c.statsEn ?? [],
       description: c.descriptionEn ?? '',
     };
+    const it = {
+      name: c.nameIt ?? c.nameEn,
+      hint: c.descriptionIt || en.hint,
+      stats: c.statsIt?.length ? c.statsIt : en.stats,
+      description: c.descriptionIt || en.description,
+    };
     db[c.id] = {
       id: c.id,
-      ...(lang === 'en' ? en : fr),
+      ...{ fr, en, it }[lang],
       nameFr: c.nameFr,
       nameEn: c.nameEn,
       category: c.category,
@@ -944,10 +988,14 @@ function buildItemsDb(lang: Lang): Record<string, DeadlockItem> {
 }
 
 export const ITEMS_DB: Record<string, DeadlockItem> = buildItemsDb('fr');
-const ITEMS_DB_EN: Record<string, DeadlockItem> = buildItemsDb('en');
+const ITEMS_BY_LANG: Record<Lang, Record<string, DeadlockItem>> = {
+  fr: ITEMS_DB,
+  en: buildItemsDb('en'),
+  it: buildItemsDb('it'),
+};
 
 /** Item catalogue in the interface language (same ids, prices and tiers as ITEMS_DB). */
-export const getItemsDb = (lang: Lang) => (lang === 'en' ? ITEMS_DB_EN : ITEMS_DB);
+export const getItemsDb = (lang: Lang) => ITEMS_BY_LANG[lang];
 
 const BASE_HEROES_DB: DeadlockHero[] = [
   // ================= 1. VINDICTA (VEDETTE AVEC FOCUS COMPLET) =================
@@ -2244,6 +2292,8 @@ interface GeneratedHeroMeta {
     nameEn: string;
     descriptionFr?: string;
     descriptionEn?: string;
+    nameIt?: string; // since 1.4.2, see GeneratedCatalogItem
+    descriptionIt?: string;
     icon?: string; // official icon (public/icons/abilities/api)
   }[];
   builds: GeneratedBuild[];
@@ -2258,13 +2308,15 @@ const BADGE_LABELS: Record<number, string> = { 81: 'Oracle+', 71: 'Archon+', 51:
 
 /** Rank bracket of the generated statistics ("Oracle+"). */
 export const rankLabel = (badgeMin: number, lang: Lang) =>
-  BADGE_LABELS[badgeMin] ?? (lang === 'en' ? 'all ranks' : 'tous rangs');
+  BADGE_LABELS[badgeMin] ?? { fr: 'tous rangs', en: 'all ranks', it: 'tutti i ranghi' }[lang];
 
-/** "47,5 %" / "47.5%" */
-export const formatPercent = (x: number, lang: Lang) =>
-  lang === 'en' ? `${(x * 100).toFixed(1)}%` : `${(x * 100).toFixed(1).replace('.', ',')} %`;
+/** "47,5 %" / "47.5%" / "47,5%" */
+export const formatPercent = (x: number, lang: Lang) => {
+  const value = (x * 100).toFixed(1);
+  return { fr: `${value.replace('.', ',')} %`, en: `${value}%`, it: `${value.replace('.', ',')}%` }[lang];
+};
 
-const formatCount = (n: number, lang: Lang) => n.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR');
+const formatCount = (n: number, lang: Lang) => n.toLocaleString({ fr: 'fr-FR', en: 'en-US', it: 'it-IT' }[lang]);
 
 const META_TEXT = {
   fr: {
@@ -2286,7 +2338,23 @@ const META_TEXT = {
     maxTip: (rank: number, label: string) => `MAX ${['1ST', '2ND', '3RD', '4TH'][rank] ?? '4TH'} (order played by ${label} players).`,
     maxOrderTip: /max|1st|2nd|first|second/i,
   },
+  it: {
+    statsTitle: (rank: string) => `Meta ${rank} — oggetti più comprati`,
+    statsSubtitle: (matches: string, rank: string, days: number, wr: string) =>
+      `${matches} partite ${rank} in ${days} giorni • ${wr} di vittorie per l'eroe`,
+    publishedTitle: (wr: string) => `Miglior build pubblicata — ${wr} di vittorie`,
+    publishedSubtitle: (name: string, matches: string, rank: string) => `"${name}" • ${matches} partite ${rank}`,
+    maxTip: (rank: number, label: string) => `MAX ${['1°', '2°', '3°', '4°'][rank] ?? '4°'} (ordine dei giocatori ${label}).`,
+    maxOrderTip: /max|massim|1°|2°|prim[oa]|second[oa]/i,
+  },
 };
+
+/** Official name of an ability in the interface language, from the generated data. */
+function officialAbilityName(a: GeneratedHeroMeta['abilities'][number], lang: Lang): string {
+  if (lang === 'it') return a.nameIt ?? a.nameEn;
+  if (lang === 'en') return a.nameEn;
+  return a.nameFr !== a.nameEn ? `${a.nameFr} (${a.nameEn})` : a.nameFr;
+}
 
 function withMetaBuilds(hero: DeadlockHero, lang: Lang): DeadlockHero {
   const meta = generatedHeroes()[hero.id];
@@ -2300,8 +2368,8 @@ function withMetaBuilds(hero: DeadlockHero, lang: Lang): DeadlockHero {
   const baseDetails: AbilityUpgradeInfo[] = isGenericHero
     ? meta.abilities.map((a) => ({
         key: a.key,
-        name: lang === 'en' ? a.nameEn : a.nameFr !== a.nameEn ? `${a.nameFr} (${a.nameEn})` : a.nameFr,
-        description: (lang === 'en' ? a.descriptionEn : a.descriptionFr) || '',
+        name: officialAbilityName(a, lang),
+        description: { fr: a.descriptionFr, en: a.descriptionEn, it: a.descriptionIt || a.descriptionEn }[lang] || '',
         priorityTip: '',
       }))
     : base.abilitiesDetails;
@@ -2337,13 +2405,16 @@ function withMetaBuilds(hero: DeadlockHero, lang: Lang): DeadlockHero {
   });
 
   const builds = isGenericHero ? generated : [...generated, ...hero.builds];
-  // English: the current official ability names (the hand-written ones date from an older patch: Catalyst -> Napalm)
-  const officialName = (key: AbilityKey) => meta.abilities.find((a) => a.key === key)?.nameEn;
+  // English, Italian: the current official ability names (the hand-written ones date from an older patch: Catalyst -> Napalm)
+  const officialName = (key: AbilityKey) => {
+    const a = meta.abilities.find((x) => x.key === key);
+    return a && officialAbilityName(a, lang);
+  };
   return {
     ...hero,
     // Un héros générique n'a qu'un build inventé : on le remplace par les builds réels
     builds:
-      lang === 'en'
+      lang !== 'fr'
         ? builds.map((b) => ({
             ...b,
             abilitiesDetails: b.abilitiesDetails.map((d) => ({ ...d, name: officialName(d.key) ?? d.name })),
@@ -2357,9 +2428,44 @@ export function getAbilityIcon(heroId: string, key: AbilityKey): string | undefi
   return generatedHeroes()[heroId]?.abilities.find((a) => a.key === key)?.icon;
 }
 
-/** English text of a hand-written hero (deadlockData.en.ts); ability names keep their English part. */
-function translateHero(hero: DeadlockHero): DeadlockHero {
-  const en = EN_HEROES[hero.id];
+const TRANSLATIONS = {
+  en: { heroes: EN_HEROES, genericBuild: EN_GENERIC_BUILD },
+  it: { heroes: IT_HEROES, genericBuild: IT_GENERIC_BUILD },
+};
+
+/** Applies localizeGameNames to every text of an Italian hero text. */
+function localizeHeroText(text: TranslatedHeroText): TranslatedHeroText {
+  const l = localizeGameNames;
+  return {
+    role: l(text.role),
+    baseTips: l(text.baseTips),
+    builds:
+      text.builds &&
+      Object.fromEntries(
+        Object.entries(text.builds).map(([id, b]) => [
+          id,
+          {
+            name: l(b.name),
+            subtitle: l(b.subtitle),
+            playstyle: l(b.playstyle),
+            abilities: Object.fromEntries(
+              Object.entries(b.abilities).map(([k, a]) => [k, { description: l(a.description), priorityTip: l(a.priorityTip) }])
+            ) as typeof b.abilities,
+            laneTips: Object.fromEntries(Object.entries(b.laneTips).map(([k, v]) => [k, l(v)])) as typeof b.laneTips,
+          },
+        ])
+      ),
+    matchups:
+      text.matchups &&
+      Object.fromEntries(Object.entries(text.matchups).map(([id, m]) => [id, { summary: l(m.summary), laneRule: l(m.laneRule) }])),
+  };
+}
+
+/** Text of a hand-written hero in English or Italian (deadlockData.en.ts / .it.ts); ability names keep their English part. */
+function translateHero(hero: DeadlockHero, lang: 'en' | 'it'): DeadlockHero {
+  const raw = TRANSLATIONS[lang].heroes[hero.id];
+  const en = raw && lang === 'it' ? localizeHeroText(raw) : raw;
+  const genericBuild = TRANSLATIONS[lang].genericBuild;
   const englishName = (name: string) => englishPart(name);
   return {
     ...hero,
@@ -2367,7 +2473,7 @@ function translateHero(hero: DeadlockHero): DeadlockHero {
     baseTips: en?.baseTips ?? hero.baseTips,
     builds: hero.builds.map((build) => {
       if (build.id.endsWith('_meta_build')) {
-        return EN_GENERIC_BUILD(hero.name, en?.role ?? hero.role, en?.baseTips ?? hero.baseTips, build);
+        return genericBuild(hero.name, en?.role ?? hero.role, en?.baseTips ?? hero.baseTips, build);
       }
       const b = en?.builds?.[build.id];
       return {
@@ -2396,10 +2502,14 @@ function translateHero(hero: DeadlockHero): DeadlockHero {
 }
 
 export const HEROES_DB: DeadlockHero[] = BASE_HEROES_DB.map((h) => withMetaBuilds(h, 'fr'));
-const HEROES_DB_EN: DeadlockHero[] = BASE_HEROES_DB.map((h) => withMetaBuilds(translateHero(h), 'en'));
+const HEROES_BY_LANG: Record<Lang, DeadlockHero[]> = {
+  fr: HEROES_DB,
+  en: BASE_HEROES_DB.map((h) => withMetaBuilds(translateHero(h, 'en'), 'en')),
+  it: BASE_HEROES_DB.map((h) => withMetaBuilds(translateHero(h, 'it'), 'it')),
+};
 
 /** Heroes in the interface language (same ids, builds and items as HEROES_DB). */
-export const getHeroesDb = (lang: Lang) => (lang === 'en' ? HEROES_DB_EN : HEROES_DB);
+export const getHeroesDb = (lang: Lang) => HEROES_BY_LANG[lang];
 
 export interface HeroItemStat {
   pickRate: number; // share of the hero's games where the item was bought
@@ -2446,7 +2556,7 @@ export interface TacticalRecommendation {
 
 type Urgency = TacticalRecommendation['priorityItems'][number]['urgency'];
 
-/** Texts of the counter engine. Item names in the rules are the English ones in both languages (as in the shop search). */
+/** Texts of the counter engine. Item names in the rules are the English ones in French and English (as in the shop search), the official Italian ones in Italian. */
 const TACTICAL_TEXT = {
   fr: {
     counter: (enemy: string) => `Contre ${enemy}`,
@@ -2510,7 +2620,49 @@ const TACTICAL_TEXT = {
     allyDuoTip: (ally: string) =>
       `Duo synergy with ${ally}: take turns pushing the wave and focus the same target as soon as an enemy uses their dash.`,
   },
+  // Item names in English here, replaced by the official Italian ones (localizeGameNames)
+  it: withItalianGameNames({
+    counter: (enemy: string) => `Counter contro ${enemy}`,
+    ccRule: (enemy: string) => `Attenzione ai controlli di ${enemy}: tieni le distanze e prendi Reactive Barrier / Dispel Magic.`,
+    airPokeRule: (enemy: string) => `Non restare allo scoperto contro il poke aereo di ${enemy}. Usa Knockdown o Spirit Shielding.`,
+    healerRule: (enemy: string) => `Taglia le cure di ${enemy} con Healbane o Toxic Bullets.`,
+    archetype: (role: string) => `Archetipo: ${role}`,
+    blocksCc: (enemy: string) => `Blocca i controlli / l'uncino di ${enemy}`,
+    purges: (enemy: string) => `Elimina i controlli / le bombe di ${enemy}`,
+    ccImmunity: (enemy: string) => `Immunità ai controlli contro ${enemy}`,
+    antiHeal: (enemy: string) => `Anti-cura (-40%) contro ${enemy}`,
+    toxic: (enemy: string) => `Sanguinamento e -65% di cure contro ${enemy}`,
+    decay: (enemy: string) => `Maledizione anti-cura contro ${enemy}`,
+    knockdown: (enemy: string) => `Fa cadere ${enemy} dal cielo`,
+    hex: (enemy: string) => `Blocca la mobilità di ${enemy}`,
+    spiritShield: (enemy: string) => `Scudo spirituale contro il burst di ${enemy}`,
+    spiritResist: (enemy: string) => `Resistenza spirituale contro ${enemy}`,
+    bulletShield: (enemy: string) => `Scudo balistico contro ${enemy}`,
+    metalSkin: (enemy: string) => `Immunità ai proiettili di ${enemy}`,
+    returnFire: (enemy: string) => `Rimanda indietro i proiettili di ${enemy}`,
+    suppressor: (enemy: string) => `-25% di cadenza di fuoco su ${enemy}`,
+    etherealShift: (enemy: string) => `Invulnerabilità contro l'all-in di ${enemy}`,
+    superiorStamina: (enemy: string) => `Mobilità aerea contro ${enemy}`,
+    soloDeny: 'Assicura e nega le anime in un 1v1 in solitaria',
+    soloSustain: 'Sustain autonomo in una corsia in solitaria',
+    duoPush: "Controllo del push dell'ondata in un 2v2 in coppia",
+    allyComboTip: (ally: string) =>
+      `Sinergia con il tuo alleato ${ally}: tieni le tue abilità di burst / immobilizzazione (es. Stake + Assassinate) per seguire subito l'ingaggio o il controllo di ${ally}!`,
+    allyCombo: (ally: string) => `Combo devastante sul controllo del tuo alleato ${ally}`,
+    allyDuoTip: (ally: string) =>
+      `Sinergia in coppia con ${ally}: alternatevi nello spingere l'ondata e concentrate i colpi sullo stesso bersaglio appena un nemico usa il suo scatto.`,
+  }),
 };
+
+/** The same texts, with the game names replaced by the official Italian ones. */
+function withItalianGameNames<T extends Record<string, string | ((arg: string) => string)>>(texts: T): T {
+  return Object.fromEntries(
+    Object.entries(texts).map(([key, text]) => [
+      key,
+      typeof text === 'function' ? (arg: string) => localizeGameNames(text(arg)) : localizeGameNames(text),
+    ])
+  ) as T;
+}
 
 export function generateTacticalPlan(
   myHeroId: string,

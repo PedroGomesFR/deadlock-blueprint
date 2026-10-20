@@ -22,6 +22,13 @@ export default {
           spiritLight: '#c084fc',
         }
       },
+      // Type scale (variables in src/index.css)
+      fontSize: {
+        small: ['var(--text-small)', { lineHeight: '1rem' }],
+        body: ['var(--text-body)', { lineHeight: '1rem' }],
+        title: ['var(--text-title)', { lineHeight: '1.25rem' }],
+        heading: ['var(--text-heading)', { lineHeight: '1.5rem' }],
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Cinzel', 'Georgia', 'serif'],

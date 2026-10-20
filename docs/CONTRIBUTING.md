@@ -81,10 +81,16 @@ When Valve releases a hero, `npm run update-builds` lists it under *"Heroes abse
 
 ## Translating
 
-- Interface: every key of `src/i18n/fr.ts` must exist in `src/i18n/en.ts` (TypeScript and a test check it). A message is a string, or a function of its parameters.
-- Hand-written hero guides: `src/data/deadlockData.en.ts`, keyed like `deadlockData.ts`. A test fails if an English screen would show French text.
-- Item names, descriptions, stats and ability names come from the official game data in both languages (`scripts/update-builds.mjs`).
-- A new language means a new message table, the `Lang` type, and `nameXx` / `descriptionXx` fields in the generator.
+- Interface: every key of `src/i18n/fr.ts` must exist in `src/i18n/en.ts` and `src/i18n/it.ts` (TypeScript and a test check it). A message is a string, or a function of its parameters.
+- Hand-written hero guides: `src/data/deadlockData.en.ts` and `deadlockData.it.ts`, keyed like `deadlockData.ts`. A test fails if an English or Italian screen would show French text, or a hand-written Italian text still has English in it.
+- In `deadlockData.it.ts`, write item and ability names by their **current English name** ("Reactive Barrier"): they are replaced by the official Italian name from the game data ("Barriera reattiva"), so the guides use the game's wording and follow Valve's renames.
+- Item names, descriptions, stats and ability names come from the official game data in each language (`scripts/update-builds.mjs`, `nameIt` / `descriptionIt` / `statsIt`…).
+- A new language means a new message table, the `Lang` type (`src/i18n/lang.ts`), `nameXx` / `descriptionXx` / `statsXx` fields in the generator (optional: no schema bump, see *Game data*), and the language's hand-written guides.
+
+## Interface
+
+- **Text sizes**: four only, `text-small` (11 px), `text-body` (12 px), `text-title` (14 px), `text-heading` (16 px), defined as CSS variables in `src/index.css`. `src/typeScale.test.ts` fails on any other size (`text-xs`, `text-[10px]`…).
+- **Overlay buttons** only work when ghost mode is off (clicks go through to the game otherwise): hide new ones while `isClickThrough` is on, like the settings and copy buttons.
 
 ## Game data
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.2] — 2026-10-20
+
+Interface improvements suggested by a player in the issues.
+
+### New
+- **Italian interface** (Italiano), chosen automatically on an Italian system. Item and ability names, descriptions and stats use the official Italian texts of the game, and the hero guides are translated, with the game's own item and ability names.
+- **Overlay settings** (⚙ in its header): **opacity**, so it hides less of the minimap, and **size** (100 / 85 / 70 %). The window shrinks with it, so the empty part never catches your clicks.
+- **Copy the item name** (button next to each recommendation), to paste it into the shop search. It only writes to the clipboard: nothing is typed into the game.
+
+### Changed
+- **Less to read in the middle of a fight**: bigger item icons, and the shop tab shown as its colour and icon plus "Vitality · Tier II" instead of "SHOP: VITALITY TAB (Green) / Tier II (1,600 souls)". The full sentence is still in the tooltip, and the price is shown once.
+- **Consistent text sizes**: the interface now uses four text sizes instead of six, and the smallest is 11 px (some overlay labels were 9 px).
+- In ghost mode the overlay hides its buttons (settings, copy), which clicks could not reach anyway; its banner says that <kbd>Alt</kbd>+<kbd>L</kbd> brings them back.
+- French: the spirit category is now called "Esprit", as in the game.
+- Weekly builds and item data refreshed.
+
 ## [1.4.1] — 2026-10-20
 
 ### Fixed
