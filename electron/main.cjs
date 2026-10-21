@@ -133,6 +133,9 @@ function ensureOverlayWindow() {
     resizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
+    // Clicking the overlay (copy button, settings) must not take focus from Deadlock: the game then acted as if
+    // alt-tabbed (its audio stopped). WS_EX_NOACTIVATE on Windows; the overlay has no text field to type in.
+    focusable: false,
     hasShadow: false,
     backgroundColor: '#00000000',
     webPreferences: {

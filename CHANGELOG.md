@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] — 2026-10-21
+
+### Fixed
+- **Clicking the overlay sent the game to the background** (its audio stopped, as after an alt-tab): the overlay window took the focus. It no longer takes it, so its buttons (copy, settings) work while Deadlock stays in front.
+
 ## [1.4.2] — 2026-10-20
 
 Interface improvements suggested by a player in the issues.
