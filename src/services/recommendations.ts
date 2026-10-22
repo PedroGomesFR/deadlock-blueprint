@@ -53,6 +53,12 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   return owned;
 }
 
+/** The counter items included in the purchase queue and highlighted in the interface. */
+export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => [
+  ...priorityItems.filter((r) => r.item.tier <= 2).slice(0, 2),
+  ...priorityItems.filter((r) => r.item.tier >= 3).slice(0, 2),
+];
+
 /**
  * Full purchase order of the build, counters included:
  * 1. first two early items, 2. urgent Tier 1-2 counters, 3. remaining early items, 4. first two mid items,
@@ -66,9 +72,7 @@ export function buildPurchaseOrder(
 ): QueueEntry[] {
   const queue: QueueEntry[] = [];
   const seen = new Set<string>();
-  const laneCounters = priorityItems.filter((r) => r.item.tier <= 2).slice(0, 2);
-  const teamfightCounters = priorityItems.filter((r) => r.item.tier >= 3).slice(0, 2);
-  const counters = [...laneCounters, ...teamfightCounters];
+  const counters = getPurchaseCounters(priorityItems);
   const phaseOf = (id: string): QueueEntry['phase'] =>
     (['early', 'mid', 'late', 'situational'] as const).find((p) => build.phases[p].includes(id));
 
@@ -83,10 +87,10 @@ export function buildPurchaseOrder(
   };
 
   build.phases.early.slice(0, 2).forEach((id) => pushItem(id, t('reason.earlyPriority')));
-  laneCounters.forEach((r) => pushItem(r.item.id, t('reason.laneCounter')));
+  counters.filter((r) => r.item.tier <= 2).forEach((r) => pushItem(r.item.id, t('reason.laneCounter')));
   build.phases.early.slice(2).forEach((id) => pushItem(id, t('reason.earlyEnd')));
   build.phases.mid.slice(0, 2).forEach((id) => pushItem(id, t('reason.midSpike')));
-  teamfightCounters.forEach((r) => pushItem(r.item.id, t('reason.teamfightCounter')));
+  counters.filter((r) => r.item.tier >= 3).forEach((r) => pushItem(r.item.id, t('reason.teamfightCounter')));
   build.phases.mid.slice(2).forEach((id) => pushItem(id, t('reason.midCore')));
   build.phases.late.forEach((id) => pushItem(id, t('reason.lateCore')));
 

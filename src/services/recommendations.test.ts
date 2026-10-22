@@ -7,6 +7,7 @@ import {
   effectiveOwnedSet,
   getComponentIds,
   getNextPurchases,
+  getPurchaseCounters,
   getSellCandidates,
   getSlotPlans,
   isInventoryFull,
@@ -54,6 +55,15 @@ describe('upgrade components', () => {
 });
 
 describe('purchase order', () => {
+  it('uses the same limited set of counters for the queue and highlighting', () => {
+    const ids = ['extra_spirit', 'extra_regen', 'extra_charge', 'boundless_spirit'];
+    const priorities = ids.map((id) => counter(id));
+    const selected = getPurchaseCounters(priorities).map((r) => r.item.id);
+    expect(selected).toEqual(['extra_spirit', 'extra_regen', 'boundless_spirit']);
+    const order = buildPurchaseOrder(build({}), priorities, ITEMS_DB, t);
+    expect(order.map((entry) => entry.item.id)).toEqual(selected);
+  });
+
   it.each([
     ['early', 'healbane'],
     ['mid', 'boundless_spirit'],

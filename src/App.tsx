@@ -40,6 +40,7 @@ import {
   InventoryStatus,
   QueueEntry,
   buildPurchaseOrder,
+  getPurchaseCounters,
   getNextPurchases,
   getSellCandidates,
   getSlotPlans,
@@ -384,6 +385,11 @@ export function App() {
   const purchaseOrder = useMemo(
     () => buildPurchaseOrder(activeBuild, tacticalPlan.priorityItems, ITEMS, t),
     [activeBuild, tacticalPlan.priorityItems, ITEMS, t]
+  );
+
+  const purchaseCounters = useMemo(
+    () => getPurchaseCounters(tacticalPlan.priorityItems),
+    [tacticalPlan.priorityItems]
   );
 
   const isFull = isInventoryFull(inventoryStatus);
@@ -1428,6 +1434,7 @@ export function App() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
                       const { item } = entry;
+                      const isCounter = purchaseCounters.some((counter) => counter.item.id === item.id);
                       const canAfford = currentSouls !== null && currentSouls >= item.cost;
                       const missingSouls =
                         currentSouls !== null && currentSouls < item.cost ? item.cost - currentSouls : null;
@@ -1507,7 +1514,7 @@ export function App() {
                           {/* Reason + Click to Skip / Advance */}
                           <div className="pt-1 border-t border-white/10 flex items-center justify-between text-small">
                             <span
-                              className="truncate font-semibold text-slate-300"
+                              className={`truncate font-semibold ${isCounter ? 'text-orange-300' : 'text-slate-300'}`}
                               title={entry.reason}
                             >
                               {entry.reason}
