@@ -325,20 +325,18 @@ export function App() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const isDiagnosticsOpen = activeTab === 'logs' && !isDedicatedOverlayWindow;
 
-  // Overlay controls. In ghost mode clicks go through to the game, so its buttons are hidden until Alt+L.
+  // Overlay controls. In ghost mode clicks go through to the game, so its buttons are hidden until Alt+L. Its
+  // settings are shown in arrange mode (⚙ or Alt+K), the only time it takes the focus from the game.
   const [overlayOpacity, setOverlayOpacity] = useState(() =>
     readStoredNumber(OVERLAY_OPACITY_KEY, 1, OVERLAY_MIN_OPACITY, 1)
   );
   const [overlayScale, setOverlayScale] = useState(() =>
     readStoredNumber(OVERLAY_SCALE_KEY, 1, OVERLAY_SCALES[OVERLAY_SCALES.length - 1], 1)
   );
-  const [isOverlaySettingsOpen, setIsOverlaySettingsOpen] = useState(false);
+  const [isOverlayArranging, setIsOverlayArranging] = useState(false);
   useEffect(() => {
     if (isDedicatedOverlayWindow) window.electronAPI?.setOverlayScale(overlayScale);
   }, [isDedicatedOverlayWindow, overlayScale]);
-  useEffect(() => {
-    if (isClickThrough) setIsOverlaySettingsOpen(false);
-  }, [isClickThrough]);
   const changeOverlayOpacity = (value: number) => {
     setOverlayOpacity(value);
     storeNumber(OVERLAY_OPACITY_KEY, value);
@@ -695,6 +693,7 @@ export function App() {
     const unsubOverlay = window.electronAPI.onOverlayStateChanged((state) => {
       setIsOverlayMode(state.isOverlayMode);
       setIsClickThrough(state.isClickThrough);
+      setIsOverlayArranging(state.isArranging);
     });
     const unsubScan = window.electronAPI.onTriggerShortcutScan(() => {
       if (!isDedicatedOverlayWindow) {
@@ -721,6 +720,7 @@ export function App() {
       const next = await window.electronAPI.setOverlayMode(!isOverlayMode);
       setIsOverlayMode(next.isOverlayMode);
       setIsClickThrough(next.isClickThrough);
+      setIsOverlayArranging(next.isArranging);
     }
   };
 
@@ -729,6 +729,15 @@ export function App() {
       const next = await window.electronAPI.setClickThrough(!isClickThrough);
       setIsOverlayMode(next.isOverlayMode);
       setIsClickThrough(next.isClickThrough);
+      setIsOverlayArranging(next.isArranging);
+    }
+  };
+
+  const handleToggleArranging = async () => {
+    if (window.electronAPI) {
+      const next = await window.electronAPI.setOverlayArranging(!isOverlayArranging);
+      setIsClickThrough(next.isClickThrough);
+      setIsOverlayArranging(next.isArranging);
     }
   };
 
@@ -847,8 +856,25 @@ export function App() {
         <div className="h-screen w-screen p-2 flex flex-col select-none bg-transparent overflow-hidden">
           <div
             style={{ opacity: overlayOpacity }}
-            className="flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden"
+            className="relative flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden"
           >
+            {isOverlayArranging && !isClickThrough && (
+              <div
+                title={t('overlay.resizeTitle')}
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  window.electronAPI?.overlayResize('start');
+                }}
+                onPointerMove={(e) => {
+                  if (e.currentTarget.hasPointerCapture(e.pointerId)) window.electronAPI?.overlayResize('move');
+                }}
+                onPointerUp={() => window.electronAPI?.overlayResize('end')}
+                onLostPointerCapture={() => window.electronAPI?.overlayResize('end')}
+                className="no-drag absolute bottom-0 left-0 z-10 w-6 h-6 cursor-nesw-resize flex items-end justify-start p-1"
+              >
+                <div className="w-3 h-3 border-l-2 border-b-2 border-amber-400 rounded-bl" />
+              </div>
+            )}
             <div className="drag-region px-3 py-2 bg-gradient-to-r from-amber-950/80 via-[#15131c] to-[#15131c] border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={28} />
@@ -872,10 +898,10 @@ export function App() {
               <div className="no-drag flex items-center gap-1 shrink-0">
                 {!isClickThrough && (
                   <button
-                    onClick={() => setIsOverlaySettingsOpen((open) => !open)}
+                    onClick={handleToggleArranging}
                     title={t('overlay.settingsTitle')}
                     className={`p-1.5 rounded-lg border transition ${
-                      isOverlaySettingsOpen
+                      isOverlayArranging
                         ? 'bg-amber-500 border-amber-300 text-black'
                         : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
                     }`}
@@ -911,8 +937,11 @@ export function App() {
               </div>
             )}
 
-            {isOverlaySettingsOpen && !isClickThrough && (
+            {isOverlayArranging && !isClickThrough && (
               <div className="no-drag px-3 py-2 bg-black/60 border-b border-white/10 space-y-2 text-small font-bold text-slate-300">
+                <p className="font-semibold text-amber-200">
+                  {t('overlay.arrangeHint')} <kbd className="px-1 bg-black/50 rounded">Alt+K</kbd>
+                </p>
                 <label className="flex items-center gap-2">
                   <span className="w-14 shrink-0">{t('overlay.opacity')}</span>
                   <input

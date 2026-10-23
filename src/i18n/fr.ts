@@ -31,7 +31,10 @@ export const MESSAGES_FR = {
   'overlay.hideTitle': "Masquer l'Overlay (Alt+O)",
   'overlay.ghostActive': '🔒 Mode fantôme : les clics vont au jeu.',
   'overlay.ghostUnlock': 'débloque les boutons.',
-  'overlay.settingsTitle': "Réglages de l'overlay (opacité, taille)",
+  'overlay.settingsTitle': "Disposer l'overlay : déplacer, redimensionner, opacité, taille (Alt+K)",
+  'overlay.resizeTitle': "Fais glisser pour redimensionner l'overlay",
+  'overlay.arrangeHint':
+    "Fais glisser l'en-tête pour déplacer l'overlay, son coin ↙ pour le redimensionner. Pendant ce temps, le jeu est en arrière-plan (sans son) : clique dessus pour y revenir, ou appuie sur",
   'overlay.opacity': 'Opacité',
   'overlay.size': 'Taille',
   'overlay.percent': (n: number) => `${n} %`,

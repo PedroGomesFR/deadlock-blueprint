@@ -28,7 +28,10 @@ export const MESSAGES_EN: Messages = {
   'overlay.hideTitle': 'Hide the overlay (Alt+O)',
   'overlay.ghostActive': '🔒 Ghost mode: clicks go through to the game.',
   'overlay.ghostUnlock': 'unlocks the buttons.',
-  'overlay.settingsTitle': 'Overlay settings (opacity, size)',
+  'overlay.settingsTitle': 'Arrange the overlay: move, resize, opacity, size (Alt+K)',
+  'overlay.resizeTitle': 'Drag to resize the overlay',
+  'overlay.arrangeHint':
+    'Drag the header to move the overlay, its ↙ corner to resize it. Meanwhile the game is in the background (no sound): click it to go back, or press',
   'overlay.opacity': 'Opacity',
   'overlay.size': 'Size',
   'overlay.percent': (n) => `${n}%`,

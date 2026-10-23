@@ -41,6 +41,8 @@ let mainWindow = null;
 let overlayWindow = null;
 let isOverlayMode = false;
 let isClickThrough = false;
+// Arrange mode of the overlay (⚙ or Alt+K): the only time it takes the focus, see setOverlayArranging()
+let isOverlayArranging = false;
 // Size setting of the overlay (App.tsx): its page zoom, and the factor its window was resized by since it was created
 let overlayScale = 1;
 
@@ -133,8 +135,9 @@ function ensureOverlayWindow() {
     resizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
-    // Clicking the overlay (copy button, settings) must not take focus from Deadlock: the game then acted as if
-    // alt-tabbed (its audio stopped). WS_EX_NOACTIVATE on Windows; the overlay has no text field to type in.
+    // Clicking the overlay (copy button) must not take focus from Deadlock: the game then acted as if alt-tabbed
+    // (its audio stopped). WS_EX_NOACTIVATE on Windows; the overlay has no text field to type in. Focusable only
+    // in arrange mode (setOverlayArranging).
     focusable: false,
     hasShadow: false,
     backgroundColor: '#00000000',
@@ -158,18 +161,27 @@ function ensureOverlayWindow() {
   }
 
   overlayScale = 1;
+  // Clicking the game (or alt-tabbing) ends arrange mode: the overlay is then already in the background
+  overlayWindow.on('blur', () => {
+    if (isOverlayArranging) setOverlayArranging(false);
+  });
   overlayWindow.on('closed', () => {
     overlayWindow = null;
     isOverlayMode = false;
     isClickThrough = false;
+    isOverlayArranging = false;
     broadcastOverlayState();
   });
 
   return overlayWindow;
 }
 
+function getOverlayState() {
+  return { isOverlayMode, isClickThrough, isArranging: isOverlayArranging };
+}
+
 function broadcastOverlayState() {
-  const payload = { isOverlayMode, isClickThrough };
+  const payload = getOverlayState();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('overlay-state-changed', payload);
   }
@@ -188,6 +200,7 @@ function toggleOverlayMode(forceState) {
     ov.setAlwaysOnTop(true, 'screen-saver');
   } else {
     isClickThrough = false;
+    setOverlayArranging(false);
     if (overlayWindow && !overlayWindow.isDestroyed()) {
       overlayWindow.setIgnoreMouseEvents(false);
       overlayWindow.hide();
@@ -202,12 +215,45 @@ function toggleClickThrough(forceState) {
     toggleOverlayMode(true);
   }
   isClickThrough = typeof forceState === 'boolean' ? forceState : !isClickThrough;
+  if (isClickThrough) setOverlayArranging(false);
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     if (isClickThrough) {
       overlayWindow.setIgnoreMouseEvents(true, { forward: true });
     } else {
       overlayWindow.setIgnoreMouseEvents(false);
     }
+  }
+  broadcastOverlayState();
+}
+
+/**
+ * Arrange mode (⚙ or Alt+K): the overlay takes the focus, like 1.4.2, so that it can be moved, resized and set.
+ * Without the focus, a player could not use the overlay at all with Deadlock in front (1.4.3), and edge resizing
+ * failed even over another app (measured: right edge ignored, bottom edge resized). The game loses the focus (its
+ * audio pauses) only while arranging; copy buttons never take it. Ends on Alt+K, ⚙, ghost mode, hiding, or a click
+ * in the game (blur).
+ */
+function setOverlayArranging(enable) {
+  const next = Boolean(enable);
+  if (next && !isOverlayMode) toggleOverlayMode(true);
+  if (!overlayWindow || overlayWindow.isDestroyed() || next === isOverlayArranging) return;
+  isOverlayArranging = next;
+
+  if (next) {
+    if (isClickThrough) {
+      isClickThrough = false;
+      overlayWindow.setIgnoreMouseEvents(false);
+    }
+    overlayWindow.setFocusable(true);
+    overlayWindow.focus();
+  } else if (overlayWindow.isFocused()) {
+    // setFocusable(false) hands the focus to the next visible window below the overlay: still topmost, that was the
+    // taskbar (measured); one level down it is the window that had the focus before, the game.
+    overlayWindow.setAlwaysOnTop(false);
+    overlayWindow.setFocusable(false);
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  } else {
+    overlayWindow.setFocusable(false);
   }
   broadcastOverlayState();
 }
@@ -221,6 +267,10 @@ app.whenReady().then(() => {
 
   globalShortcut.register('Alt+L', () => {
     toggleClickThrough();
+  });
+
+  globalShortcut.register('Alt+K', () => {
+    setOverlayArranging(!isOverlayArranging);
   });
 
   globalShortcut.register('Alt+S', () => {
@@ -413,12 +463,17 @@ ipcMain.handle('get-sources', async () => {
 
 ipcMain.handle('set-overlay-mode', (_event, enable) => {
   toggleOverlayMode(enable);
-  return { isOverlayMode, isClickThrough };
+  return getOverlayState();
 });
 
 ipcMain.handle('set-click-through', (_event, enable) => {
   toggleClickThrough(enable);
-  return { isOverlayMode, isClickThrough };
+  return getOverlayState();
+});
+
+ipcMain.handle('set-overlay-arranging', (_event, enable) => {
+  setOverlayArranging(enable);
+  return getOverlayState();
 });
 
 /**
@@ -438,6 +493,33 @@ function setOverlayScale(scale) {
   const height = Math.round(bounds.height * ratio);
   overlayWindow.setBounds({ x: bounds.x + bounds.width - width, y: bounds.y, width, height });
 }
+
+/**
+ * Resizing from the ↙ corner of the overlay (arrange mode). Its window edges cannot be grabbed: they are in the 8 px
+ * transparent margin around the panel, which lets clicks through to the window behind (measured). The renderer sends
+ * start / move / end while it holds the pointer; the size comes from the cursor, top-right corner in place.
+ */
+let overlayResizeStart = null;
+const OVERLAY_MIN_SIZE = { width: 240, height: 220 };
+
+ipcMain.on('overlay-resize', (event, phase) => {
+  if (!overlayWindow || overlayWindow.isDestroyed() || event.sender !== overlayWindow.webContents) return;
+  if (phase === 'start') {
+    overlayResizeStart = { cursor: screen.getCursorScreenPoint(), bounds: overlayWindow.getBounds() };
+  } else if (phase === 'move' && overlayResizeStart) {
+    const { cursor, bounds } = overlayResizeStart;
+    const now = screen.getCursorScreenPoint();
+    const area = screen.getDisplayMatching(bounds).workArea;
+    const right = bounds.x + bounds.width;
+    const width = Math.round(Math.min(right - area.x, Math.max(OVERLAY_MIN_SIZE.width, bounds.width - (now.x - cursor.x))));
+    const height = Math.round(
+      Math.min(area.y + area.height - bounds.y, Math.max(OVERLAY_MIN_SIZE.height, bounds.height + (now.y - cursor.y)))
+    );
+    overlayWindow.setBounds({ x: right - width, y: bounds.y, width, height });
+  } else {
+    overlayResizeStart = null;
+  }
+});
 
 ipcMain.handle('set-overlay-scale', (event, scale) => {
   if (overlayWindow && !overlayWindow.isDestroyed() && event.sender === overlayWindow.webContents) setOverlayScale(scale);

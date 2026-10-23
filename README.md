@@ -52,7 +52,7 @@ Every 350 ms the app reads the image of the Deadlock window and recognizes:
 
 ### 🎯 In-game overlay
 A transparent panel, always on top, shows your ability order and your next 3 purchases. In **ghost mode** clicks go through it, so it never gets in the way of your aim.
-Its ⚙ button sets its **opacity** (so it hides less of the minimap) and its **size** (100 / 85 / 70 %). The buttons are hidden in ghost mode, since clicks go through to the game: <kbd>Alt</kbd> + <kbd>L</kbd> brings them back.
+Clicking it (copy an item name) never takes the focus from the game, so the game sound keeps playing. To **arrange** it, press its ⚙ button or <kbd>Alt</kbd> + <kbd>K</kbd>: drag its header to move it, its ↙ corner to resize it, and set its **opacity** (so it hides less of the minimap) and its **size** (100 / 85 / 70 %). Meanwhile the overlay has the focus, like any window: click the game (or press <kbd>Alt</kbd> + <kbd>K</kbd> again) to go back. The buttons are hidden in ghost mode, since clicks go through to the game: <kbd>Alt</kbd> + <kbd>L</kbd> brings them back.
 
 ### 🌍 English, French, Italian
 The interface and the hero guides are in English, French and Italian. Item and ability names, descriptions and stats come from the game's official texts in each language.
@@ -111,6 +111,7 @@ Hero skins whose portrait differs a lot from the default one may be misread on s
 | :---: | :--- |
 | <kbd>Alt</kbd> + <kbd>O</kbd> | Show / hide the **overlay** on top of the game |
 | <kbd>Alt</kbd> + <kbd>L</kbd> | **Ghost mode**: clicks go through the overlay |
+| <kbd>Alt</kbd> + <kbd>K</kbd> | **Arrange the overlay**: move, resize, opacity, size (press again to go back to the game) |
 | <kbd>Alt</kbd> + <kbd>S</kbd> | Scan now |
 
 ### 🖱️ Fixing things by hand

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.4] — 2026-10-23
+
+### Fixed
+- **The overlay could no longer be moved, resized or set** since 1.4.3, which stopped it from taking the focus (so clicking it no longer muted the game). It now has an **arrange mode**: its ⚙ button or <kbd>Alt</kbd> + <kbd>K</kbd> gives it the focus, like before 1.4.3, to drag its header, resize it from its new ↙ corner and set its opacity and size. Click the game (or press <kbd>Alt</kbd> + <kbd>K</kbd> again) to go back: the game gets the focus back. The copy buttons still never take the focus.
+- Resizing the overlay from its edges barely worked even before: they are in its transparent margin, which lets clicks through to the game. The ↙ corner replaces them.
+
 ## [1.4.3] — 2026-10-21
 
 ### Fixed

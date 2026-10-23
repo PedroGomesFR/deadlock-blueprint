@@ -28,7 +28,10 @@ export const MESSAGES_IT: Messages = {
   'overlay.hideTitle': "Nascondi l'overlay (Alt+O)",
   'overlay.ghostActive': '🔒 Modalità fantasma: i clic passano al gioco.',
   'overlay.ghostUnlock': 'sblocca i pulsanti.',
-  'overlay.settingsTitle': "Impostazioni dell'overlay (opacità, dimensione)",
+  'overlay.settingsTitle': "Sistema l'overlay: sposta, ridimensiona, opacità, dimensione (Alt+K)",
+  'overlay.resizeTitle': "Trascina per ridimensionare l'overlay",
+  'overlay.arrangeHint':
+    "Trascina l'intestazione per spostare l'overlay, l'angolo ↙ per ridimensionarlo. Nel frattempo il gioco è in secondo piano (senza audio): cliccalo per tornarci, o premi",
   'overlay.opacity': 'Opacità',
   'overlay.size': 'Dimensione',
   'overlay.percent': (n) => `${n}%`,

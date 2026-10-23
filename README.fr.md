@@ -50,7 +50,7 @@ Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconna�
 
 ### 🎯 Overlay en jeu
 Un panneau transparent, toujours au premier plan, affiche ton ordre de sorts et tes 3 prochains achats. En **mode fantôme**, les clics le traversent et il ne gêne jamais ta visée.
-Son bouton ⚙ règle son **opacité** (pour moins cacher la minicarte) et sa **taille** (100 / 85 / 70 %). Les boutons sont masqués en mode fantôme, puisque les clics vont au jeu : <kbd>Alt</kbd> + <kbd>L</kbd> les fait revenir.
+Cliquer dessus (copier un nom d'objet) ne prend jamais le focus au jeu : le son du jeu continue. Pour le **disposer**, appuie sur son bouton ⚙ ou sur <kbd>Alt</kbd> + <kbd>K</kbd> : fais glisser son en-tête pour le déplacer, son coin ↙ pour le redimensionner, et règle son **opacité** (pour moins cacher la minicarte) et sa **taille** (100 / 85 / 70 %). Pendant ce temps l'overlay a le focus, comme n'importe quelle fenêtre : clique sur le jeu (ou rappuie sur <kbd>Alt</kbd> + <kbd>K</kbd>) pour y revenir. Les boutons sont masqués en mode fantôme, puisque les clics vont au jeu : <kbd>Alt</kbd> + <kbd>L</kbd> les fait revenir.
 
 ### 🌍 Français, anglais, italien
 L'interface et les guides des héros sont en français, en anglais et en italien. Les noms, descriptions et stats des objets et des sorts viennent des textes officiels du jeu dans chaque langue.
@@ -109,6 +109,7 @@ Un skin de héros dont le portrait est très différent du portrait par défaut 
 | :---: | :--- |
 | <kbd>Alt</kbd> + <kbd>O</kbd> | Afficher / masquer l'**overlay** par-dessus le jeu |
 | <kbd>Alt</kbd> + <kbd>L</kbd> | **Mode fantôme** : les clics traversent l'overlay |
+| <kbd>Alt</kbd> + <kbd>K</kbd> | **Disposer l'overlay** : déplacer, redimensionner, opacité, taille (rappuyer pour revenir au jeu) |
 | <kbd>Alt</kbd> + <kbd>S</kbd> | Forcer un scan immédiat |
 
 ### 🖱️ Corriger à la main

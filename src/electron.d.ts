@@ -29,6 +29,8 @@ export interface CaptureSourceInfo {
 export interface OverlayState {
   isOverlayMode: boolean;
   isClickThrough: boolean;
+  /** Arrange mode (⚙ or Alt+K): the overlay has the focus, to be moved, resized and set. */
+  isArranging: boolean;
 }
 
 export interface AppInfo {
@@ -59,6 +61,10 @@ declare global {
       getSources: () => Promise<ElectronSourceInfo[]>;
       setOverlayMode: (enable?: boolean) => Promise<OverlayState>;
       setClickThrough: (enable?: boolean) => Promise<OverlayState>;
+      /** Arrange mode: the overlay takes the focus until it is turned off or the game is clicked. */
+      setOverlayArranging: (enable: boolean) => Promise<OverlayState>;
+      /** Overlay window only: resizing from its ↙ corner, the size comes from the cursor (main process). */
+      overlayResize: (phase: 'start' | 'move' | 'end') => void;
       /** Overlay window only: zoom of its page, its window resized by the same factor. */
       setOverlayScale: (scale: number) => Promise<number>;
       /** Writes to the clipboard (item name for the shop search). */
