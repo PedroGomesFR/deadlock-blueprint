@@ -3,7 +3,7 @@
  * build, the counters and what the player owns (tested in recommendations.test.ts).
  */
 import { DeadlockItem, HeroBuildArchetype, ITEMS_DB, TacticalRecommendation } from '../data/deadlockData';
-import type { MessageKey } from '../i18n';
+import type { Translate } from '../i18n';
 
 export const INVENTORY_SLOTS = 12;
 
@@ -16,9 +16,7 @@ export interface InventoryStatus {
 
 export interface QueueEntry {
   item: DeadlockItem;
-  reasonKey?: MessageKey; // generic reason (build phase)
-  counterReason?: string; // reason of a counter-item, already in the interface language
-  isCounter?: boolean;
+  reason: string;
   phase?: 'early' | 'mid' | 'late' | 'situational'; // phase of the active build that holds the item
 }
 
@@ -55,6 +53,12 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   return owned;
 }
 
+/** The counter items included in the purchase queue and highlighted in the interface. */
+export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => [
+  ...priorityItems.filter((r) => r.item.tier <= 2).slice(0, 2),
+  ...priorityItems.filter((r) => r.item.tier >= 3).slice(0, 2),
+];
+
 /**
  * Full purchase order of the build, counters included:
  * 1. first two early items, 2. urgent Tier 1-2 counters, 3. remaining early items, 4. first two mid items,
@@ -63,36 +67,32 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
 export function buildPurchaseOrder(
   build: HeroBuildArchetype,
   priorityItems: TacticalRecommendation['priorityItems'],
-  items: Record<string, DeadlockItem>
+  items: Record<string, DeadlockItem>,
+  t: Translate
 ): QueueEntry[] {
   const queue: QueueEntry[] = [];
   const seen = new Set<string>();
+  const counters = getPurchaseCounters(priorityItems);
   const phaseOf = (id: string): QueueEntry['phase'] =>
     (['early', 'mid', 'late', 'situational'] as const).find((p) => build.phases[p].includes(id));
 
-  const pushItem = (id: string, entry: Omit<QueueEntry, 'item' | 'phase'>) => {
+  const pushItem = (id: string, reason: string) => {
     if (seen.has(id)) return;
     const item = items[id];
     if (!item) return;
+    const counter = counters.find((r) => r.item.id === id);
+    if (counter) reason = counter.reasons[0] ?? t(item.tier <= 2 ? 'reason.laneCounter' : 'reason.teamfightCounter');
     seen.add(id);
-    queue.push({ item, phase: phaseOf(id), ...entry });
+    queue.push({ item, phase: phaseOf(id), reason });
   };
-  const pushCounter = (r: TacticalRecommendation['priorityItems'][number], fallback: MessageKey) =>
-    pushItem(r.item.id, r.reasons[0] ? { counterReason: r.reasons[0], isCounter: true } : { reasonKey: fallback, isCounter: true });
 
-  build.phases.early.slice(0, 2).forEach((id) => pushItem(id, { reasonKey: 'reason.earlyPriority' }));
-  priorityItems
-    .filter((r) => r.item.tier <= 2)
-    .slice(0, 2)
-    .forEach((r) => pushCounter(r, 'reason.laneCounter'));
-  build.phases.early.slice(2).forEach((id) => pushItem(id, { reasonKey: 'reason.earlyEnd' }));
-  build.phases.mid.slice(0, 2).forEach((id) => pushItem(id, { reasonKey: 'reason.midSpike' }));
-  priorityItems
-    .filter((r) => r.item.tier >= 3)
-    .slice(0, 2)
-    .forEach((r) => pushCounter(r, 'reason.teamfightCounter'));
-  build.phases.mid.slice(2).forEach((id) => pushItem(id, { reasonKey: 'reason.midCore' }));
-  build.phases.late.forEach((id) => pushItem(id, { reasonKey: 'reason.lateCore' }));
+  build.phases.early.slice(0, 2).forEach((id) => pushItem(id, t('reason.earlyPriority')));
+  counters.filter((r) => r.item.tier <= 2).forEach((r) => pushItem(r.item.id, t('reason.laneCounter')));
+  build.phases.early.slice(2).forEach((id) => pushItem(id, t('reason.earlyEnd')));
+  build.phases.mid.slice(0, 2).forEach((id) => pushItem(id, t('reason.midSpike')));
+  counters.filter((r) => r.item.tier >= 3).forEach((r) => pushItem(r.item.id, t('reason.teamfightCounter')));
+  build.phases.mid.slice(2).forEach((id) => pushItem(id, t('reason.midCore')));
+  build.phases.late.forEach((id) => pushItem(id, t('reason.lateCore')));
 
   return queue;
 }

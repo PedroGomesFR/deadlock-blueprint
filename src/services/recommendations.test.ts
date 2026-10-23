@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { HeroBuildArchetype, ITEMS_DB, TacticalRecommendation } from '../data/deadlockData';
+import { makeTranslate } from '../i18n';
 import {
   InventoryStatus,
   buildPurchaseOrder,
   effectiveOwnedSet,
   getComponentIds,
   getNextPurchases,
+  getPurchaseCounters,
   getSellCandidates,
   getSlotPlans,
   isInventoryFull,
   withLockedFirst,
 } from './recommendations';
+
+const t = makeTranslate('en');
 
 const build = (phases: Partial<HeroBuildArchetype['phases']>): HeroBuildArchetype => ({
   id: 'test',
@@ -51,25 +55,60 @@ describe('upgrade components', () => {
 });
 
 describe('purchase order', () => {
+  it('uses the same limited set of counters for the queue and highlighting', () => {
+    const ids = ['extra_spirit', 'extra_regen', 'extra_charge', 'boundless_spirit'];
+    const priorities = ids.map((id) => counter(id));
+    const selected = getPurchaseCounters(priorities).map((r) => r.item.id);
+    expect(selected).toEqual(['extra_spirit', 'extra_regen', 'boundless_spirit']);
+    const order = buildPurchaseOrder(build({}), priorities, ITEMS_DB, t);
+    expect(order.map((entry) => entry.item.id)).toEqual(selected);
+  });
+
+  it.each([
+    ['early', 'healbane'],
+    ['mid', 'boundless_spirit'],
+  ] as const)('keeps the counter explanation when the item is already in the first %s purchases', (phase, id) => {
+    const activeBuild = build({ [phase]: [id] });
+    const reason = 'Useful against the selected enemy';
+    const order = buildPurchaseOrder(activeBuild, [counter(id, reason)], ITEMS_DB, t);
+    expect(order.map((entry) => entry.item.id)).toEqual([id]);
+    expect(order[0]).toMatchObject({ phase, reason });
+  });
+
   it('interleaves the lane counters after the first two early items', () => {
-    const order = buildPurchaseOrder(BUILD, [counter('healbane'), counter('boundless_spirit')], ITEMS_DB).map((e) => e.item.id);
+    const order = buildPurchaseOrder(BUILD, [counter('healbane'), counter('boundless_spirit')], ITEMS_DB, t).map((e) => e.item.id);
     expect(order.slice(0, 3)).toEqual(['extra_spirit', 'extended_magazine', 'healbane']);
     expect(order).toContain('boundless_spirit');
     expect(new Set(order).size).toBe(order.length);
   });
 
   it('keeps the counter reason, and the phase of build items', () => {
-    const order = buildPurchaseOrder(BUILD, [counter('healbane', '[LANE] Anti-heal vs Abrams')], ITEMS_DB);
+    const order = buildPurchaseOrder(BUILD, [counter('healbane', '[LANE] Anti-heal vs Abrams')], ITEMS_DB, t);
     const healbane = order.find((e) => e.item.id === 'healbane')!;
-    expect(healbane.counterReason).toBe('[LANE] Anti-heal vs Abrams');
-    expect(healbane.isCounter).toBe(true);
-    expect(order[0].reasonKey).toBe('reason.earlyPriority');
+    expect(healbane.reason).toBe('[LANE] Anti-heal vs Abrams');
+    expect(order[0].reason).toBe(t('reason.earlyPriority'));
     expect(order[0].phase).toBe('early');
+  });
+
+  it('uses a translated fallback when a counter has no explanation', () => {
+    const withoutReason = { ...counter('healbane'), reasons: [] };
+    const order = buildPurchaseOrder(build({ early: ['healbane'] }), [withoutReason], ITEMS_DB, t);
+    expect(order[0].reason).toBe(t('reason.laneCounter'));
+  });
+
+  it('builds the reason text in the requested language without changing purchase order', () => {
+    const french = makeTranslate('fr');
+    const englishOrder = buildPurchaseOrder(BUILD, [], ITEMS_DB, t);
+    const frenchOrder = buildPurchaseOrder(BUILD, [], ITEMS_DB, french);
+    expect(englishOrder[0].reason).toBe(t('reason.earlyPriority'));
+    expect(frenchOrder[0].reason).toBe(french('reason.earlyPriority'));
+    expect(frenchOrder[0].reason).not.toBe(englishOrder[0].reason);
+    expect(frenchOrder.map((entry) => entry.item.id)).toEqual(englishOrder.map((entry) => entry.item.id));
   });
 });
 
 describe('next purchases', () => {
-  const order = buildPurchaseOrder(BUILD, [], ITEMS_DB);
+  const order = buildPurchaseOrder(BUILD, [], ITEMS_DB, t);
 
   it('never suggests an owned item nor a component consumed by an owned upgrade', () => {
     const next = getNextPurchases(order, ['boundless_spirit'], null, []).map((e) => e.item.id);
@@ -117,7 +156,7 @@ describe('inventory full', () => {
   it('shows "replaces" for an upgrade and "sell" for the others, never selling an upgraded component', () => {
     const owned = ['extra_spirit', 'extra_regen', 'healbane'];
     const full = status(owned, 12);
-    const shown = buildPurchaseOrder(BUILD, [], ITEMS_DB).filter((e) => ['improved_spirit', 'titanic_magazine'].includes(e.item.id));
+    const shown = buildPurchaseOrder(BUILD, [], ITEMS_DB, t).filter((e) => ['improved_spirit', 'titanic_magazine'].includes(e.item.id));
     const plans = getSlotPlans(shown, owned, full, getSellCandidates(full, BUILD, new Set()));
     expect(plans.get('improved_spirit')).toEqual({ kind: 'upgrade', itemId: 'extra_spirit' });
     expect(plans.get('titanic_magazine')).toEqual({ kind: 'sell', itemId: 'healbane' });

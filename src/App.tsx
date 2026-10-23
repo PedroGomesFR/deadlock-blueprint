@@ -40,6 +40,7 @@ import {
   InventoryStatus,
   QueueEntry,
   buildPurchaseOrder,
+  getPurchaseCounters,
   getNextPurchases,
   getSellCandidates,
   getSlotPlans,
@@ -380,8 +381,13 @@ export function App() {
    * component consumed by an owned upgrade, is skipped.
    */
   const purchaseOrder = useMemo(
-    () => buildPurchaseOrder(activeBuild, tacticalPlan.priorityItems, ITEMS),
-    [activeBuild, tacticalPlan.priorityItems, ITEMS]
+    () => buildPurchaseOrder(activeBuild, tacticalPlan.priorityItems, ITEMS, t),
+    [activeBuild, tacticalPlan.priorityItems, ITEMS, t]
+  );
+
+  const purchaseCounters = useMemo(
+    () => getPurchaseCounters(tacticalPlan.priorityItems),
+    [tacticalPlan.priorityItems]
   );
 
   const isFull = isInventoryFull(inventoryStatus);
@@ -839,8 +845,6 @@ export function App() {
     return parts.join(' · ');
   };
 
-  const reasonText = (entry: QueueEntry) => entry.counterReason ?? (entry.reasonKey ? t(entry.reasonKey) : '');
-
   const inventoryLabel = inventoryStatus
     ? t('inv.label', inventoryStatus.occupied, INVENTORY_SLOTS - inventoryStatus.locked, isFull)
     : t('inv.ownedCount', ownedItems.length);
@@ -1001,7 +1005,7 @@ export function App() {
                     <div
                       key={entry.item.id}
                       onClick={() => handleToggleOwnedItem(entry.item.id)}
-                      title={[reasonText(entry), whyText(entry)].filter(Boolean).join('\n')}
+                      title={[entry.reason, whyText(entry)].filter(Boolean).join('\n')}
                       className={`p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
                         canAfford
                           ? 'bg-emerald-950/50 border-emerald-400 shadow-lg'
@@ -1458,7 +1462,8 @@ export function App() {
                   {/* Top 6 Immediate Next Buys */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                     {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
-                      const { item, isCounter } = entry;
+                      const { item } = entry;
+                      const isCounter = purchaseCounters.some((counter) => counter.item.id === item.id);
                       const canAfford = currentSouls !== null && currentSouls >= item.cost;
                       const missingSouls =
                         currentSouls !== null && currentSouls < item.cost ? item.cost - currentSouls : null;
@@ -1539,9 +1544,9 @@ export function App() {
                           <div className="pt-1 border-t border-white/10 flex items-center justify-between text-small">
                             <span
                               className={`truncate font-semibold ${isCounter ? 'text-orange-300' : 'text-slate-300'}`}
-                              title={reasonText(entry)}
+                              title={entry.reason}
                             >
-                              {reasonText(entry)}
+                              {entry.reason}
                             </span>
                             <span className="px-2 py-0.5 rounded bg-white/10 hover:bg-emerald-500/30 text-slate-200 font-bold flex items-center gap-1 shrink-0">
                               {t('buy.skip')}
