@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.5] — 2026-10-23
+
+### Fixed
+- **A counter item that is also in your build now says why it counters your enemies.** When an item was both in the build and recommended against your opponents (Healbane against a healer, Reactive Barrier against a hook…), the card showed the generic build text ("End of the early lane phase") instead of "[LANE] Anti-heal (-40%) against Solomon", and it was not highlighted as a counter. The purchase order is unchanged. Thanks to [@vshtykhnov](https://github.com/vshtykhnov) ([#3](https://github.com/PedroGomesFR/deadlock-blueprint/pull/3)).
+
 ## [1.4.4] — 2026-10-23
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
   "name": "deadlock-tactical-autobuild",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Real-time build coach and overlay for Deadlock: reads the game screen and tells you what to buy next.",
   "author": "Pedro Gomes",
   "license": "MIT",
