@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T21:28:08.714Z",
+  "generatedAt": "2026-10-26T11:39:38.619Z",
   "items": {
     "extended_magazine": {
       "id": "extended_magazine",
@@ -1282,9 +1282,9 @@
       "cost": 6400,
       "isActive": false,
       "upgradesFrom": ["spirit_lifesteal"],
-      "descriptionFr": "Augmente votre cadence de tir, votre pouvoir spirituel et votre vol de vie spirituel. L'effet gagne en puissance à mesure que vous tirez sur des occultistes adverses.",
-      "descriptionEn": "Gain bonus Fire Rate, Spirit Power and Spirit Lifesteal by charging up when shooting enemy heroes.",
-      "descriptionIt": "Ottieni cadenza di fuoco, potere spirituale e prosciugamento della salute spirituale bonus quando carichi l'effetto facendo fuoco su eroi nemici.",
+      "descriptionFr": "Augmente votre cadence de tir, votre pouvoir spirituel et votre vol de vie spirituel. L'effet gagne en puissance à mesure que vous tirez sur des occultistes.",
+      "descriptionEn": "Gain bonus Fire Rate, Spirit Power and Spirit Lifesteal by charging up when shooting heroes.",
+      "descriptionIt": "Ottieni cadenza di fuoco, potere spirituale e prosciugamento della salute spirituale bonus quando carichi l'effetto sparando agli eroi.",
       "statsFr": ["+13% Durée de capacité", "+13% Vol de vie spirituel", "+90 PV bonus", "+6 Pouvoir spirituel", "1.08% Accumulation par tir"],
       "statsEn": ["+13% Ability Duration", "+13% Spirit Lifesteal", "+90 Bonus Health", "+6 Spirit Power", "1.08% Buildup Per Shot"],
       "statsIt": ["+13% Durata dell'abilità", "+13% Prosciug. salute spirituale", "+90 PS bonus", "+6 Potere spirituale", "1.08% Accumulo per sparo"],
@@ -2846,9 +2846,9 @@
       "cost": 3200,
       "isActive": false,
       "upgradesFrom": ["extended_magazine"],
-      "descriptionFr": "Accorde de la résistance aux balles quand vos balles touchent une unité occultiste ennemie.Chaque tir ne peut accorder qu'une charge.",
-      "descriptionEn": "Grants Bullet Resist when your bullets hit an enemy hero. Each shot can only grant one stack.",
-      "descriptionIt": "Fornisce resistenza balistica quando i tuoi proiettili colpiscono un eroe nemico. Ogni sparo fornisce una sola istanza.",
+      "descriptionFr": "Accorde de la résistance aux balles quand vos balles touchent une unité occultiste. Chaque tir ne peut accorder qu'une charge.",
+      "descriptionEn": "Grants Bullet Resist when your bullets hit a hero. Each shot can only grant one stack.",
+      "descriptionIt": "Conferisce resistenza balistica quando i tuoi proiettili colpiscono un eroe. Ogni sparo fornisce una sola istanza.",
       "statsFr": ["+35% Mun. max.", "+75 PV bonus", "+18% Dégâts des armes", "2% Résistance aux balles par charge", "24s Durée de la charge"],
       "statsEn": ["+35% Max Ammo", "+75 Bonus Health", "+18% Weapon Damage", "2% Bullet Resist per Stack", "24s Stack Duration"],
       "statsIt": ["+35% Munizioni max", "+75 PS bonus", "+18% Danni da arma", "2% Resistenza balistica per istanza", "24s Durata dell'istanza"],
