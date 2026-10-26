@@ -700,6 +700,11 @@ export const EN_HEROES: Record<string, TranslatedHeroText> = {
     baseTips:
       'Lay down Strix Salvo (1), then finish marked targets with a charged shot. The jetpack (2) overheats: plan your explosive landing in the middle of the enemies.',
   },
+  nurse_harrow: {
+    role: 'Spirit healer, leeches & area terror',
+    baseTips:
+      'Healing Needles (3) heal your allies whenever you deal damage: stay within shooting range. Lurking Terrors (4) makes enemies who look at you flee: cast it facing their line to break up their engage.',
+  },
 };
 
 const englishPart = (name: string) => (name.match(/\(([^)]+)\)/)?.[1] ?? name).trim();
