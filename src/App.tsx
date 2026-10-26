@@ -40,6 +40,7 @@ import {
   InventoryStatus,
   QueueEntry,
   buildPurchaseOrder,
+  effectiveOwnedSet,
   getPurchaseCounters,
   getNextPurchases,
   getSellCandidates,
@@ -398,9 +399,19 @@ export function App() {
     [inventoryStatus, activeBuild, tacticalPlan.priorityItems]
   );
 
+  // Owned items plus the components they consumed (owning Greater Expansion means Mystic Expansion is done)
+  const effectiveOwned = useMemo(() => effectiveOwnedSet(ownedItems), [ownedItems]);
+
   const rawNextToBuyQueue = useMemo(
-    () => getNextPurchases(purchaseOrder, ownedItems, inventoryStatus, sellCandidates),
-    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates]
+    () =>
+      getNextPurchases(
+        purchaseOrder,
+        ownedItems,
+        inventoryStatus,
+        sellCandidates,
+        (itemId) => getHeroItemStat(myHeroId, itemId)?.buyTimeS
+      ),
+    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates, myHeroId]
   );
 
   // The #1 stays locked until it is bought or skipped (or the hero/build changes):
@@ -1581,7 +1592,7 @@ export function App() {
                 </div>
 
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
-                {tacticalPlan.priorityItems.filter((rec) => !ownedItems.includes(rec.item.id)).length > 0 && (
+                {tacticalPlan.priorityItems.filter((rec) => !effectiveOwned.has(rec.item.id)).length > 0 && (
                   <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
                     <span className="text-body font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5 text-orange-400" />{' '}
@@ -1589,7 +1600,7 @@ export function App() {
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                       {tacticalPlan.priorityItems
-                        .filter((rec) => !ownedItems.includes(rec.item.id))
+                        .filter((rec) => !effectiveOwned.has(rec.item.id))
                         .slice(0, 3)
                         .map((rec) => (
                           <ItemCard
@@ -1614,7 +1625,7 @@ export function App() {
                       { key: 'late', title: t('phases.late'), accent: 'text-teal-300 border-teal-500/30' },
                     ] as const
                   ).map((col) => {
-                    const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !ownedItems.includes(id));
+                    const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !effectiveOwned.has(id));
                     return (
                       <div key={col.key} className={`p-3 rounded-xl bg-deadlock-panel border ${col.accent} space-y-2`}>
                         <h3 className="font-display text-body font-extrabold uppercase tracking-wider">{col.title}</h3>
@@ -1713,7 +1724,7 @@ export function App() {
                           <ItemCard
                             key={itemId}
                             item={item}
-                            isOwned={ownedItems.includes(itemId)}
+                            isOwned={effectiveOwned.has(itemId)}
                             onToggleOwned={handleToggleOwnedItem}
                           />
                         ) : null;

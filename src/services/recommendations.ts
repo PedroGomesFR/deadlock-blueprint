@@ -53,11 +53,21 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   return owned;
 }
 
-/** The counter items included in the purchase queue and highlighted in the interface. */
-export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => [
-  ...priorityItems.filter((r) => r.item.tier <= 2).slice(0, 2),
-  ...priorityItems.filter((r) => r.item.tier >= 3).slice(0, 2),
-];
+/**
+ * A counter only goes into the purchase queue when the threat is real: it answers the enemy in my lane, or
+ * at least two different enemies (one team enemy alone is not worth bending the build for).
+ */
+const isStrongCounter = (r: TacticalRecommendation['priorityItems'][number]) =>
+  r.urgency === 'Critique (En Face / Lane)' || r.reasons.length >= 2;
+
+/**
+ * The counter items included in the purchase queue and highlighted in the interface: at most one Tier 1-2
+ * and one Tier 3-4, so that following the queue still follows the build.
+ */
+export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => {
+  const strong = priorityItems.filter(isStrongCounter);
+  return [...strong.filter((r) => r.item.tier <= 2).slice(0, 1), ...strong.filter((r) => r.item.tier >= 3).slice(0, 1)];
+};
 
 /**
  * Full purchase order of the build, counters included:
@@ -131,15 +141,34 @@ export function getUpgradedComponent(itemId: string, ownedItems: string[]): stri
 }
 
 /**
+ * Orders entries by the average time players buy them. Entries without a known time keep their own position,
+ * the others are sorted (stable) into the positions of the timed ones.
+ */
+export function sortByBuyTime(queue: QueueEntry[], buyTimeS?: (itemId: string) => number | undefined): QueueEntry[] {
+  if (!buyTimeS) return queue;
+  const timed = queue
+    .map((entry, index) => ({ entry, index, time: buyTimeS(entry.item.id) }))
+    .filter((e): e is { entry: QueueEntry; index: number; time: number } => e.time !== undefined);
+  const sorted = [...timed].sort((a, b) => a.time - b.time || a.index - b.index);
+  const result = [...queue];
+  timed.forEach((slot, i) => {
+    result[slot.index] = sorted[i].entry;
+  });
+  return result;
+}
+
+/**
  * Next purchases, nothing owned (nor consumed by an owned upgrade). With a full inventory, an item needing a
  * free slot must be worth at least the weakest item it replaces. Once the early slots are filled (4+ items, or
- * 3+ Tier 1), the mid / late items come first.
+ * 3+ Tier 1), the mid / late items come first. With `buyTimeS`, each of those groups is ordered by the time
+ * players usually buy the item.
  */
 export function getNextPurchases(
   order: QueueEntry[],
   ownedItems: string[],
   status: InventoryStatus | null,
-  sellCandidates: string[]
+  sellCandidates: string[],
+  buyTimeS?: (itemId: string) => number | undefined
 ): QueueEntry[] {
   const owned = effectiveOwnedSet(ownedItems);
   let unowned = order.filter((entry) => !owned.has(entry.item.id));
@@ -155,9 +184,9 @@ export function getNextPurchases(
   if (ownedItems.length >= 4 || ownedTier1Count >= 3) {
     const midAndLate = unowned.filter((entry) => entry.item.tier >= 2);
     const leftoverEarly = unowned.filter((entry) => entry.item.tier === 1);
-    return [...midAndLate, ...leftoverEarly];
+    return [...sortByBuyTime(midAndLate, buyTimeS), ...sortByBuyTime(leftoverEarly, buyTimeS)];
   }
-  return unowned;
+  return sortByBuyTime(unowned, buyTimeS);
 }
 
 /** The locked #1 first, the rest in order. */
