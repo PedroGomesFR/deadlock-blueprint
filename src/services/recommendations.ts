@@ -53,11 +53,21 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   return owned;
 }
 
-/** The counter items included in the purchase queue and highlighted in the interface. */
-export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => [
-  ...priorityItems.filter((r) => r.item.tier <= 2).slice(0, 2),
-  ...priorityItems.filter((r) => r.item.tier >= 3).slice(0, 2),
-];
+/**
+ * A counter only goes into the purchase queue when the threat is real: it answers the enemy in my lane, or
+ * at least two different enemies (one team enemy alone is not worth bending the build for).
+ */
+const isStrongCounter = (r: TacticalRecommendation['priorityItems'][number]) =>
+  r.urgency === 'Critique (En Face / Lane)' || r.reasons.length >= 2;
+
+/**
+ * The counter items included in the purchase queue and highlighted in the interface: at most one Tier 1-2
+ * and one Tier 3-4, so that following the queue still follows the build.
+ */
+export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => {
+  const strong = priorityItems.filter(isStrongCounter);
+  return [...strong.filter((r) => r.item.tier <= 2).slice(0, 1), ...strong.filter((r) => r.item.tier >= 3).slice(0, 1)];
+};
 
 /**
  * Full purchase order of the build, counters included:

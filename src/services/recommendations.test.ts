@@ -28,10 +28,14 @@ const build = (phases: Partial<HeroBuildArchetype['phases']>): HeroBuildArchetyp
   laneTips: { solo: '', duo: '', yellow_purple: '', orange_blue: '' },
 });
 
-const counter = (id: string, reason = `Counters X`): TacticalRecommendation['priorityItems'][number] => ({
+const counter = (
+  id: string,
+  reason = `Counters X`,
+  urgency: TacticalRecommendation['priorityItems'][number]['urgency'] = 'Critique (En Face / Lane)'
+): TacticalRecommendation['priorityItems'][number] => ({
   item: ITEMS_DB[id],
   reasons: [reason],
-  urgency: 'Haute (Teamfight / Mid)',
+  urgency,
 });
 
 const status = (itemIds: string[], occupied: number, locked = 0): InventoryStatus => ({
@@ -59,9 +63,24 @@ describe('purchase order', () => {
     const ids = ['extra_spirit', 'extra_regen', 'extra_charge', 'boundless_spirit'];
     const priorities = ids.map((id) => counter(id));
     const selected = getPurchaseCounters(priorities).map((r) => r.item.id);
-    expect(selected).toEqual(['extra_spirit', 'extra_regen', 'boundless_spirit']);
+    expect(selected).toEqual(['extra_spirit', 'boundless_spirit']);
     const order = buildPurchaseOrder(build({}), priorities, ITEMS_DB, t);
     expect(order.map((entry) => entry.item.id)).toEqual(selected);
+  });
+
+  it('ignores a counter against a single team enemy, keeps lane counters and counters against two enemies', () => {
+    const teamOnly = counter('healbane', '[TEAM] Anti-heal vs Abrams', 'Haute (Teamfight / Mid)');
+    expect(getPurchaseCounters([teamOnly])).toEqual([]);
+    const twoEnemies = { ...teamOnly, reasons: ['[TEAM] Anti-heal vs Abrams', '[TEAM] Anti-heal vs Kelvin'] };
+    expect(getPurchaseCounters([twoEnemies]).map((r) => r.item.id)).toEqual(['healbane']);
+    const lane = counter('healbane', '[LANE] Anti-heal vs Abrams');
+    expect(getPurchaseCounters([lane]).map((r) => r.item.id)).toEqual(['healbane']);
+  });
+
+  it('leaves the build untouched when no counter is strong enough', () => {
+    const teamOnly = counter('healbane', '[TEAM] Anti-heal vs Abrams', 'Haute (Teamfight / Mid)');
+    const withCounter = buildPurchaseOrder(BUILD, [teamOnly], ITEMS_DB, t).map((e) => e.item.id);
+    expect(withCounter).toEqual(buildPurchaseOrder(BUILD, [], ITEMS_DB, t).map((e) => e.item.id));
   });
 
   it.each([
