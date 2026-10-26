@@ -399,8 +399,15 @@ export function App() {
   );
 
   const rawNextToBuyQueue = useMemo(
-    () => getNextPurchases(purchaseOrder, ownedItems, inventoryStatus, sellCandidates),
-    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates]
+    () =>
+      getNextPurchases(
+        purchaseOrder,
+        ownedItems,
+        inventoryStatus,
+        sellCandidates,
+        (itemId) => getHeroItemStat(myHeroId, itemId)?.buyTimeS
+      ),
+    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates, myHeroId]
   );
 
   // The #1 stays locked until it is bought or skipped (or the hero/build changes):

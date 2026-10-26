@@ -132,6 +132,20 @@ describe('next purchases', () => {
     expect(next.every((e) => e.item.tier >= 2)).toBe(true);
   });
 
+  it('orders by the usual buy time, items without a time keeping their position', () => {
+    const times: Record<string, number> = { titanic_magazine: 600, improved_spirit: 1200, boundless_spirit: 300 };
+    const next = getNextPurchases(order, ['extra_spirit', 'extended_magazine', 'extra_regen'], null, [], (id) => times[id]);
+    const ids = next.map((e) => e.item.id);
+    const noTimes = getNextPurchases(order, ['extra_spirit', 'extended_magazine', 'extra_regen'], null, []).map((e) => e.item.id);
+    const timedIds = ids.filter((id) => id in times);
+    expect(timedIds).toEqual(['boundless_spirit', 'titanic_magazine', 'improved_spirit']);
+    // untimed entries stay where they were, early leftovers stay last
+    ids.forEach((id, i) => {
+      if (!(id in times)) expect(noTimes[i]).toBe(id);
+    });
+    expect(ids.at(-1)).toBe('extra_charge');
+  });
+
   it('keeps the locked #1 first', () => {
     const next = getNextPurchases(order, [], null, []);
     const locked = withLockedFirst(next, next[3].item.id);
