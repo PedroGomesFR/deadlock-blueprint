@@ -93,6 +93,8 @@ export const MESSAGES_IT: Messages = {
   'why.meta': (pick, rank, hero) => `Comprato nel ${pick} delle partite ${rank} con ${hero}`,
   'why.winRate': (wr) => `${wr} di vittorie quando viene comprato`,
   'why.buyTime': (time) => `comprato di solito verso ${time}`,
+  'imbue.label': 'Imbevi su',
+  'imbue.title': (share, builds) => `La maggior parte dei giocatori imbeve questo oggetto su questa abilità: ${share} di ${builds} build pubblicate`,
   'why.published': 'Nella build pubblicata con il miglior tasso di vittoria',
   'why.handBuild': 'Nella build scelta',
 

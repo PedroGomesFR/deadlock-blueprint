@@ -25,6 +25,8 @@ import {
   LaneMode,
   formatPercent,
   generateTacticalPlan,
+  getAbilityIcon,
+  getHeroImbueTarget,
   getHeroItemStat,
   getHeroMetaInfo,
   getHeroesDb,
@@ -856,6 +858,32 @@ export function App() {
     return parts.join(' · ');
   };
 
+  /** "Imbue on [ability icon] Name 53 %" under an imbue item, when most published builds agree on the ability. */
+  const renderImbueHint = (itemId: string, compact = false) => {
+    const imbue = getHeroImbueTarget(myHeroId, itemId, lang);
+    if (!imbue) return null;
+    const icon = getAbilityIcon(myHeroId, imbue.ability);
+    const share = `${Math.round(imbue.share * 100)}${lang === 'fr' ? ' %' : '%'}`;
+    const size = compact ? 16 : 20;
+    return (
+      <div
+        className={`flex items-center gap-1.5 rounded-lg border font-bold bg-violet-500/15 border-violet-400/40 text-violet-200 ${
+          compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
+        } text-small`}
+        title={t('imbue.title', share, imbue.builds)}
+      >
+        <span className="shrink-0">{t('imbue.label')}</span>
+        {icon ? (
+          <img src={icon} alt="" style={{ width: size, height: size }} className="shrink-0 object-contain" draggable={false} />
+        ) : (
+          <span className="shrink-0 rounded bg-amber-500 px-1 text-black">{imbue.ability}</span>
+        )}
+        <span className={compact ? 'min-w-0' : 'truncate'}>{imbue.abilityName}</span>
+        <span className="shrink-0 font-semibold text-violet-300/80">{share}</span>
+      </div>
+    );
+  };
+
   const inventoryLabel = inventoryStatus
     ? t('inv.label', inventoryStatus.occupied, INVENTORY_SLOTS - inventoryStatus.locked, isFull)
     : t('inv.ownedCount', ownedItems.length);
@@ -1035,6 +1063,7 @@ export function App() {
                           </div>
                           <ShopTabMarker category={entry.item.category} />
                           {renderSlotPlan(entry.item.id, true)}
+                          {renderImbueHint(entry.item.id, true)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
@@ -1541,6 +1570,7 @@ export function App() {
                             </div>
 
                             {renderSlotPlan(item.id)}
+                            {renderImbueHint(item.id)}
 
                             {/* Why this item: meta statistics of this hero */}
                             {why && (

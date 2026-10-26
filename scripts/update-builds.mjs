@@ -36,6 +36,8 @@ const WINDOW_DAYS = 30;
 const BADGE_LADDER = [81, 71, 51, 0];
 const BADGE_LABELS = { 81: 'Oracle+', 71: 'Archon+', 51: 'Ritualist+', 0: 'Tous rangs' };
 const MIN_HERO_MATCHES = 3000; // parties minimum pour qu'un palier de rang soit retenu
+const IMBUE_BUILD_SAMPLE = 100; // published builds read per hero to see where players put imbue items
+const IMBUE_MIN_BUILDS = 5; // an imbue item needs this many builds with a target to be kept
 const MIN_BUILD_MATCHES = 100; // parties minimum pour qu'un build publié soit retenu
 const ANALYTICS_DELAY_MS = 350; // limite API : 200 requêtes / minute sur /v1/analytics
 
@@ -391,6 +393,45 @@ function phasesFromPublishedBuild(heroBuild, catalog) {
   return phases;
 }
 
+/**
+ * Where players put imbue items: itemId -> [builds, builds on ability 1, 2, 3, 4], read from the hero's most
+ * favourited published builds (`imbue_target_ability_id`). One count per build and item, so a build that
+ * imbues the same item twice does not weigh double. Popularity of the builds, not their win rate.
+ * Optional data: a failed or empty answer returns undefined and nothing else is affected.
+ */
+async function imbueTargetsFromBuilds(heroApiId, catalog, slotByAbilityId) {
+  let found;
+  try {
+    found = await fetchJson('/v1/builds', {
+      hero_id: heroApiId,
+      only_latest: true,
+      sort_by: 'weekly_favorites',
+      limit: IMBUE_BUILD_SAMPLE,
+    });
+  } catch (err) {
+    console.warn(`  ⚠ builds publiés indisponibles pour les cibles d'imprégnation : ${err.message}`);
+    return undefined;
+  }
+  const counts = {};
+  for (const entry of Array.isArray(found) ? found : []) {
+    const seen = new Set();
+    for (const cat of entry.hero_build?.details?.mod_categories || []) {
+      for (const mod of cat.mods || []) {
+        if (!mod.imbue_target_ability_id) continue;
+        const item = catalog.byApiId.get(mod.ability_id);
+        const slot = slotByAbilityId.get(mod.imbue_target_ability_id);
+        if (!item || !slot || seen.has(`${item.id}|${slot}`)) continue; // target outside this hero's four abilities
+        seen.add(`${item.id}|${slot}`);
+        counts[item.id] ??= [0, 0, 0, 0, 0];
+        counts[item.id][0]++;
+        counts[item.id][Number(slot)]++;
+      }
+    }
+  }
+  const out = Object.fromEntries(Object.entries(counts).filter(([, c]) => c[0] >= IMBUE_MIN_BUILDS));
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** Ordre de maximisation des sorts : ordre dans lequel chaque sort reçoit sa 4e occurrence (déblocage + 3 améliorations). */
 function maxOrderFromSequence(sequence, slotByAbilityId) {
   const counts = new Map();
@@ -612,6 +653,7 @@ async function main() {
       abilities,
       builds,
       itemStats: compactItemStats(rows),
+      imbueTargets: await imbueTargetsFromBuilds(hero.id, catalog, slotByAbilityId),
     };
     const b0 = builds[0].phases;
     console.log(
@@ -669,6 +711,10 @@ function validateGenerated(catalogJson, metaJson) {
   for (const [id, h] of heroList) {
     if (!h.builds?.length) errors.push(`${id} : aucun build`);
     if (h.abilities?.length !== 4) errors.push(`${id} : ${h.abilities?.length ?? 0} sorts`);
+    for (const [itemId, c] of Object.entries(h.imbueTargets || {})) {
+      if (!items[itemId]) errors.push(`${id} : objet d'imprégnation inconnu ${itemId}`);
+      if (!Array.isArray(c) || c.length !== 5 || c.some((n) => !Number.isInteger(n) || n < 0)) errors.push(`${id}/${itemId} : cibles d'imprégnation invalides`);
+    }
     for (const b of h.builds || []) {
       const n = b.phases.early.length + b.phases.mid.length + b.phases.late.length;
       if (n < 6) errors.push(`${id}/${b.kind} : ${n} objets`);

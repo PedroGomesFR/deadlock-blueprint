@@ -102,6 +102,8 @@ export const MESSAGES_FR = {
     `Acheté dans ${pick} des parties ${rank} ${/^[aeiou]/i.test(hero) ? 'd’' : 'de '}${hero}`,
   'why.winRate': (wr: string) => `${wr} de victoires quand il est acheté`,
   'why.buyTime': (time: string) => `acheté vers ${time} en moyenne`,
+  'imbue.label': 'Imprégner sur',
+  'imbue.title': (share: string, builds: number) => `La plupart des joueurs imprègnent cet objet sur ce sort : ${share} des ${builds} builds publiés`,
   'why.published': 'Dans le build publié au meilleur taux de victoire',
   'why.handBuild': 'Dans le build choisi',
 

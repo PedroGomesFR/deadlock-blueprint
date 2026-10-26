@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { HEROES_DB, ITEMS_DB, generateTacticalPlan, getHeroesDb, getItemsDb, getLanes } from './deadlockData';
+import { HEROES_DB, ITEMS_DB, generateTacticalPlan, getHeroImbueTarget, getHeroesDb, getItemsDb, getLanes } from './deadlockData';
 import { EN_HEROES } from './deadlockData.en';
 import { IT_HEROES } from './deadlockData.it';
 import { getMetaData } from './dataSource';
@@ -217,5 +217,42 @@ describe('interface texts', () => {
       .map(([key, m]) => [key, typeof m === 'function' ? (m as (...a: unknown[]) => string)('x', 1, 1) : m] as const)
       .filter(([, text]) => FRENCH_IN_ITALIAN.test(text) || ENGLISH.test(text));
     expect(wrong).toEqual([]);
+  });
+});
+
+describe('imbue targets', () => {
+  type MetaWithImbue = { heroes: Record<string, { imbueTargets?: Record<string, number[]> }> };
+  const hero = () => (getMetaData() as unknown as MetaWithImbue).heroes.nurse_harrow;
+
+  const withTargets = (targets: Record<string, number[]> | undefined, run: () => void) => {
+    const before = hero().imbueTargets;
+    hero().imbueTargets = targets;
+    try {
+      run();
+    } finally {
+      hero().imbueTargets = before;
+    }
+  };
+
+  it('names the ability most builds imbue the item on, in the interface language', () => {
+    withTargets({ compress_cooldown: [20, 12, 4, 3, 1] }, () => {
+      expect(getHeroImbueTarget('nurse_harrow', 'compress_cooldown', 'en')).toMatchObject({
+        ability: '1',
+        abilityName: 'Leech Therapy',
+        share: 0.6,
+        builds: 20,
+      });
+      expect(getHeroImbueTarget('nurse_harrow', 'compress_cooldown', 'fr')?.abilityName).toBe('Saignée salutaire');
+    });
+  });
+
+  it('gives no hint when no ability stands out, or without data', () => {
+    withTargets({ compress_cooldown: [20, 7, 6, 4, 3] }, () => {
+      expect(getHeroImbueTarget('nurse_harrow', 'compress_cooldown', 'en')).toBeUndefined();
+    });
+    withTargets(undefined, () => {
+      expect(getHeroImbueTarget('nurse_harrow', 'compress_cooldown', 'en')).toBeUndefined();
+    });
+    expect(getHeroImbueTarget('unknown_hero', 'compress_cooldown', 'en')).toBeUndefined();
   });
 });
