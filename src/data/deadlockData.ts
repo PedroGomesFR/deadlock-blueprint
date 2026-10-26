@@ -2315,6 +2315,8 @@ interface GeneratedHeroMeta {
   builds: GeneratedBuild[];
   /** itemId -> [share of the games where it was bought, smoothed win rate, average buy time (s)] */
   itemStats?: Record<string, [number, number, number]>;
+  /** imbue item id -> [builds, builds imbuing ability 1, 2, 3, 4], from the hero's published builds (optional field) */
+  imbueTargets?: Record<string, [number, number, number, number, number]>;
 }
 
 const generatedHeroes = () =>
@@ -2537,6 +2539,31 @@ export interface HeroItemStat {
 export function getHeroItemStat(heroId: string, itemId: string): HeroItemStat | undefined {
   const row = generatedHeroes()[heroId]?.itemStats?.[itemId];
   return row ? { pickRate: row[0], winRate: row[1], buyTimeS: row[2] } : undefined;
+}
+
+export interface HeroImbueTarget {
+  ability: AbilityKey;
+  abilityName: string; // official name in the interface language
+  share: number; // share of the builds imbuing this item that put it on this ability
+  builds: number; // builds imbuing this item
+}
+
+/** Minimum share for a hint: below it no ability stands out and a hint would only mislead. */
+const IMBUE_HINT_MIN_SHARE = 0.4;
+
+/** The ability players most often imbue this item on, when one stands out. */
+export function getHeroImbueTarget(heroId: string, itemId: string, lang: Lang): HeroImbueTarget | undefined {
+  const hero = generatedHeroes()[heroId];
+  const counts = hero?.imbueTargets?.[itemId];
+  if (!hero || !counts || counts[0] <= 0) return undefined;
+  const slots = (['1', '2', '3', '4'] as const).map((key, i) => ({ key, count: counts[i + 1] }));
+  const top = slots.reduce((a, b) => (b.count > a.count ? b : a));
+  const share = top.count / counts[0];
+  if (top.count === 0 || share < IMBUE_HINT_MIN_SHARE) return undefined;
+  const ability = hero.abilities.find((a) => a.key === top.key);
+  if (!ability) return undefined;
+  const abilityName = { fr: ability.nameFr, en: ability.nameEn, it: ability.nameIt || ability.nameEn }[lang];
+  return { ability: top.key, abilityName, share, builds: counts[0] };
 }
 
 /** Rank bracket, games and win rate of the hero in the generated statistics. */

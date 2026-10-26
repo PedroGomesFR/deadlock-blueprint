@@ -93,6 +93,8 @@ export const MESSAGES_EN: Messages = {
   'why.meta': (pick, rank, hero) => `Bought in ${pick} of ${rank} ${hero} games`,
   'why.winRate': (wr) => `${wr} win rate with it`,
   'why.buyTime': (time) => `usually bought around ${time}`,
+  'imbue.label': 'Imbue on',
+  'imbue.title': (share, builds) => `Most players imbue this item on this ability: ${share} of ${builds} published builds`,
   'why.published': 'In the published build with the best win rate',
   'why.handBuild': 'In the selected build',
 
