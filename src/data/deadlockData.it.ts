@@ -690,6 +690,11 @@ export const IT_HEROES: Record<string, TranslatedHeroText> = {
     baseTips:
       "Lancia Strix Salvo (1), poi finisci i bersagli marcati con un colpo caricato. Il jetpack (2) si surriscalda: prepara il tuo atterraggio esplosivo in mezzo ai nemici.",
   },
+  nurse_harrow: {
+    role: "Guaritrice spirituale, sanguisughe e terrore ad area",
+    baseTips:
+      "Healing Needles (3) curano i tuoi alleati quando infliggi danni: resta a portata di tiro. Lurking Terrors (4) fa fuggire i nemici che ti guardano: lanciala di fronte alla loro linea per spezzare il loro ingaggio.",
+  },
 };
 
 const englishPart = (name: string) => (name.match(/\(([^)]+)\)/)?.[1] ?? name).trim();
