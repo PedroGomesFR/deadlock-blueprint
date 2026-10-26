@@ -4,7 +4,6 @@
  * returns a compact summary of what it read.
  */
 import { loadGameData } from '../data/dataSource';
-import { hdrCaptureValue } from '../services/hdrToneMap';
 import type { VisionDetectionResult } from '../services/visionScanner';
 
 export interface SimulatedLayout {
@@ -23,8 +22,6 @@ export interface ReplayJob {
   heroId?: string;
   buildItemIds?: string[];
   simulateLayout?: SimulatedLayout;
-  /** Captured on an HDR screen with this gain (SDR white / 80 nits, hdrToneMap.ts) */
-  simulateHdr?: number;
 }
 
 export interface ReplaySummary {
@@ -78,29 +75,7 @@ function summarize(d: VisionDetectionResult): ReplaySummary {
   };
 }
 
-/** The frame as an HDR screen capture with this gain gives it (measured: linear light, scaled, clipped). */
-async function simulateHdrCapture(frame: ImageBitmap, gain: number): Promise<ImageBitmap> {
-  const canvas = document.createElement('canvas');
-  canvas.width = frame.width;
-  canvas.height = frame.height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(frame, 0, 0);
-  frame.close();
-  const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const lut = Array.from({ length: 256 }, (_, v) => hdrCaptureValue(v, gain));
-  for (let i = 0; i < image.data.length; i += 4) {
-    for (let c = 0; c < 3; c++) image.data[i + c] = lut[image.data[i + c]];
-  }
-  ctx.putImageData(image, 0, 0);
-  return createImageBitmap(canvas);
-}
-
 async function composeFrame(job: ReplayJob): Promise<ImageBitmap> {
-  const frame = await composeSdrFrame(job);
-  return job.simulateHdr ? simulateHdrCapture(frame, job.simulateHdr) : frame;
-}
-
-async function composeSdrFrame(job: ReplayJob): Promise<ImageBitmap> {
   const images = await Promise.all(
     job.parts.map(async (p) => ({ p, bitmap: await createImageBitmap(new Blob([await api.readFile(p.file)])) }))
   );

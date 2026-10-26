@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.7] — 2026-10-26
+
+### Fixed
+- **Items you bought are recognised again without HDR.** The HDR correction of 1.4.6 made some items you had bought go unrecognised on screens without HDR, so they stayed in "Buy right now". It is removed for now: with Windows HDR on, the app detects nothing again. Turn HDR off while playing (Settings › Display › Use HDR) until HDR is supported properly.
+
 ## [1.4.6] — 2026-10-26
 
 ### Fixed

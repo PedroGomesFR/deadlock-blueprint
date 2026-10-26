@@ -114,7 +114,6 @@ export const DiagnosticsTab: React.FC<DiagnosticsTabProps> = ({
               <span className={isSupportedFormat(d.frameWidth, d.frameHeight) ? 'text-emerald-300' : 'text-red-300 font-bold'}>
                 {d.frameWidth}×{d.frameHeight}
               </span>
-              {d.hdrGain !== undefined && <span className="text-slate-400"> · HDR ×{d.hdrGain.toFixed(2)}</span>}
             </Row>
             <Row label={t('diag.mode')}>
               {d.shopOpen ? t('diag.mode.shop') : d.hudVisible ? t('diag.mode.hud') : t('diag.mode.other')}

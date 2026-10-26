@@ -35,7 +35,6 @@ function jobsFromCases(dir) {
     heroId: c.heroId,
     buildItemIds: c.buildItemIds,
     simulateLayout: c.simulateLayout,
-    simulateHdr: c.simulateHdr,
     expect: c.expect || {},
   }));
 }

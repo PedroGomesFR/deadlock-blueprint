@@ -145,11 +145,6 @@ export function logScan(detection: VisionDetectionResult, frame: ImageBitmap | s
   }
   if (!active) return;
 
-  // HDR capture: the crops below are the corrected colours
-  logState(
-    'ÉTAT capture',
-    detection.hdrGain !== undefined ? `HDR gain ×${detection.hdrGain.toFixed(1)} (couleurs corrigées)` : 'SDR'
-  );
   const mode = detection.shopOpen ? 'BOUTIQUE' : detection.hudVisible ? 'HUD' : 'AUTRE';
   const slots = detection.inventorySlots ?? [];
   // Matching errors change on every frame: only what is seen is compared, the errors are just written along
