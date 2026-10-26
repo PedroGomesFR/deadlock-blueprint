@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.6] — 2026-10-26
+
+### Fixed
+- **The app now works with Windows HDR turned on.** With HDR, the screen capture does not give the colours the game shows (darker, or too bright and washed out, depending on the "SDR content brightness" setting of Windows): the app saw no match at all, so no hero, no lineups and no items. It now recognises an HDR capture from the colours of the score boxes at the top of the screen and corrects it. On a real HDR capture, everything is read as without HDR. With a high "SDR content brightness", the capture itself loses the brightest details: some portraits are not read on every frame (the lineups are voted over the whole match anyway), and from about 320 nits some items too. If detection stays incomplete, lower that setting (Settings › Display › HDR) or turn HDR off while playing.
+
+### New
+- **Nurse Harrow** is in the hero list (guide, abilities, builds and counters): the hero was missing, so the app could not show or detect them. Thanks to [@roroos](https://github.com/roroos) ([#5](https://github.com/PedroGomesFR/deadlock-blueprint/pull/5)).
+
 ## [1.4.5] — 2026-10-23
 
 ### Fixed
