@@ -1,6 +1,7 @@
 import Tesseract from 'tesseract.js';
 import { HEROES_DB, ITEMS_DB, ItemCategory, LaneColor } from '../data/deadlockData';
 import officialIconsMap from '../data/officialIconsMap.json';
+import { HdrToneMapTracker, ToneMap, throughHdrCapture, undoToneMap } from './hdrToneMap';
 
 export interface VisionDetectionResult {
   detectedHeroId?: string;
@@ -24,6 +25,7 @@ export interface VisionDetectionResult {
   mySlotIndex?: number; // ally slot used as mine for the lane (-1 when unknown)
   frameWidth?: number; // size of the captured frame (analysed once normalized to 1920x1080); unset if not analysed
   frameHeight?: number;
+  hdrGain?: number; // HDR capture, colours corrected with this gain (hdrToneMap.ts); unset in SDR
   detectedSouls?: number;
   detectedLaneColor?: LaneColor;
   rawText: string;
@@ -136,7 +138,11 @@ interface ItemIconTemplate {
   itemName: string;
   category: ItemCategory;
   rgba: Uint8ClampedArray; // 20x20 RGBA
+  source: Uint8ClampedArray; // ITEM_SOURCE_GRID² RGBA: its HDR variants are made from it (templatesThroughHdr)
 }
+
+// Icons are 200x200, ~54 px in the game: kept at about the game's size (2 MB for every item instead of 25)
+const ITEM_SOURCE_GRID = 60;
 
 let cachedPortraitTemplates: HeroPortraitTemplate[] | null = null;
 let cachedAbilityTemplates: AbilityMaskTemplate[] | null = null;
@@ -448,8 +454,12 @@ const slotEmptyStreak: number[] = new Array(12).fill(0);
 const SHOP_INVENTORY_DY = -40;
 const SHOP_SOULS_DY = -50;
 
-/** Souls digits (mint-cyan) of the souls counter. */
-const isSoulsDigitPixel = (r: number, g: number, b: number) => g > 200 && b > 165 && r < 205 && g - r > 20;
+/**
+ * Souls digits (mint-cyan) of the souls counter. In an HDR capture their brightest pixels are clipped to white,
+ * red included (from sRGB 170 at gain 2.5): the digits lost their middle (2346 read 234, 452 read 152).
+ */
+const isSoulsDigitPixel = (r: number, g: number, b: number) =>
+  (g > 200 && b > 165 && r < 205 && g - r > 20) || (hdrToneMap.current.hdr && r >= 250 && g >= 250 && b >= 250);
 const MIN_SOULS_DIGIT_PIXELS = 18;
 
 /**
@@ -457,14 +467,14 @@ const MIN_SOULS_DIGIT_PIXELS = 18;
  * this exact same code: canvas drawImage downscaling differs between the GPU and CPU backends and aliases
  * thin lines (e.g. Mystic Reverb), which inflated the error of correct matches up to the threshold.
  */
-function areaDownsample(src: Uint8ClampedArray, srcW: number, srcH: number): Uint8ClampedArray {
-  const out = new Uint8ClampedArray(MATCH_GRID * MATCH_GRID * 4);
-  const fx = srcW / MATCH_GRID;
-  const fy = srcH / MATCH_GRID;
-  for (let oy = 0; oy < MATCH_GRID; oy++) {
+function areaDownsample(src: Uint8ClampedArray, srcW: number, srcH: number, grid = MATCH_GRID): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(grid * grid * 4);
+  const fx = srcW / grid;
+  const fy = srcH / grid;
+  for (let oy = 0; oy < grid; oy++) {
     const y0 = oy * fy;
     const y1 = y0 + fy;
-    for (let ox = 0; ox < MATCH_GRID; ox++) {
+    for (let ox = 0; ox < grid; ox++) {
       const x0 = ox * fx;
       const x1 = x0 + fx;
       let r = 0,
@@ -484,7 +494,7 @@ function areaDownsample(src: Uint8ClampedArray, srcW: number, srcH: number): Uin
           wSum += wgt;
         }
       }
-      const o = (oy * MATCH_GRID + ox) * 4;
+      const o = (oy * grid + ox) * 4;
       out[o] = r / wSum;
       out[o + 1] = g / wSum;
       out[o + 2] = b / wSum;
@@ -529,11 +539,13 @@ async function getItemTemplates(): Promise<ItemIconTemplate[]> {
         const ctx = c.getContext('2d', { willReadFrequently: true });
         if (ctx && c.width > 0 && c.height > 0) {
           ctx.drawImage(img, 0, 0);
+          const data = ctx.getImageData(0, 0, c.width, c.height).data;
           templates.push({
             itemId,
             itemName,
             category,
-            rgba: areaDownsample(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height),
+            rgba: areaDownsample(data, c.width, c.height),
+            source: areaDownsample(data, c.width, c.height, ITEM_SOURCE_GRID),
           });
         }
         resolve();
@@ -559,6 +571,38 @@ async function getItemTemplates(): Promise<ItemIconTemplate[]> {
   return templates;
 }
 
+interface HdrTemplates {
+  items: ItemIconTemplate[];
+  portraits: HeroPortraitTemplate[];
+}
+// By gain (a few at most: the gain moves in 5 % steps)
+const hdrTemplatesCache = new Map<number, HdrTemplates>();
+const HDR_TEMPLATES_CACHE_SIZE = 4;
+
+/**
+ * The templates as the scanner sees them through an HDR capture of this gain once corrected (hdrToneMap.ts): the
+ * detail the capture clips is clipped in them too, like in the frame. Items from their pixels at about the game's
+ * size, reduced like the SDR ones (areaDownsample). Portraits from their 20x27 template: reducing them again with
+ * drawImage, from a canvas instead of the image, filtered differently and lost portraits even without clipping.
+ * Measured on the 16 vision test frames (scripts/vision-replay.cjs, simulateHdr): items 108/108 up to gain 3,
+ * 92/108 at 4, 47/108 at 6; without HDR templates every bright icon was "unknown" from gain 2.5.
+ */
+function templatesThroughHdr(items: ItemIconTemplate[], portraits: HeroPortraitTemplate[], gain: number): HdrTemplates {
+  const cached = hdrTemplatesCache.get(gain);
+  if (cached && cached.items.length === items.length && cached.portraits.length === portraits.length) return cached;
+
+  const result: HdrTemplates = {
+    items: items.map((t) => ({
+      ...t,
+      rgba: areaDownsample(throughHdrCapture(t.source, gain), ITEM_SOURCE_GRID, ITEM_SOURCE_GRID),
+    })),
+    portraits: portraits.map((t) => ({ ...t, rgba: throughHdrCapture(t.rgba, gain) })),
+  };
+  if (hdrTemplatesCache.size >= HDR_TEMPLATES_CACHE_SIZE) hdrTemplatesCache.clear();
+  hdrTemplatesCache.set(gain, result);
+  return result;
+}
+
 /**
  * Forgets what the scanner remembers between frames (last item of each slot, padlocks seen, souls read):
  * used by the replay harness (scripts/vision-replay.cjs) to analyse unrelated frames independently.
@@ -571,6 +615,7 @@ export function resetScannerState(): void {
   lastMintXSum = -1;
   cachedDetectedSouls = undefined;
   lastProvenLayout = null;
+  hdrToneMap.reset();
 }
 
 /** Resolves once the background souls OCR is done (replay harness: the next scan of the frame reads the souls). */
@@ -616,6 +661,8 @@ interface HudLayout {
 }
 
 let lastProvenLayout: HudLayout | null = null;
+// SDR or HDR capture, from the score boxes of the frames where they are seen (kept while they are not: shop, death)
+const hdrToneMap = new HdrToneMapTracker();
 
 function buildHudCandidates(rawW: number, rawH: number): HudLayout[] {
   const ratio = rawW / rawH;
@@ -738,6 +785,10 @@ function checkTopBarOn1080pCanvas(ctx: CanvasRenderingContext2D): { visible: boo
   try {
     const leftBarData = ctx.getImageData(855, 44, 50, 24).data;
     const rightBarData = ctx.getImageData(1015, 44, 50, 24).data;
+    // The score boxes also tell an HDR capture apart (hdrToneMap.ts)
+    hdrToneMap.observe(leftBarData, rightBarData);
+    undoToneMap(leftBarData, hdrToneMap.current);
+    undoToneMap(rightBarData, hdrToneMap.current);
     const sapphireLayout =
       colorRatio(leftBarData, isSapphireBlue, 16) >= 0.35 && colorRatio(rightBarData, isAmberGold, 16) >= 0.35;
     const amberLayout =
@@ -750,6 +801,7 @@ function checkTopBarOn1080pCanvas(ctx: CanvasRenderingContext2D): { visible: boo
 
 function countSoulsMintPixelsOn1080pCanvas(ctx: CanvasRenderingContext2D, dy: number): number {
   const data = ctx.getImageData(110, 892 + dy, 98, 32).data;
+  undoToneMap(data, hdrToneMap.current);
   let mintPixels = 0;
   for (let i = 0; i < data.length; i += 4) {
     if (isSoulsDigitPixel(data[i], data[i + 1], data[i + 2])) mintPixels++;
@@ -825,6 +877,22 @@ function drawNormalizedFrame(
   return { layout: primary, topBarVisible: false, isMyTeamAmber: false };
 }
 
+// Every row the scanner reads: top bar (portraits, score boxes) and bottom HUD (inventory, souls, abilities)
+const TONE_MAPPED_BANDS = [
+  [0, 160],
+  [800, 280],
+] as const;
+
+/** HDR capture: the game's colours back on the bands the scanner reads of the normalized frame. */
+function undoToneMapOn1080pCanvas(ctx: CanvasRenderingContext2D, map: ToneMap): void {
+  if (!map.hdr) return;
+  for (const [y, height] of TONE_MAPPED_BANDS) {
+    const image = ctx.getImageData(0, y, 1920, height);
+    undoToneMap(image.data, map);
+    ctx.putImageData(image, 0, y);
+  }
+}
+
 /** Analyses one game frame: a live capture frame (ImageBitmap) or an image data URL. */
 export async function analyzeDeadlockScreen(
   frame: string | ImageBitmap,
@@ -834,7 +902,7 @@ export async function analyzeDeadlockScreen(
   buildItemIds: string[] = [],
   includePreview = false
 ): Promise<VisionDetectionResult> {
-  const [portraitTemplates, abilityTemplates, itemTemplates] = await Promise.all([
+  const [sdrPortraitTemplates, abilityTemplates, sdrItemTemplates] = await Promise.all([
     getPortraitTemplates(),
     getAbilityTemplates(),
     getItemTemplates(),
@@ -905,6 +973,12 @@ export async function analyzeDeadlockScreen(
 
       // 0. NORMALIZE ANY SCREEN SIZE / ASPECT RATIO TO 1920x1080 & VERIFY IF TOP TEAM BARS ARE VISIBLE
       const normalized = drawNormalizedFrame(img, fullCtx);
+      const toneMap = hdrToneMap.current;
+      undoToneMapOn1080pCanvas(fullCtx, toneMap);
+      if (toneMap.hdr) debugLogs.push(`Capture HDR (gain ×${toneMap.gain.toFixed(2)}) : couleurs corrigées`);
+      const { items: itemTemplates, portraits: portraitTemplates } = toneMap.hdr
+        ? templatesThroughHdr(sdrItemTemplates, sdrPortraitTemplates, toneMap.gain)
+        : { items: sdrItemTemplates, portraits: sdrPortraitTemplates };
       normalizedFrameReady = true;
       const isDeadlockTopBarVisible = normalized.topBarVisible;
       const isMyTeamAmber = normalized.isMyTeamAmber;
@@ -1667,6 +1741,7 @@ export async function analyzeDeadlockScreen(
         mySlotIndex,
         frameWidth: rawW,
         frameHeight: rawH,
+        hdrGain: toneMap.hdr ? toneMap.gain : undefined,
         detectedSouls: cachedDetectedSouls,
         detectedLaneColor,
         rawText: [

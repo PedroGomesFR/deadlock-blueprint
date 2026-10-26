@@ -35,7 +35,7 @@ It watches your screen, recognizes your match and tells you what to buy, right n
 ### 👁️ Automatic detection, without touching the game
 Every 350 ms the app reads the image of the Deadlock window and recognizes:
 
-- **Your hero**, from your highlighted portrait in the top bar (all 43 heroes). It stays **locked for the whole match**: when you are dead and spectating a teammate, nothing changes.
+- **Your hero**, from your highlighted portrait in the top bar (all 44 heroes). It stays **locked for the whole match**: when you are dead and spectating a teammate, nothing changes.
 - **Your allies, the 6 enemies, your lane and your lane partner**, on the Amber or Sapphire side. Each portrait is voted over the whole match, so a single misread frame (a respawn timer, a low-HP banner) changes nothing.
 - **Your inventory** (12 slots, padlocked ones included), even with the shop open and with items on cooldown.
 - **Your souls**, read by OCR, fully offline.
@@ -99,6 +99,7 @@ Anti-cheat systems go after programs that read or modify a game's memory or auto
 | :--- | :--- |
 | ✅ **16:9**: 1920×1080, 2560×1440, 3840×2160… | Calibrated on 1920×1080; other 16:9 resolutions are scaled to it. |
 | ✅ Fullscreen or borderless windowed | |
+| ✅ Windows HDR | The capture's colours are corrected automatically (checked on a real HDR capture). With a high "SDR content brightness" (Settings › Display › HDR), the capture loses the brightest details and some portraits, then items, are read less often: lower it if detection stays incomplete. |
 | 🧪 16:10, ultrawide (21:9, 32:9), 4:3, windowed with borders | Experimental: the HUD is mapped onto the 16:9 layout, not yet checked on real captures of these formats. If detection fails, [report a problem](#-report-a-problem) with a game log. |
 | ⛔ Vertical screen, tiny window | The app says so and **pauses detection** instead of showing wrong recommendations. |
 | ⚠️ A changed HUD scale, colour filters | The HUD is not where the scanner looks: the app shows a hint when it finds no HUD for a few minutes. |

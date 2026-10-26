@@ -33,7 +33,7 @@ Il lit ton écran, reconnaît ta partie et te dit quoi acheter, maintenant.
 ### 👁️ Détection automatique, sans rien toucher au jeu
 Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconnaît :
 
-- **Ton héros** grâce à ton portrait surligné dans la barre du haut (les 43 héros). Il est **verrouillé pour toute la partie** : quand tu es mort et que tu regardes un coéquipier, rien ne bouge.
+- **Ton héros** grâce à ton portrait surligné dans la barre du haut (les 44 héros). Il est **verrouillé pour toute la partie** : quand tu es mort et que tu regardes un coéquipier, rien ne bouge.
 - **Tes alliés, les 6 ennemis, ta lane et ton partenaire de lane**, que tu joues côté Ambre ou Saphir. Chaque portrait est voté sur toute la partie : une image mal lue (chrono de réapparition, bannière de PV critiques) ne change rien.
 - **Ton inventaire** (12 slots, y compris ceux encore verrouillés), même boutique ouverte et objets en recharge.
 - **Tes âmes**, lues par OCR, entièrement hors ligne.
@@ -97,6 +97,7 @@ Les anti-triche visent les programmes qui lisent ou modifient la mémoire d'un j
 | :--- | :--- |
 | ✅ **16:9** : 1920×1080, 2560×1440, 3840×2160… | Calibré sur 1920×1080, les autres résolutions 16:9 y sont ramenées. |
 | ✅ Plein écran ou fenêtré sans bordure | |
+| ✅ HDR Windows | Les couleurs de la capture sont corrigées automatiquement (vérifié sur une vraie capture HDR). Avec une « Luminosité du contenu SDR » élevée (Paramètres › Affichage › HDR), la capture perd les détails les plus clairs et certains portraits, puis certains objets, sont lus moins souvent : la baisser si la détection reste incomplète. |
 | 🧪 16:10, ultra-large (21:9, 32:9), 4:3, fenêtré avec bordures | Expérimental : le HUD est ramené à la disposition 16:9, pas encore vérifié sur de vraies captures de ces formats. Si la détection échoue, [signale un problème](#-signaler-un-problème) avec un journal de partie. |
 | ⛔ Écran vertical, toute petite fenêtre | L'application le signale et **met la détection en pause** au lieu d'afficher de mauvaises recommandations. |
 | ⚠️ Échelle du HUD modifiée, filtres de couleur | Le HUD n'est pas là où le scanner le cherche : l'application l'indique si elle ne trouve aucun HUD pendant plusieurs minutes. |

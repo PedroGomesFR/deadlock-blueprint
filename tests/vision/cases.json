@@ -452,6 +452,85 @@
         "locked": 3,
         "souls": 191
       }
+    },
+    {
+      "name": "hdr_capture_sapphire_early_0536",
+      "description": "Real HDR capture (Windows HDR on, SDR white 80 nits): the 5:36 frame shown fullscreen and captured by the app's own pipeline. Every channel came back as linear light (128 -> 55); before 1.4.6 nothing was read (no top bar). Lossless PNG crops. Souls not compared: the capture's video noise reads a '1' there in SDR too.",
+      "heroId": "infernus",
+      "parts": [
+        { "file": "frames/hdr_capture_sapphire_early_0536_top.png", "x": 0, "y": 0 },
+        { "file": "frames/hdr_capture_sapphire_early_0536_inv.png", "x": 0, "y": 820 },
+        { "file": "frames/hdr_capture_sapphire_early_0536_abilities.png", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
+        "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"],
+        "slots": ["extra_spirit", ".", ".", ".", ".", "lock", "extra_regen", ".", ".", ".", "lock", "lock"],
+        "locked": 3
+      }
+    },
+    {
+      "name": "amber_late_3501_hdr_1.5",
+      "description": "The 35:01 frame as an HDR capture with gain 1.5 (SDR white 120 nits): linear light x 1.5, clipped.",
+      "heroId": "infernus",
+      "simulateHdr": 1.5,
+      "parts": [
+        { "file": "frames/amber_late_3501_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_late_3501_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_late_3501_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": [null, null, "infernus", "victor", "haze", "deadman_danny"],
+        "enemySlots": [null, "apollo", null, "seven", null, "billy"],
+        "slots": ["swift_striker", "suppressor", "healbane", "?vitality", "express_shot", "spirit_rend", "improved_spirit", "titanic_magazine", "reactive_barrier", "toxic_bullets", "metal_skin", "lock"],
+        "locked": 1,
+        "souls": 3386
+      }
+    },
+    {
+      "name": "sapphire_full_inventory_hdr_2.5",
+      "description": "Full inventory as an HDR capture with gain 2.5 (SDR white 200 nits): everything above sRGB 170 clipped to white. The items are compared with templates clipped the same way.",
+      "heroId": "infernus",
+      "simulateHdr": 2.5,
+      "parts": [
+        { "file": "frames/sapphire_full_inventory_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_full_inventory_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_full_inventory_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "knownIssues": ["enemy slot 0 (Apollo) unreadable: the clipping takes too much of the portrait (the lineup vote fills it from other frames)"],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
+        "enemySlots": [null, null, "paige", "wraith", "rat_king", null],
+        "slots": ["extra_regen", "reactive_barrier", "improved_spirit", "titanic_magazine", ".", "lock", "high_velocity_mag", "return_fire", "swift_striker", "debuff_remover", "lock", "lock"],
+        "locked": 3,
+        "souls": 452
+      }
+    },
+    {
+      "name": "amber_rat_king_0709_hdr_3",
+      "description": "Rat King at 7:09 as an HDR capture with gain 3 (SDR white 240 nits): my highlighted portrait, the items and the souls are still read.",
+      "heroId": "infernus",
+      "simulateHdr": 3,
+      "parts": [
+        { "file": "frames/amber_rat_king_0709_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_rat_king_0709_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_rat_king_0709_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "knownIssues": ["ally slot 3 (Haze) unreadable at this gain"],
+      "expect": {
+        "mode": "hud",
+        "highlighted": "rat_king",
+        "allySlots": ["rem", "victor", "venator", null, "rat_king", "sinclair"],
+        "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 191
+      }
     }
   ]
 }
