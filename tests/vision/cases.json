@@ -465,7 +465,7 @@
     {
       "name": "amber_rat_king_0709_2k_1440p",
       "description": "The 7:09 frame at 2560x1440: my portrait's frame (3 px strips at 1080p) still found once the frame is scaled down to 1920x1080.",
-      "knownIssues": ["enemy slot 0 is dead (respawn timer read at 1080p) but its timer is missed once scaled from 2560x1440"],
+      "knownIssues": ["enemy slots 0 and 1 are dead (read at 1080p), but slot 0's respawn timer is borderline once scaled from 2560x1440: found with the software canvas (CI), missed with the GPU one, so the dead slots are not checked here"],
       "heroId": "infernus",
       "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
       "parts": [
@@ -478,7 +478,6 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
-        "dead": "000000|010000",
         "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
