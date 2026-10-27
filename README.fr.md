@@ -42,7 +42,8 @@ Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconna�
 - **Builds méta issus de vraies statistiques** : les objets les plus achetés en haut rang (Oracle+, 30 derniers jours) et le build publié avec le meilleur taux de victoire, via [deadlock-api.com](https://deadlock-api.com). **Mis à jour chaque semaine**, sans nouvelle version de l'application.
 - **« À acheter tout de suite »** : les prochains objets dans l'ordre, avec l'onglet de la boutique et ce qu'il te manque en âmes. Le **#1 reste fixe** jusqu'à ce que tu l'achètes.
 - **Pourquoi cet objet ?** « Acheté dans 76 % des parties Oracle+ d'Infernus · 47,8 % de victoires quand il est acheté · acheté vers 18:42 en moyenne », ou « Anti-soin contre Baba ».
-- **Contres automatiques** contre tes adversaires de lane et l'équipe ennemie (anti-soin, résistances, immunité aux contrôles…).
+- **Contres automatiques** contre tes adversaires de lane et l'équipe ennemie (anti-soin, résistances, immunité aux contrôles…), plus les objets qui gagnent vraiment plus contre chaque ennemi avec ton héros (parties haut rang).
+- **Qui éviter, qui focus** : chaque ennemi est classé d'après le vrai taux de victoire de ton héros contre lui (en lane pour tes adversaires de lane) : *Évite ses 1v1*, *Équilibré* ou *Focus*, avec la difficulté de ta lane et les résultats de ton héros avec ton partenaire de lane. **Clique sur un ennemi fed** : ses contres passent en premier, et l'overlay te rappelle de ne pas prendre ses 1v1.
 - **Jamais un objet que tu as déjà**, ni un composant déjà amélioré.
 - **Inventaire plein ?** Chaque recommandation indique **quel objet vendre** (le moins utile pour ton build), ou **lequel sera remplacé** s'il s'agit d'une amélioration.
 

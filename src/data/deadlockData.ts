@@ -1,6 +1,17 @@
 import { getCatalogData, getMetaData } from './dataSource';
 import { EN_GENERIC_BUILD, EN_HEROES, EN_LANES, type TranslatedHeroText } from './deadlockData.en';
 import { IT_GENERIC_BUILD, IT_HEROES, IT_LANES } from './deadlockData.it';
+import {
+  type DuoStat,
+  type LaneOutlook,
+  type MatchupStance,
+  type MatchupStat,
+  getCounterItemStats,
+  getLaneDuoStat,
+  getMatchupStat,
+  isExtreme,
+  laneOutlookOf,
+} from './matchupStats';
 import type { Lang } from '../i18n/lang';
 
 // The data below is written in French (HEROES_DB, ITEMS_DB, DEADLOCK_LANES: used by the scanner and the
@@ -2334,6 +2345,12 @@ export const formatPercent = (x: number, lang: Lang) => {
   return { fr: `${value.replace('.', ',')} %`, en: `${value}%`, it: `${value.replace('.', ',')}%` }[lang];
 };
 
+/** Win-rate points without sign: 0.031 -> "3,1" / "3.1" */
+export const formatPoints = (x: number, lang: Lang) => {
+  const value = Math.abs(x * 100).toFixed(1);
+  return lang === 'en' ? value : value.replace('.', ',');
+};
+
 const formatCount = (n: number, lang: Lang) => n.toLocaleString({ fr: 'fr-FR', en: 'en-US', it: 'it-IT' }[lang]);
 
 const META_TEXT = {
@@ -2587,6 +2604,12 @@ export interface TacticalRecommendation {
     dangerLevel: 'Low' | 'Medium' | 'High' | 'Extreme';
     advice: string;
     keyRule: string;
+    /** Avoid its 1v1s, even, or focus it: from my hero's real win rate against it, or 'avoid' when it is fed */
+    stance?: MatchupStance;
+    /** My hero's win rate against it (generated statistics), absent from older data files */
+    stat?: MatchupStat;
+    /** Marked fed by the player: its counters weigh more */
+    isFed: boolean;
   }[];
   laneStrategy: {
     laneTitle: string;
@@ -2594,6 +2617,10 @@ export interface TacticalRecommendation {
     economyTip: string;
     positioningTip: string;
     allySynergyTip?: string;
+    /** Lane against my lane opponents, from my lane matchups against each of them */
+    outlook?: { outlook: LaneOutlook; diff: number };
+    /** My hero laning with my lane partner */
+    duo?: DuoStat;
   };
 }
 
@@ -2631,6 +2658,7 @@ const TACTICAL_TEXT = {
     allyCombo: (ally: string) => `Combo dévastateur sur le contrôle de votre allié ${ally}`,
     allyDuoTip: (ally: string) =>
       `Synergie Duo avec ${ally} : alternez vos poussées de vagues et concentrez vos tirs sur la même cible dès qu'un ennemi utilise son dash.`,
+    winsMore: (enemy: string, points: string) => `+${points} pts de victoire contre ${enemy}`,
   },
   en: {
     counter: (enemy: string) => `Counters ${enemy}`,
@@ -2662,6 +2690,7 @@ const TACTICAL_TEXT = {
     allyCombo: (ally: string) => `Devastating combo on your ally ${ally}'s crowd control`,
     allyDuoTip: (ally: string) =>
       `Duo synergy with ${ally}: take turns pushing the wave and focus the same target as soon as an enemy uses their dash.`,
+    winsMore: (enemy: string, points: string) => `+${points} pts win rate against ${enemy}`,
   },
   // Item names in English here, replaced by the official Italian ones (localizeGameNames)
   it: withItalianGameNames({
@@ -2694,15 +2723,16 @@ const TACTICAL_TEXT = {
     allyCombo: (ally: string) => `Combo devastante sul controllo del tuo alleato ${ally}`,
     allyDuoTip: (ally: string) =>
       `Sinergia in coppia con ${ally}: alternatevi nello spingere l'ondata e concentrate i colpi sullo stesso bersaglio appena un nemico usa il suo scatto.`,
+    winsMore: (enemy: string, points: string) => `+${points} punti di vittoria contro ${enemy}`,
   }),
 };
 
 /** The same texts, with the game names replaced by the official Italian ones. */
-function withItalianGameNames<T extends Record<string, string | ((arg: string) => string)>>(texts: T): T {
+function withItalianGameNames<T extends Record<string, string | ((...args: string[]) => string)>>(texts: T): T {
   return Object.fromEntries(
     Object.entries(texts).map(([key, text]) => [
       key,
-      typeof text === 'function' ? (arg: string) => localizeGameNames(text(arg)) : localizeGameNames(text),
+      typeof text === 'function' ? (...args: string[]) => localizeGameNames(text(...args)) : localizeGameNames(text),
     ])
   ) as T;
 }
@@ -2715,7 +2745,8 @@ export function generateTacticalPlan(
   laneEnemyIds: string[],
   teamEnemyIds: string[] = [],
   allyPartnerId: string | null = null,
-  lang: Lang = 'fr'
+  lang: Lang = 'fr',
+  fedEnemyIds: string[] = []
 ): TacticalRecommendation {
   const heroes = getHeroesDb(lang);
   const items = getItemsDb(lang);
@@ -2755,10 +2786,26 @@ export function generateTacticalPlan(
   const matchupAlerts: TacticalRecommendation['matchupAlerts'] = [];
 
   const evaluateEnemy = (enemy: DeadlockHero, isInMyLane: boolean) => {
-    const weight = isInMyLane ? 1.0 : 0.45;
-    const prefix = isInMyLane ? `[LANE] ` : `[TEAM] `;
-    const defaultUrgency: Urgency = isInMyLane ? 'Critique (En Face / Lane)' : 'Haute (Teamfight / Mid)';
+    // A fed enemy (marked by the player) weighs more than a lane opponent: with 1.0, items countering several enemies
+    // at once (summed scores) kept its own counters out of the list (Healbane against a fed Ivy, measured)
+    const isFed = fedEnemyIds.includes(enemy.id);
+    const weight = isInMyLane ? (isFed ? 2.0 : 1.0) : isFed ? 1.6 : 0.45;
+    const prefix = `${isFed ? '🔥 ' : ''}${isInMyLane ? '[LANE] ' : '[TEAM] '}`;
+    const defaultUrgency: Urgency = isInMyLane || isFed ? 'Critique (En Face / Lane)' : 'Haute (Teamfight / Mid)';
     const name = enemy.name;
+    const stat = getMatchupStat(myHero.id, enemy.id, isInMyLane);
+    // Never take a fed enemy's 1v1s, whatever the usual matchup
+    const stance: MatchupStance | undefined = isFed ? 'avoid' : stat?.stance;
+
+    // Items that win more than usual against this enemy for my hero (generated statistics)
+    getCounterItemStats(myHero.id, enemy.id).forEach(({ itemId, lift }) => {
+      addItemRecommendation(
+        itemId,
+        Math.round(Math.min(34, 18 + lift * 400) * weight),
+        `${prefix}${text.winsMore(name, formatPoints(lift, lang))}`,
+        defaultUrgency
+      );
+    });
 
     const specific = myHero.specificMatchups?.[enemy.id];
     if (specific) {
@@ -2767,9 +2814,12 @@ export function generateTacticalPlan(
         enemyName: name,
         enemyColor: enemy.accentColor,
         isInMyLane,
-        dangerLevel: specific.dangerLevel,
+        dangerLevel: isFed && specific.dangerLevel !== 'Extreme' ? 'High' : specific.dangerLevel,
         advice: specific.summary,
         keyRule: specific.laneRule,
+        stance,
+        stat,
+        isFed,
       });
       specific.mustBuyItems.forEach((itemId, idx) => {
         addItemRecommendation(
@@ -2794,6 +2844,11 @@ export function generateTacticalPlan(
         danger = 'Medium';
         rule = text.healerRule(name);
       }
+      // The tags say what the enemy does, not how my hero fares against it: the real matchup decides the danger
+      if (stat) {
+        danger = isExtreme(stat) ? 'Extreme' : stat.stance === 'avoid' ? 'High' : stat.stance === 'focus' ? 'Low' : 'Medium';
+      }
+      if (isFed && (danger === 'Low' || danger === 'Medium')) danger = 'High';
 
       matchupAlerts.push({
         enemyId: enemy.id,
@@ -2803,6 +2858,9 @@ export function generateTacticalPlan(
         dangerLevel: danger,
         advice: text.archetype(enemy.role),
         keyRule: rule,
+        stance,
+        stat,
+        isFed,
       });
     }
 
@@ -2876,11 +2934,13 @@ export function generateTacticalPlan(
     .slice(0, 6)
     .map(([itemId, data]) => ({
       item: items[itemId],
-      reasons: data.reasons,
+      // Reasons against a fed enemy first: the cards show the first one
+      reasons: [...data.reasons.filter((r) => r.startsWith('🔥')), ...data.reasons.filter((r) => !r.startsWith('🔥'))],
       urgency: data.urgency,
     }));
 
   const isOuterLane = laneColor === 'yellow' || laneColor === 'purple';
+  const laneStats = matchupAlerts.filter((a) => a.isInMyLane && a.stat?.lane).map((a) => a.stat!);
 
   return {
     priorityItems,
@@ -2891,6 +2951,8 @@ export function generateTacticalPlan(
       economyTip: laneMode === 'solo' ? selectedBuild.laneTips.solo : selectedBuild.laneTips.duo,
       positioningTip: isOuterLane ? selectedBuild.laneTips.yellow_purple : selectedBuild.laneTips.orange_blue,
       allySynergyTip,
+      outlook: laneOutlookOf(laneStats),
+      duo: laneMode === 'duo' && allyHero ? getLaneDuoStat(myHero.id, allyHero.id) : undefined,
     },
   };
 }

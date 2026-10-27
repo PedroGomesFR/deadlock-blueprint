@@ -7,7 +7,9 @@
 //                                           palier, composants, icône)
 //   src/data/generated/metaBuilds.json    — par héros : build « Méta » (objets les plus achetés en haut rang),
 //                                           meilleur build publié (meilleur taux de victoire), ordre des sorts, et
-//                                           stats de chaque objet (taux d'achat, de victoire, moment d'achat)
+//                                           stats de chaque objet (taux d'achat, de victoire, moment d'achat),
+//                                           matchups contre chaque héros, duos de lane, objets qui gagnent contre
+//                                           chaque héros
 //   public/icons/items/api/<id>.png       — icônes officielles (jamais d'écrasement des PNG existants)
 //   public/icons/abilities/api/<héros>_<touche>.png — icônes officielles des sorts (idem)
 //
@@ -40,6 +42,14 @@ const IMBUE_BUILD_SAMPLE = 100; // published builds read per hero to see where p
 const IMBUE_MIN_BUILDS = 5; // an imbue item needs this many builds with a target to be kept
 const MIN_BUILD_MATCHES = 100; // parties minimum pour qu'un build publié soit retenu
 const ANALYTICS_DELAY_MS = 350; // limite API : 200 requêtes / minute sur /v1/analytics
+// Matchups, duos de lane et objets contre chaque héros : un seul palier pour toutes les paires (Oracle+ : médiane de
+// 1 442 parties par paire en lane, 90 % des paires ≥ 565, 728 par duo, mesuré en octobre 2026)
+const MATCHUP_BADGE = 81;
+const COUNTER_ITEM_SMOOTHING = 300; // parties « fictives » sans effet propre à l'ennemi (lissage bayésien)
+const COUNTER_ITEM_MIN_MATCHES = 150;
+const COUNTER_ITEM_MIN_PICK = 0.05; // part des parties contre l'ennemi où l'objet est acheté
+const COUNTER_ITEM_MIN_LIFT = 0.01; // +1 point de victoire de plus que d'habitude
+const COUNTER_ITEMS_PER_ENEMY = 3;
 
 // Correspondance ids locaux historiques -> class_name Valve (stable même quand l'objet est renommé).
 const LOCAL_ID_BY_CLASS = {
@@ -482,6 +492,112 @@ function abilityOrderFromBuild(heroBuild, slotByAbilityId) {
   return [...order, ...rest];
 }
 
+// ---------------------------------------------------------------------------
+// 3. Matchups, duos de lane, objets contre chaque héros
+// ---------------------------------------------------------------------------
+const round3 = (x) => Math.round(x * 1000) / 1000;
+
+/**
+ * hero.matchups[enemy] = [wins, games] when the two laned against each other, then [wins, games] over all the games
+ * where the enemy was on the other team. hero.laneDuos[ally] = [wins, games] laning together. Raw counts: the
+ * application smooths them (src/data/matchupStats.ts).
+ */
+function addMatchups(heroes, localIdByApiId, laneCounters, gameCounters, laneDuos) {
+  const local = (apiId) => localIdByApiId.get(apiId);
+  for (const [rows, offset] of [[laneCounters, 0], [gameCounters, 2]]) {
+    for (const r of rows) {
+      const hero = heroes[local(r.hero_id)];
+      const enemy = local(r.enemy_hero_id);
+      if (!hero || !enemy || enemy === local(r.hero_id) || !(r.matches_played > 0)) continue;
+      hero.matchups ??= {};
+      const row = (hero.matchups[enemy] ??= [0, 0, 0, 0]);
+      row[offset] = r.wins;
+      row[offset + 1] = r.matches_played;
+    }
+  }
+  for (const r of laneDuos) {
+    const [a, b] = [local(r.hero_id1), local(r.hero_id2)];
+    if (!heroes[a] || !heroes[b] || a === b || !(r.matches_played > 0)) continue;
+    (heroes[a].laneDuos ??= {})[b] = [r.wins, r.matches_played];
+    (heroes[b].laneDuos ??= {})[a] = [r.wins, r.matches_played];
+  }
+}
+
+/**
+ * Items that win more than usual for a hero when a given enemy is on the other team:
+ * hero.counterItems[enemy] = [[itemId, lift], ...] (best first, lift in win-rate points, 0.031 = +3.1).
+ *
+ * Late items win more in any game (long games are won by whoever is ahead), and a hero that loses to an enemy loses
+ * with every item. So an item is compared with what it would do against this enemy if it had no special effect: its
+ * usual win rate on the hero, shifted by how much better or worse the hero does against the enemy. Its win rate
+ * against the enemy is smoothed towards that expectation (COUNTER_ITEM_SMOOTHING games), so rare items need many
+ * games to stand out.
+ */
+function counterItemsFor(heroApiId, enemyRows, baselineRows, heroWinRate, matchupWinRate, catalog) {
+  const baseline = new Map(baselineRows.map((r) => [r.item_id, r]));
+  const out = [];
+  for (const r of enemyRows) {
+    const item = catalog.byApiId.get(r.item_id);
+    const base = baseline.get(r.item_id);
+    if (!item || !base || !(base.matches > 0) || r.matches < COUNTER_ITEM_MIN_MATCHES) continue;
+    if (r.matches / matchupWinRate.matches < COUNTER_ITEM_MIN_PICK) continue;
+    const expected = base.wins / base.matches + (matchupWinRate.rate - heroWinRate);
+    const smoothed = (r.wins + COUNTER_ITEM_SMOOTHING * expected) / (r.matches + COUNTER_ITEM_SMOOTHING);
+    const lift = smoothed - expected;
+    if (lift >= COUNTER_ITEM_MIN_LIFT) out.push([item.id, round3(lift)]);
+  }
+  return out.sort((a, b) => b[1] - a[1]).slice(0, COUNTER_ITEMS_PER_ENEMY);
+}
+
+async function addPairStats(heroes, catalog, minUnix) {
+  const localIdByApiId = new Map(Object.entries(heroes).map(([id, h]) => [h.apiHeroId, id]));
+  const filters = { min_unix_timestamp: minUnix, min_average_badge: MATCHUP_BADGE };
+  const laneCounters = await fetchJson('/v1/analytics/hero-counter-stats', { ...filters, same_lane_filter: true }, { analytics: true });
+  // Explicitly false: without the parameter the API counted lane opponents only (same numbers as above, measured)
+  const gameCounters = await fetchJson('/v1/analytics/hero-counter-stats', { ...filters, same_lane_filter: false }, { analytics: true });
+  const laneDuos = await fetchJson('/v1/analytics/hero-synergy-stats', { ...filters, same_lane_filter: true }, { analytics: true });
+  assertFields('hero-counter-stats', laneCounters[0] || {}, ['hero_id', 'enemy_hero_id', 'wins', 'matches_played']);
+  assertFields('hero-synergy-stats', laneDuos[0] || {}, ['hero_id1', 'hero_id2', 'wins', 'matches_played']);
+  addMatchups(heroes, localIdByApiId, laneCounters, gameCounters, laneDuos);
+
+  // One call per enemy (bucket = buyer hero) instead of one per pair of heroes
+  const heroStats = await fetchJson('/v1/analytics/hero-stats', filters, { analytics: true });
+  const heroWinRate = new Map(heroStats.filter((r) => r.matches > 0).map((r) => [r.hero_id, r.wins / r.matches]));
+  const byHero = (rows) => {
+    const map = new Map();
+    for (const r of rows) {
+      if (!map.has(r.bucket)) map.set(r.bucket, []);
+      map.get(r.bucket).push(r);
+    }
+    return map;
+  };
+  const baseline = byHero(await fetchJson('/v1/analytics/item-stats', { ...filters, bucket: 'hero', min_matches: 20 }, { analytics: true }));
+  const gameCounterByPair = new Map(gameCounters.map((r) => [`${r.hero_id}:${r.enemy_hero_id}`, r]));
+  let pairs = 0;
+  for (const [enemyId, enemy] of Object.entries(heroes)) {
+    const rows = byHero(
+      await fetchJson(
+        '/v1/analytics/item-stats',
+        { ...filters, bucket: 'hero', enemy_hero_ids: enemy.apiHeroId, min_matches: COUNTER_ITEM_MIN_MATCHES },
+        { analytics: true }
+      )
+    );
+    for (const [heroApiId, enemyRows] of rows) {
+      const heroId = localIdByApiId.get(heroApiId);
+      const pair = gameCounterByPair.get(`${heroApiId}:${enemy.apiHeroId}`);
+      const wr = heroWinRate.get(heroApiId);
+      if (!heroId || heroId === enemyId || !pair || !(pair.matches_played > 0) || wr === undefined) continue;
+      // Hero's win rate against this enemy, smoothed towards its usual one (200 games)
+      const rate = (pair.wins + 200 * wr) / (pair.matches_played + 200);
+      const items = counterItemsFor(heroApiId, enemyRows, baseline.get(heroApiId) || [], wr, { rate, matches: pair.matches_played }, catalog);
+      if (items.length === 0) continue;
+      (heroes[heroId].counterItems ??= {})[enemyId] = items;
+      pairs++;
+    }
+  }
+  return { lanePairs: laneCounters.length, duoPairs: laneDuos.length, counterPairs: pairs };
+}
+
 /** Indented JSON with the arrays of plain values (item ids, stats) on one line: smaller file, readable diffs. */
 const stringifyCompact = (obj) =>
   JSON.stringify(obj, null, 2).replace(/\[\n\s+([^[\]{}]*?)\n\s*\]/g, (_, inner) => `[${inner.split(/,\n\s+/).join(', ')}]`) +
@@ -662,6 +778,10 @@ async function main() {
     );
   }
 
+  console.log(`▶ Matchups, duos de lane et objets contre chaque héros (${BADGE_LABELS[MATCHUP_BADGE]}, ~1 min)…`);
+  const pairs = await addPairStats(heroes, catalog, minUnix);
+  console.log(`  ${pairs.lanePairs} paires en lane, ${pairs.duoPairs} duos, objets contre l'ennemi pour ${pairs.counterPairs} paires.`);
+
   console.log('▶ Icônes des sorts…');
   const failedAbilityIcons = await downloadAbilityIcons(abilityIcons);
   for (const hero of Object.values(heroes)) {
@@ -719,6 +839,23 @@ function validateGenerated(catalogJson, metaJson) {
       const n = b.phases.early.length + b.phases.mid.length + b.phases.late.length;
       if (n < 6) errors.push(`${id}/${b.kind} : ${n} objets`);
       for (const phase of Object.values(b.phases)) for (const itemId of phase) if (!items[itemId]) errors.push(`${id} : objet inconnu ${itemId}`);
+    }
+    // Facultatifs (depuis 1.4.8) : absents des fichiers plus anciens
+    const isCount = (n) => Number.isInteger(n) && n >= 0;
+    for (const [enemy, row] of Object.entries(h.matchups || {})) {
+      if (!heroes[enemy]) errors.push(`${id} : matchup contre un héros inconnu ${enemy}`);
+      if (row.length !== 4 || !row.every(isCount) || row[0] > row[1] || row[2] > row[3]) errors.push(`${id} : matchup ${enemy} ${row}`);
+    }
+    for (const [ally, row] of Object.entries(h.laneDuos || {})) {
+      if (!heroes[ally]) errors.push(`${id} : duo avec un héros inconnu ${ally}`);
+      if (row.length !== 2 || !row.every(isCount) || row[0] > row[1]) errors.push(`${id} : duo ${ally} ${row}`);
+    }
+    for (const [enemy, list] of Object.entries(h.counterItems || {})) {
+      if (!heroes[enemy]) errors.push(`${id} : objets contre un héros inconnu ${enemy}`);
+      for (const [itemId, lift] of list) {
+        if (!items[itemId]) errors.push(`${id} : objet inconnu ${itemId} contre ${enemy}`);
+        if (!(lift > 0 && lift < 0.5)) errors.push(`${id} : écart ${lift} pour ${itemId} contre ${enemy}`);
+      }
     }
   }
   if (errors.length > 0) {

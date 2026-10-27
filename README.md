@@ -46,7 +46,8 @@ Every 350 ms the app reads the image of the Deadlock window and recognizes:
 - **Meta builds from real statistics**: the items most bought by high-rank players (Oracle+, last 30 days) and the published build with the best win rate, from [deadlock-api.com](https://deadlock-api.com). **Updated every week**, without a new version of the app.
 - **"Buy right now"**: your next items in order, with their shop tab and how many souls you are short. The **#1 stays fixed** until you buy it.
 - **Why this item?** "Bought in 76% of Oracle+ Infernus games · 47.8% win rate with it · usually bought around 18:42", or "Anti-heal against Baba".
-- **Counters** against your lane opponents and the enemy team (anti-heal, resists, CC immunity…).
+- **Counters** against your lane opponents and the enemy team (anti-heal, resists, CC immunity…), plus the items that actually win more against each enemy for your hero (high-rank games).
+- **Who to avoid, who to focus**: each enemy is rated from your hero's real win rate against them (in lane for your lane opponents): *Avoid 1v1s*, *Even* or *Focus*, with the lane outlook against your opponents and how your hero does with your lane partner. **Click an enemy who is fed**: their counters come first, and the overlay reminds you not to take their 1v1s.
 - **Never an item you already own**, nor a component already upgraded.
 - **Inventory full?** Each recommendation says **which item to sell** (the least useful for your build), or **which one it replaces** for an upgrade.
 

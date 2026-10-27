@@ -45,6 +45,42 @@ describe('heroes', () => {
   });
 });
 
+describe('counter engine with the matchup statistics', () => {
+  const plan = (fed: string[] = [], mode: 'duo' | 'solo' = 'duo') =>
+    generateTacticalPlan('infernus', '', 'yellow', mode, ['haze', 'bebop'], ['abrams', 'lash', 'ivy', 'seven'], 'kelvin', 'en', fed);
+
+  it('rates every enemy from my hero real win rate against it, in lane for the lane opponents', () => {
+    const alerts = plan().matchupAlerts;
+    expect(alerts).toHaveLength(6);
+    for (const a of alerts) {
+      expect(a.stat, a.enemyId).toBeDefined();
+      expect(a.stance).toBe(a.stat!.stance);
+      expect(a.stat!.lane).toBe(a.isInMyLane);
+      expect(a.isFed).toBe(false);
+    }
+  });
+
+  it('adds the items that win more against an enemy, and the lane outlook and duo', () => {
+    const p = plan();
+    expect(p.priorityItems.flatMap((i) => i.reasons).some((r) => /pts win rate against/.test(r))).toBe(true);
+    expect(p.laneStrategy.outlook).toBeDefined();
+    expect(p.laneStrategy.duo?.games).toBeGreaterThan(0);
+    expect(plan([], 'solo').laneStrategy.duo).toBeUndefined();
+  });
+
+  it('never takes the 1v1s of a fed enemy, and puts its counters first', () => {
+    const before = plan();
+    const after = plan(['ivy']);
+    const ivy = after.matchupAlerts.find((a) => a.enemyId === 'ivy')!;
+    expect(ivy).toMatchObject({ isFed: true, stance: 'avoid' });
+    expect(['High', 'Extreme']).toContain(ivy.dangerLevel);
+    const fedReasons = (p: typeof before) => p.priorityItems.flatMap((i) => i.reasons).filter((r) => r.startsWith('🔥'));
+    expect(fedReasons(before)).toEqual([]);
+    expect(fedReasons(after).length).toBeGreaterThan(0);
+    expect(fedReasons(after).every((r) => r.includes('Ivy'))).toBe(true);
+  });
+});
+
 describe('English data', () => {
   const en = getHeroesDb('en');
 

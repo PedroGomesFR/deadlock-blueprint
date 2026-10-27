@@ -125,6 +125,24 @@ export const MESSAGES_FR = {
   'danger.Medium': 'Moyen',
   'danger.High': 'Élevé',
   'danger.Extreme': 'Extrême',
+  'stance.avoid': 'Évite ses 1v1',
+  'stance.even': 'Équilibré',
+  'stance.focus': 'Focus',
+  'stance.fed': '🔥 Fed',
+  'matchups.stat': (rate: string, usual: string, games: string, lane: boolean) =>
+    `Tu gagnes ${rate} des parties ${lane ? 'en lane contre lui' : 'contre lui'} (d'habitude ${usual}) · ${games} parties`,
+  'matchups.fedRule': 'Fed : ne prends jamais ses 1v1, regroupe-toi et focus-le en teamfight ; ses contres passent en premier.',
+  'matchups.fedMark': 'Marquer fed',
+  'matchups.fedUnmark': 'Plus fed',
+  'lane.hard': (pts: string) => `Lane difficile : ${pts} pts de victoire de moins que d'habitude contre ces adversaires`,
+  'lane.even': 'Lane équilibrée contre ces adversaires',
+  'lane.favourable': (pts: string) => `Lane favorable : +${pts} pts de victoire contre ces adversaires`,
+  'lane.duo': (ally: string, rate: string, usual: string, games: string) =>
+    `En lane avec ${ally} : ${rate} de victoires (d'habitude ${usual}) · ${games} parties`,
+  'enemies.stripTitle': 'Ennemis — clique sur un ennemi fed',
+  'enemies.stripHint': 'Clique pour marquer / démarquer fed : ses contres passent en premier',
+  'overlay.avoid': 'Évite',
+  'overlay.focus': 'Focus',
 
   // Diagnostic
   'diag.title': "Diagnostic & Choix de l'Écran",

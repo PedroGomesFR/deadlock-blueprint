@@ -23,7 +23,9 @@ import {
 import {
   LaneColor,
   LaneMode,
+  TacticalRecommendation,
   formatPercent,
+  formatPoints,
   generateTacticalPlan,
   getAbilityIcon,
   getHeroImbueTarget,
@@ -133,8 +135,19 @@ const DANGER_KEYS = {
   Extreme: 'danger.Extreme',
 } as const;
 
+// Enemy stance (real matchup of my hero, or fed): label and colours of the enemy strip and the matchup cards
+const STANCE_KEYS = { avoid: 'stance.avoid', even: 'stance.even', focus: 'stance.focus' } as const;
+const STANCE_STYLE = {
+  avoid: 'bg-red-500/20 border-red-400/60 text-red-200',
+  even: 'bg-white/5 border-white/15 text-slate-300',
+  focus: 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200',
+  fed: 'bg-orange-500/30 border-orange-400 text-orange-100',
+} as const;
+type MatchupAlert = TacticalRecommendation['matchupAlerts'][number];
+
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
 const HERO_LOCKED_KEY = 'dl_heroLocked';
+const FED_ENEMIES_KEY = 'dl_fedEnemies';
 // First launch done (language and game logs chosen)
 const ONBOARDED_KEY = 'dl_onboarded';
 
@@ -218,6 +231,18 @@ export function App() {
       return [];
     }
   });
+  // Enemies marked fed by the player (their counters come first), cleared at a new match: shared with the overlay
+  const [fedEnemyIds, setFedEnemyIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(FED_ENEMIES_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const storeFedEnemies = useCallback((ids: string[]) => {
+    setFedEnemyIds(ids);
+    localStorage.setItem(FED_ENEMIES_KEY, JSON.stringify(ids));
+  }, []);
   const [currentSouls, setCurrentSouls] = useState<number | null>(() => {
     const saved = localStorage.getItem('dl_currentSouls');
     return saved ? parseInt(saved, 10) : null;
@@ -290,6 +315,7 @@ export function App() {
         setLaneEnemyIds(JSON.parse(localStorage.getItem('dl_laneEnemyIds') || '[]'));
         setTeamEnemyIds(JSON.parse(localStorage.getItem('dl_teamEnemyIds') || '[]'));
         setOwnedItems(JSON.parse(localStorage.getItem('dl_ownedItems') || '[]'));
+        setFedEnemyIds(JSON.parse(localStorage.getItem(FED_ENEMIES_KEY) || '[]'));
         setLockedNext(JSON.parse(localStorage.getItem('dl_lockedNext') || 'null'));
         setInventoryStatus(JSON.parse(localStorage.getItem('dl_inventoryStatus') || 'null'));
       } catch {
@@ -363,6 +389,14 @@ export function App() {
     [myHero, selectedBuildId]
   );
 
+  // A fed mark only counts while that hero is in the enemy lineup
+  const activeFedIds = useMemo(
+    () => fedEnemyIds.filter((id) => laneEnemyIds.includes(id) || teamEnemyIds.includes(id)),
+    [fedEnemyIds, laneEnemyIds, teamEnemyIds]
+  );
+  const toggleFed = (enemyId: string) =>
+    storeFedEnemies(activeFedIds.includes(enemyId) ? activeFedIds.filter((id) => id !== enemyId) : [...activeFedIds, enemyId]);
+
   const tacticalPlan = useMemo(
     () =>
       generateTacticalPlan(
@@ -373,9 +407,15 @@ export function App() {
         laneEnemyIds,
         teamEnemyIds,
         laneMode === 'duo' ? allyPartnerId : null,
-        lang
+        lang,
+        activeFedIds
       ),
-    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId, lang]
+    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId, lang, activeFedIds]
+  );
+  // Enemies by stance, lane opponents first, for the enemy strip and the overlay
+  const stanceAlerts = useMemo(
+    () => [...tacticalPlan.matchupAlerts].sort((a, b) => Number(b.isInMyLane) - Number(a.isInMyLane)),
+    [tacticalPlan.matchupAlerts]
   );
 
   /**
@@ -543,7 +583,8 @@ export function App() {
     snapshotRef.current = { ...snapshotRef.current, ownedItems: [], inventoryStatus: null };
     setOwnedItems([]);
     setInventoryStatus(null);
-  }, []);
+    storeFedEnemies([]);
+  }, [storeFedEnemies]);
 
   /** Applies what the tracker concluded from a scan. */
   const applyMatchUpdate = useCallback(
@@ -884,6 +925,39 @@ export function App() {
     );
   };
 
+  const stanceLabel = (alert: MatchupAlert) =>
+    alert.isFed ? t('stance.fed') : alert.stance ? t(STANCE_KEYS[alert.stance]) : null;
+  const stanceStyle = (alert: MatchupAlert) => STANCE_STYLE[alert.isFed ? 'fed' : alert.stance ?? 'even'];
+  /** "You win 44.1% of games laning against them (usually 48.3%) · 2,345 games" */
+  const matchupStatText = (alert: MatchupAlert) =>
+    alert.stat
+      ? t(
+          'matchups.stat',
+          formatPercent(alert.stat.winRate, lang),
+          formatPercent(alert.stat.usualWinRate, lang),
+          formatNumber(alert.stat.games),
+          alert.stat.lane
+        )
+      : null;
+  const { outlook, duo } = tacticalPlan.laneStrategy;
+  const laneOutlookText = outlook
+    ? outlook.outlook === 'hard'
+      ? t('lane.hard', formatPoints(outlook.diff, lang))
+      : outlook.outlook === 'favourable'
+      ? t('lane.favourable', formatPoints(outlook.diff, lang))
+      : t('lane.even')
+    : null;
+  const laneDuoText =
+    duo && allyPartnerId
+      ? t(
+          'lane.duo',
+          HEROES.find((h) => h.id === allyPartnerId)?.name ?? allyPartnerId,
+          formatPercent(duo.winRate, lang),
+          formatPercent(duo.usualWinRate, lang),
+          formatNumber(duo.games)
+        )
+      : null;
+
   const inventoryLabel = inventoryStatus
     ? t('inv.label', inventoryStatus.occupied, INVENTORY_SLOTS - inventoryStatus.locked, isFull)
     : t('inv.ownedCount', ownedItems.length);
@@ -973,6 +1047,29 @@ export function App() {
                 </button>
               </div>
             </div>
+
+            {stanceAlerts.some((a) => a.isFed || a.stance === 'avoid' || a.stance === 'focus') && (
+              <div className="no-drag px-3 py-1 bg-black/50 border-b border-white/10 text-small font-semibold flex flex-wrap gap-x-3">
+                {stanceAlerts.some((a) => a.isFed || a.stance === 'avoid') && (
+                  <span className="text-red-300">
+                    ⚠ {t('overlay.avoid')}:{' '}
+                    {stanceAlerts
+                      .filter((a) => a.isFed || a.stance === 'avoid')
+                      .map((a) => `${a.isFed ? '🔥' : ''}${a.enemyName}`)
+                      .join(', ')}
+                  </span>
+                )}
+                {stanceAlerts.some((a) => !a.isFed && a.stance === 'focus') && (
+                  <span className="text-emerald-300">
+                    🎯 {t('overlay.focus')}:{' '}
+                    {stanceAlerts
+                      .filter((a) => !a.isFed && a.stance === 'focus')
+                      .map((a) => a.enemyName)
+                      .join(', ')}
+                  </span>
+                )}
+              </div>
+            )}
 
             {isClickThrough && (
               <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-small text-center text-red-200 font-semibold">
@@ -1621,6 +1718,32 @@ export function App() {
                   </div>
                 </div>
 
+                {/* Enemies: avoid their 1v1s / even / focus (real matchup of my hero); click = fed */}
+                {stanceAlerts.length > 0 && (
+                  <div className="p-3 rounded-xl bg-deadlock-panel border border-white/10 space-y-2">
+                    <span className="text-body font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <Swords className="w-3.5 h-3.5 text-red-400" /> {t('enemies.stripTitle')}
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {stanceAlerts.map((alert) => (
+                        <button
+                          key={alert.enemyId}
+                          onClick={() => toggleFed(alert.enemyId)}
+                          title={[matchupStatText(alert), t('enemies.stripHint')].filter(Boolean).join('\n')}
+                          className={`flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg border transition hover:brightness-125 ${stanceStyle(
+                            alert
+                          )}`}
+                        >
+                          <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={24} />
+                          <span className="text-body font-bold">{alert.enemyName}</span>
+                          {alert.isInMyLane && <span className="text-small">🎯</span>}
+                          {stanceLabel(alert) && <span className="text-small font-semibold">{stanceLabel(alert)}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
                 {tacticalPlan.priorityItems.filter((rec) => !effectiveOwned.has(rec.item.id)).length > 0 && (
                   <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
@@ -1771,9 +1894,23 @@ export function App() {
                 <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/30 space-y-1.5">
                   <h3 className="text-body font-bold uppercase text-amber-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
                   <p className="text-body text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
+                  {laneOutlookText && (
+                    <p
+                      className={`text-body font-semibold ${
+                        outlook?.outlook === 'hard'
+                          ? 'text-red-300'
+                          : outlook?.outlook === 'favourable'
+                          ? 'text-emerald-300'
+                          : 'text-slate-300'
+                      }`}
+                    >
+                      ⚔ {laneOutlookText}
+                    </p>
+                  )}
                   {tacticalPlan.laneStrategy.allySynergyTip && (
                     <p className="text-body text-emerald-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
                   )}
+                  {laneDuoText && <p className="text-small text-slate-400">{laneDuoText}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1781,15 +1918,32 @@ export function App() {
                     <div
                       key={alert.enemyId}
                       className={`p-3.5 rounded-xl bg-deadlock-panel border space-y-1.5 ${
-                        alert.isInMyLane ? 'border-red-500/50' : 'border-orange-500/30'
+                        alert.isFed ? 'border-orange-400' : alert.isInMyLane ? 'border-red-500/50' : 'border-orange-500/30'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="text-body font-bold text-white">
                           {alert.isInMyLane ? t('matchups.lane') : t('matchups.team')} VS {alert.enemyName}
                         </span>
-                        <span className="text-small font-bold text-red-300">{t(DANGER_KEYS[alert.dangerLevel])}</span>
+                        <span className="text-small font-bold text-red-300 shrink-0">{t(DANGER_KEYS[alert.dangerLevel])}</span>
                       </div>
+                      <div className="flex items-center justify-between gap-2">
+                        {stanceLabel(alert) ? (
+                          <span className={`px-2 py-0.5 rounded-md border text-small font-bold ${stanceStyle(alert)}`}>
+                            {stanceLabel(alert)}
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+                        <button
+                          onClick={() => toggleFed(alert.enemyId)}
+                          className="px-2 py-0.5 rounded-md border border-white/15 bg-white/5 hover:bg-orange-500/25 text-small font-bold text-slate-200"
+                        >
+                          {alert.isFed ? t('matchups.fedUnmark') : `🔥 ${t('matchups.fedMark')}`}
+                        </button>
+                      </div>
+                      {matchupStatText(alert) && <p className="text-small text-slate-400">{matchupStatText(alert)}</p>}
+                      {alert.isFed && <p className="text-body text-orange-200">{t('matchups.fedRule')}</p>}
                       <p className="text-body text-emerald-300">{alert.keyRule}</p>
                     </div>
                   ))}

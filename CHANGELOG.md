@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.8] — 2026-10-27
+
+Suggestions from a player.
+
+### New
+- **Who to avoid, who to focus**: each enemy is now rated from your hero's real win rate against them in high-rank games (in lane for your lane opponents): **Avoid 1v1s**, **Even** or **Focus**, with the numbers ("You win 44.9% of games laning against them, usually 47.8%"). The danger level comes from it too: before, it only depended on what the enemy does (any enemy with crowd control was "High"), whatever hero you played. Shown in the Matchups tab, in a new **Enemies** strip of the main window, and as one line of the overlay.
+- **Lane outlook and duo**: the Matchups tab says whether your lane is hard, even or favourable against your opponents, and how your hero does with your lane partner.
+- **Items that win against each enemy**: the counters now include the items that win more than usual for your hero when that enemy is on the other team ("+2.1 pts win rate against Haze"), on top of the anti-heal / resist / CC-immunity rules.
+- **Mark an enemy as fed**: click them in the Enemies strip (or "Mark fed" in the Matchups tab). Their counters come first, they are always "Avoid 1v1s", and the overlay reminds you. Cleared at the next match.
+
 ## [1.4.7] — 2026-10-26
 
 ### Fixed
