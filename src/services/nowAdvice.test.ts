@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TeamBoard } from './matchTracker';
-import { NowEnemy, NowInput, getNowAdvice } from './nowAdvice';
+import { NowEnemy, NowInput, getNowAdvice, midBossBackAt } from './nowAdvice';
 
 // Slots go by lane pairs: 0-1 York, 2-3 Broadway, 4-5 Orchard. I am Infernus, slot 2 (Broadway) with Sinclair.
 const ALLIES = ['celeste', 'vindicta', 'infernus', 'sinclair', 'mirage', 'billy'];
@@ -17,6 +17,7 @@ const input = (overrides: Partial<NowInput> = {}): NowInput => ({
   nextItem: { id: 'mystic_burst', cost: 1600 },
   souls: 1000,
   enemies: [],
+  midBossAlive: true,
   ...overrides,
 });
 
@@ -86,6 +87,44 @@ describe('what to do now', () => {
     const advice = getNowAdvice(input({ enemies: fed }), 10);
     expect(advice).toContainEqual({ kind: 'focus', enemyId: 'paige', fed: true, winRate: undefined });
     expect(advice).toContainEqual({ kind: 'avoid', enemyIds: ['warden'] });
+  });
+
+  it('calls the Mid Boss with a numbers advantage after the laning phase, while it is up', () => {
+    const fourDead = board([0], [0, 1, 4, 5]);
+    expect(kinds(input({ board: fourDead, clockS: 15 * 60 }))).toContain('midBoss');
+    expect(kinds(input({ board: fourDead, clockS: 15 * 60 }))).not.toContain('push'); // the Mid Boss replaces the push
+    // Laning phase, clock unknown, or Mid Boss marked killed: push instead
+    expect(kinds(input({ board: fourDead, clockS: 6 * 60 }))).toContain('push');
+    expect(kinds(input({ board: fourDead }))).toContain('push');
+    expect(kinds(input({ board: fourDead, clockS: 15 * 60, midBossAlive: false }))).toContain('push');
+    // Even numbers: no Mid Boss
+    expect(kinds(input({ board: board([0, 1], [0, 1]), clockS: 15 * 60 }))).not.toContain('midBoss');
+  });
+
+  it('uses the team souls: a lead with 2 more enemies dead calls the Mid Boss, a deficit says to play grouped', () => {
+    const ahead = { ally: 80, enemy: 66 }; // 14k, 17.5 %
+    expect(getNowAdvice(input({ board: { ...board([], [0, 1]), souls: ahead }, clockS: 15 * 60 }), 10)).toContainEqual({
+      kind: 'midBoss',
+      alliesDead: 0,
+      enemiesDead: 2,
+      soulLead: 14,
+    });
+    // The same lead without an advantage on the board: force the objectives
+    expect(getNowAdvice(input({ board: { ...board(), souls: ahead } }), 10)).toContainEqual({ kind: 'soulsAhead', diff: 14 });
+    expect(getNowAdvice(input({ board: { ...board(), souls: { ally: 62, enemy: 72 } } }), 10)).toContainEqual({
+      kind: 'soulsBehind',
+      diff: 10,
+    });
+    // Small gaps do not count: 3k early (below the 4k minimum), 8k late (below 12 %)
+    expect(kinds(input({ board: { ...board(), souls: { ally: 15, enemy: 18 } } }))).not.toContain('soulsBehind');
+    expect(kinds(input({ board: { ...board(), souls: { ally: 172, enemy: 180 } } }))).not.toContain('soulsBehind');
+  });
+
+  it('counts the Mid Boss respawn: 7, then 6, then 5 min after each kill', () => {
+    expect(midBossBackAt(null)).toBeNull();
+    expect(midBossBackAt({ kills: 1, lastKillAt: 0 })).toBe(7 * 60_000);
+    expect(midBossBackAt({ kills: 2, lastKillAt: 0 })).toBe(6 * 60_000);
+    expect(midBossBackAt({ kills: 4, lastKillAt: 0 })).toBe(5 * 60_000);
   });
 
   it('keeps the most urgent orders first and cuts the list', () => {

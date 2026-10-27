@@ -44,7 +44,8 @@ Every 350 ms the app reads the image of the Deadlock window and recognizes:
 
 ### 🛒 What to buy
 - **Meta builds from real statistics**: the items most bought by high-rank players (Oracle+, last 30 days) and the published build with the best win rate, from [deadlock-api.com](https://deadlock-api.com). **Updated every week**, without a new version of the app.
-- **Now**: what to do right now, from who is dead on each side, your souls and your matchups: buy or farm, push when enemies are dead, play safe when your team is down, go help a lane where an ally is alone against two, who to focus and whose 1v1s to avoid.
+- **Now**: what to do right now, from who is dead on each side, the match clock, both teams' souls and your matchups: buy or farm, push or take the Mid Boss when your team has the advantage, play safe when it is down, go help a lane where an ally is alone against two, who to focus and whose 1v1s to avoid, with their portraits. A **Mid Boss taken** button counts its respawn.
+- **Counter the enemies**: a card per enemy with their ultimate and the 3 best items against them.
 - **"Buy right now"**: your next items in order, with their shop tab and how many souls you are short. The **#1 stays fixed** until you buy it.
 - **Why this item?** "Bought in 76% of Oracle+ Infernus games · 47.8% win rate with it · usually bought around 18:42", or "Anti-heal against Baba".
 - **Counters** against your lane opponents and the enemy team (anti-heal, resists, CC immunity…), plus the items that actually win more against each enemy for your hero (high-rank games).

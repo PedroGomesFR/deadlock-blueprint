@@ -139,11 +139,16 @@ export const MESSAGES_FR = {
   'lane.favourable': (pts: string) => `Lane favorable : +${pts} pts de victoire contre ces adversaires`,
   'lane.duo': (ally: string, rate: string, usual: string, games: string) =>
     `En lane avec ${ally} : ${rate} de victoires (d'habitude ${usual}) · ${games} parties`,
-  'enemies.stripTitle': 'Ennemis — clique sur un ennemi fed',
   'enemies.stripHint': 'Clique pour marquer / démarquer fed : ses contres passent en premier',
+  'enemies.countersTitle': 'Contrer les ennemis',
+  'enemies.countersHint': "Clique sur un ennemi s'il est fed. Leurs objets ne sont pas visibles : contres d'après leur kit et les stats haut rang.",
+  'enemies.ult': 'Ult :',
+  'enemies.ultTitle': 'Son ultime (sort 4)',
+  'enemies.noCounters': 'Pas de contre particulier',
+  'enemies.dead': 'mort',
   'now.title': 'Maintenant',
   'now.hint':
-    "D'après qui est mort (portraits en haut de l'écran), tes âmes et tes matchups. L'application ne voit pas la carte.",
+    "D'après qui est mort (portraits en haut de l'écran), le chrono, les âmes des équipes et tes matchups. L'application ne voit pas la carte.",
   'now.and': 'et',
   'now.dead': (item: string, missing: string | null) =>
     missing ? `Tu es mort : prochain achat ${item}, il te manque ${missing} âmes` : `Tu es mort : prochain achat ${item}`,
@@ -155,6 +160,19 @@ export const MESSAGES_FR = {
     `Joue safe : ${allies} alliés morts contre ${enemies} ennemis. Farm sans te battre`,
   'now.push': (enemies: number, allies: number) =>
     `${enemies} ennemis morts contre ${allies} alliés : pousse, prends un gardien ou un objectif`,
+  'now.midBoss': (enemies: number, allies: number) =>
+    `Va faire le Mid Boss avec ton équipe : ${enemies} ennemis morts contre ${allies} alliés`,
+  'now.midBossLead': (enemies: number, lead: string) =>
+    `Va faire le Mid Boss avec ton équipe : ${enemies} ennemis morts et ${lead}k âmes d'avance`,
+  'now.soulsBehind': (diff: string) =>
+    `Ton équipe a ${diff}k âmes de retard : joue groupé, farm, évite les combats à découvert`,
+  'now.soulsAhead': (diff: string) => `Ton équipe a ${diff}k âmes d'avance : force les gardiens et les objectifs`,
+  'now.midBossUp': 'Mid Boss en vie',
+  'now.midBossBack': (time: string) => `Mid Boss de retour dans ${time}`,
+  'now.midBossTaken': 'Mid Boss pris',
+  'now.midBossTakenTitle':
+    "L'application ne voit pas le Mid Boss : clique quand une équipe le tue, elle compte sa réapparition (7, puis 6, puis 5 min)",
+  'now.midBossUndoTitle': 'Annuler le dernier « Mid Boss pris »',
   'now.partnerDead': (ally: string) => `${ally} est mort : recule vers ta tour, ne prends pas le 2 contre 1`,
   'now.pushLane': (enemies: string, count: number) =>
     `${enemies} ${count > 1 ? 'sont morts' : 'est mort'} : pousse ta lane`,

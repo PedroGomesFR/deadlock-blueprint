@@ -79,6 +79,22 @@ describe('counter engine with the matchup statistics', () => {
     expect(fedReasons(after).length).toBeGreaterThan(0);
     expect(fedReasons(after).every((r) => r.includes('Ivy'))).toBe(true);
   });
+
+  it("gives each enemy's card its ultimate and its own best counters", () => {
+    const p = plan();
+    for (const a of p.matchupAlerts) {
+      expect(a.ult?.name, a.enemyId).toBeTruthy();
+      expect(a.counters.length, a.enemyId).toBeGreaterThan(0);
+      expect(a.counters.length).toBeLessThanOrEqual(3);
+      // The reasons name that enemy, without the [LANE] / [TEAM] prefix of the purchase list
+      for (const c of a.counters) {
+        expect(c.reason).not.toMatch(/^(🔥 )?\[(LANE|TEAM)\]/);
+        expect(c.reason, `${a.enemyId}: ${c.reason}`).toContain(a.enemyName);
+      }
+    }
+    // Ivy heals: anti-heal among her counters
+    expect(p.matchupAlerts.find((a) => a.enemyId === 'ivy')!.counters.map((c) => c.item.id)).toContain('healbane');
+  });
 });
 
 describe('English data', () => {

@@ -27,6 +27,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
         "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"],
         "dead": "000000|000000",
+        "topBar": "5:36 18/17",
         "slots": ["extra_spirit", ".", ".", ".", ".", "lock", "extra_regen", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": null
@@ -59,6 +60,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
         "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null],
         "dead": "000000|000001",
+        "topBar": "15:45 62/72",
         "slots": ["extra_regen", "return_fire", "swift_striker", ".", ".", "lock", "reactive_barrier", "improved_spirit", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 2346
@@ -92,6 +94,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
         "enemySlots": ["apollo", null, "paige", "wraith", "rat_king", null],
         "dead": "000001|010001",
+        "topBar": "20:50 88/99",
         "slots": ["extra_regen", "reactive_barrier", "improved_spirit", "titanic_magazine", ".", "lock", "high_velocity_mag", "return_fire", "swift_striker", "debuff_remover", "lock", "lock"],
         "locked": 3,
         "souls": 452
@@ -124,6 +127,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "dead": "000011|000101",
+        "topBar": "29:58 156/172",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -132,6 +136,7 @@
     {
       "name": "sapphire_death_cam",
       "description": "Death cam: the killer's HUD and inventory, no highlighted portrait of mine.",
+      "knownIssues": ["match clock (25:54) not read on this frame: no clock rather than a wrong one"],
       "heroId": "infernus",
       "parts": [
         {
@@ -154,6 +159,8 @@
         "mode": "hud",
         "highlighted": null,
         "allySlots": [null, "vindicta", null, null, "seven", null],
+        "dead": "101100|001101",
+        "topBar": "? 124/141",
         "slots": ["extra_regen", "enduring_speed", "slowing_hex", "lifestrike", ".", "lock", "stalker", "spirit_shielding", "rapid_recharge", "crushing_fists", ".", "lock"],
         "locked": 2,
         "souls": null
@@ -218,6 +225,7 @@
         "allySlots": ["mo_and_krill", "graves", "infernus", null, "haze", "deadman_danny"],
         "enemySlots": ["doorman", "apollo", null, "seven", "lady_geist", null],
         "dead": "000100|000001",
+        "topBar": "23:22 119/139",
         "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", ".", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "."],
         "locked": 0,
         "souls": 2335
@@ -281,6 +289,7 @@
         "allySlots": ["mo_and_krill", "graves", "infernus", null, null, "deadman_danny"],
         "enemySlots": [null, null, "doorman", null, null, null],
         "dead": "000110|110111",
+        "topBar": "29:27 174/186",
         "slots": ["slowing_hex", "return_fire", "suppressor", "pristine_emblem", "recharging_rush", "express_shot", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "toxic_bullets", "lock"],
         "locked": 1,
         "souls": 3580
@@ -314,6 +323,7 @@
         "allySlots": [null, null, "infernus", "victor", "haze", "deadman_danny"],
         "enemySlots": [null, "apollo", null, "seven", null, "billy"],
         "dead": "010000|101010",
+        "topBar": "35:01 219/221",
         "slots": ["swift_striker", "suppressor", "healbane", "?vitality", "express_shot", "spirit_rend", "improved_spirit", "titanic_magazine", "reactive_barrier", "toxic_bullets", "metal_skin", "lock"],
         "locked": 1,
         "souls": 3386
@@ -336,6 +346,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "dead": "000011|000101",
+        "topBar": "29:58 156/172",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -358,6 +369,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "dead": "000011|000101",
+        "topBar": "29:58 156/172",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -380,6 +392,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "dead": "000011|000101",
+        "topBar": "29:58 156/172",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -402,6 +415,7 @@
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
         "dead": "000011|000101",
+        "topBar": "29:58 156/172",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -422,6 +436,7 @@
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
         "enemySlots": ["mirage", "mo_and_krill", "vindicta", "grey_talon", "billy", "mina"],
         "dead": "000000|000000",
+        "topBar": "0:32 3/3",
         "slots": [".", ".", ".", ".", ".", "lock", ".", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 600
@@ -440,6 +455,8 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|110000",
+        "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 191
@@ -448,6 +465,7 @@
     {
       "name": "amber_rat_king_0709_2k_1440p",
       "description": "The 7:09 frame at 2560x1440: my portrait's frame (3 px strips at 1080p) still found once the frame is scaled down to 1920x1080.",
+      "knownIssues": ["enemy slot 0 is dead (respawn timer read at 1080p) but its timer is missed once scaled from 2560x1440"],
       "heroId": "infernus",
       "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
       "parts": [
@@ -460,6 +478,8 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|010000",
+        "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 191
