@@ -40,6 +40,7 @@ Toutes les 350 ms, l'application lit l'image de la fenêtre Deadlock et reconna�
 
 ### 🛒 Recommandations d'achat
 - **Builds méta issus de vraies statistiques** : les objets les plus achetés en haut rang (Oracle+, 30 derniers jours) et le build publié avec le meilleur taux de victoire, via [deadlock-api.com](https://deadlock-api.com). **Mis à jour chaque semaine**, sans nouvelle version de l'application.
+- **Maintenant** : quoi faire tout de suite, d'après qui est mort de chaque côté, tes âmes et tes matchups : acheter ou farmer, pousser quand des ennemis sont morts, jouer safe quand ton équipe est en infériorité, aller aider une lane où un allié est seul contre deux, qui focus et qui éviter en 1v1.
 - **« À acheter tout de suite »** : les prochains objets dans l'ordre, avec l'onglet de la boutique et ce qu'il te manque en âmes. Le **#1 reste fixe** jusqu'à ce que tu l'achètes.
 - **Pourquoi cet objet ?** « Acheté dans 76 % des parties Oracle+ d'Infernus · 47,8 % de victoires quand il est acheté · acheté vers 18:42 en moyenne », ou « Anti-soin contre Baba ».
 - **Contres automatiques** contre tes adversaires de lane et l'équipe ennemie (anti-soin, résistances, immunité aux contrôles…), plus les objets qui gagnent vraiment plus contre chaque ennemi avec ton héros (parties haut rang).

@@ -157,18 +157,22 @@ export function logScan(detection: VisionDetectionResult, frame: ImageBitmap | s
     detection.detectedEnemyIds,
     detection.allySlots,
     detection.enemySlots,
+    detection.allyDead,
+    detection.enemyDead,
     slots.map((s) => `${s.state}:${s.state === 'unknown' ? '' : s.itemId ?? ''}`),
   ]);
   if (signature !== lastScanSignature) {
     lastScanSignature = signature;
-    // Portraits slot by slot ("?" unreadable): the lineups are voted per slot (matchTracker.ts)
-    const portraits = (slotIds?: (string | null)[]) => (slotIds ? slotIds.map((id) => id ?? '?').join(',') : '-');
+    // Portraits slot by slot ("?" unreadable, "✝" dead): the lineups are voted per slot (matchTracker.ts)
+    const portraits = (slotIds?: (string | null)[], dead?: boolean[]) =>
+      slotIds ? slotIds.map((id, i) => (dead?.[i] ? '✝' : id ?? '?')).join(',') : '-';
     write(
       `SCAN ${mode} héros=${detection.detectedHeroId ?? '-'} (portrait ${detection.highlightedHeroId ?? '-'}, sorts ${
         detection.abilityHeroId ?? '-'
       }) âmes=${detection.detectedSouls ?? '?'} ennemis=[${detection.detectedEnemyIds.join(',')}] alliés@=[${portraits(
-        detection.allySlots
-      )}] ennemis@=[${portraits(detection.enemySlots)}] slots occupés=${detection.occupiedSlotsCount} cadenas=${
+        detection.allySlots,
+        detection.allyDead
+      )}] ennemis@=[${portraits(detection.enemySlots, detection.enemyDead)}] slots occupés=${detection.occupiedSlotsCount} cadenas=${
         detection.lockedSlotsCount ?? 0
       } inconnus=${detection.unmatchedSlotsCount ?? 0} | ${slots.map(describeSlot).join(' | ')}`
     );

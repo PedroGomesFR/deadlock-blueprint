@@ -38,7 +38,8 @@ import {
 } from './data/deadlockData';
 import { getDataInfo } from './data/dataSource';
 import { analyzeDeadlockScreen, VisionDetectionResult } from './services/visionScanner';
-import { MatchSnapshot, MatchTracker, MatchUpdate } from './services/matchTracker';
+import { LANE_BY_PAIR, MatchSnapshot, MatchTracker, MatchUpdate, TeamBoard } from './services/matchTracker';
+import { NowAdvice, getNowAdvice } from './services/nowAdvice';
 import {
   INVENTORY_SLOTS,
   InventoryStatus,
@@ -145,9 +146,25 @@ const STANCE_STYLE = {
 } as const;
 type MatchupAlert = TacticalRecommendation['matchupAlerts'][number];
 
+// "Now" orders: red = back off, green = go, amber = who to hit
+const NOW_STYLE: Record<NowAdvice['kind'], { icon: string; className: string }> = {
+  dead: { icon: '💀', className: 'text-slate-200' },
+  buy: { icon: '🛒', className: 'text-emerald-300' },
+  farm: { icon: '🌾', className: 'text-teal-200' },
+  safe: { icon: '🛡', className: 'text-red-300' },
+  push: { icon: '⚔', className: 'text-emerald-300' },
+  partnerDead: { icon: '⚠', className: 'text-red-300' },
+  pushLane: { icon: '➡', className: 'text-emerald-300' },
+  help: { icon: '🤝', className: 'text-sky-300' },
+  focus: { icon: '🎯', className: 'text-amber-300' },
+  avoid: { icon: '🚫', className: 'text-red-300' },
+};
+
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
 const HERO_LOCKED_KEY = 'dl_heroLocked';
 const FED_ENEMIES_KEY = 'dl_fedEnemies';
+// Who is dead in the top bar right now (services/matchTracker.ts), written by the main window only when it changes
+const BOARD_KEY = 'dl_board';
 // First launch done (language and game logs chosen)
 const ONBOARDED_KEY = 'dl_onboarded';
 
@@ -243,6 +260,13 @@ export function App() {
     setFedEnemyIds(ids);
     localStorage.setItem(FED_ENEMIES_KEY, JSON.stringify(ids));
   }, []);
+  const [board, setBoard] = useState<TeamBoard | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(BOARD_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  });
   const [currentSouls, setCurrentSouls] = useState<number | null>(() => {
     const saved = localStorage.getItem('dl_currentSouls');
     return saved ? parseInt(saved, 10) : null;
@@ -316,6 +340,7 @@ export function App() {
         setTeamEnemyIds(JSON.parse(localStorage.getItem('dl_teamEnemyIds') || '[]'));
         setOwnedItems(JSON.parse(localStorage.getItem('dl_ownedItems') || '[]'));
         setFedEnemyIds(JSON.parse(localStorage.getItem(FED_ENEMIES_KEY) || '[]'));
+        setBoard(JSON.parse(localStorage.getItem(BOARD_KEY) || 'null'));
         setLockedNext(JSON.parse(localStorage.getItem('dl_lockedNext') || 'null'));
         setInventoryStatus(JSON.parse(localStorage.getItem('dl_inventoryStatus') || 'null'));
       } catch {
@@ -485,6 +510,27 @@ export function App() {
     [nextToBuyQueue, ownedItems, inventoryStatus, sellCandidates]
   );
 
+  // "Now": a few orders from who is dead in the top bar, my souls and my real matchups (services/nowAdvice.ts)
+  const nowAdvice = useMemo(
+    () =>
+      getNowAdvice(
+        {
+          board,
+          nextItem: nextToBuyQueue[0] && { id: nextToBuyQueue[0].item.id, cost: nextToBuyQueue[0].item.cost },
+          souls: currentSouls,
+          enemies: tacticalPlan.matchupAlerts.map((a) => ({
+            id: a.enemyId,
+            stance: a.stance,
+            diff: a.stat?.diff,
+            winRate: a.stat?.winRate,
+            isFed: a.isFed,
+          })),
+        },
+        4
+      ),
+    [board, nextToBuyQueue, currentSouls, tacticalPlan.matchupAlerts]
+  );
+
   // Static list of the active build's items: a tie-breaker for the inventory scanner that does not
   // depend on the buy queue (feeding the queue back into the scanner made the list cascade)
   const buildItemIds = useMemo(
@@ -549,6 +595,17 @@ export function App() {
     );
   }, [nextToBuyQueue, slotPlans, currentSouls]);
 
+  useEffect(() => {
+    const deadSlots = (slots: TeamBoard['allies']) =>
+      slots.flatMap((s, i) => (s.dead ? [`${i}:${s.heroId ?? '?'}`] : [])).join(',');
+    logState(
+      'MAINTENANT',
+      `${board ? `morts alliés=[${deadSlots(board.allies)}] ennemis=[${deadSlots(board.enemies)}]` : 'barre du haut non vue'} → ${
+        nowAdvice.map(({ kind, ...rest }) => `${kind} ${JSON.stringify(rest)}`).join(' • ') || 'rien'
+      }`
+    );
+  }, [board, nowAdvice]);
+
   const manuallyExcludedRef = useRef<Set<string>>(new Set());
   const isScanningRef = useRef<boolean>(false);
   // Decisions taken from each scan (services/matchTracker.ts), and the latest state it reads: the scan loop
@@ -586,6 +643,8 @@ export function App() {
     storeFedEnemies([]);
   }, [storeFedEnemies]);
 
+  const boardJsonRef = useRef<string>(JSON.stringify(board));
+
   /** Applies what the tracker concluded from a scan. */
   const applyMatchUpdate = useCallback(
     (update: MatchUpdate) => {
@@ -617,6 +676,12 @@ export function App() {
           : null
       );
       setHudMissing(update.hudMissing);
+      const boardJson = JSON.stringify(update.board);
+      if (boardJson !== boardJsonRef.current) {
+        boardJsonRef.current = boardJson;
+        setBoard(update.board);
+        localStorage.setItem(BOARD_KEY, boardJson);
+      }
     },
     [clearOwnedItems, lockHero]
   );
@@ -966,6 +1031,58 @@ export function App() {
   const allyHeroObj = allyPartnerId ? HEROES.find((h) => h.id === allyPartnerId) : null;
   const heroName = (id: string) => HEROES.find((h) => h.id === id)?.name;
 
+  const nameList = (ids: string[]) => {
+    const names = ids.map((id) => heroName(id) ?? id);
+    return names.length > 1 ? `${names.slice(0, -1).join(', ')} ${t('now.and')} ${names[names.length - 1]}` : names[0] ?? '';
+  };
+  const shortItemName = (id: string) => ITEMS[id]?.name.split('(')[0].trim() ?? id;
+  const nowText = (a: NowAdvice): string => {
+    switch (a.kind) {
+      case 'dead':
+        if (!a.itemId) return t('now.deadNoItem');
+        return a.missing === 0
+          ? t('now.deadCanBuy', shortItemName(a.itemId))
+          : t('now.dead', shortItemName(a.itemId), a.missing === undefined ? null : formatNumber(a.missing));
+      case 'buy':
+        return t('now.buy', shortItemName(a.itemId));
+      case 'farm':
+        return t('now.farm', formatNumber(a.missing), shortItemName(a.itemId));
+      case 'safe':
+        return t('now.safe', a.alliesDead, a.enemiesDead);
+      case 'push':
+        return t('now.push', a.enemiesDead, a.alliesDead);
+      case 'partnerDead':
+        return t('now.partnerDead', nameList([a.partnerId]));
+      case 'pushLane':
+        return t('now.pushLane', nameList(a.enemyIds), a.enemyIds.length);
+      case 'help': {
+        const lane = LANES.find((l) => l.id === LANE_BY_PAIR[a.lanePair])?.name.split(' (')[0] ?? LANE_BY_PAIR[a.lanePair];
+        return t('now.help', lane, nameList([a.allyId]), nameList(a.enemyIds));
+      }
+      case 'focus':
+        return a.fed
+          ? t('now.focusFed', nameList([a.enemyId]))
+          : t('now.focus', nameList([a.enemyId]), a.winRate === undefined ? null : formatPercent(a.winRate, lang));
+      case 'avoid':
+        return t('now.avoid', nameList(a.enemyIds));
+    }
+  };
+  /** The "Now" orders, most urgent first. */
+  const renderNow = (max: number) => (
+    <ul className="space-y-1">
+      {nowAdvice.length === 0 ? (
+        <li className="text-body text-slate-400">{t('now.empty')}</li>
+      ) : (
+        nowAdvice.slice(0, max).map((a) => (
+          <li key={a.kind} className={`flex items-start gap-1.5 text-body font-semibold ${NOW_STYLE[a.kind].className}`}>
+            <span className="shrink-0 w-4 text-center">{NOW_STYLE[a.kind].icon}</span>
+            <span>{nowText(a)}</span>
+          </li>
+        ))
+      )}
+    </ul>
+  );
+
   // ================= DEDICATED TRANSPARENT IN-GAME OVERLAY HUD WINDOW =================
   if (isDedicatedOverlayWindow) {
     return (
@@ -1048,28 +1165,10 @@ export function App() {
               </div>
             </div>
 
-            {stanceAlerts.some((a) => a.isFed || a.stance === 'avoid' || a.stance === 'focus') && (
-              <div className="no-drag px-3 py-1 bg-black/50 border-b border-white/10 text-small font-semibold flex flex-wrap gap-x-3">
-                {stanceAlerts.some((a) => a.isFed || a.stance === 'avoid') && (
-                  <span className="text-red-300">
-                    ⚠ {t('overlay.avoid')}:{' '}
-                    {stanceAlerts
-                      .filter((a) => a.isFed || a.stance === 'avoid')
-                      .map((a) => `${a.isFed ? '🔥' : ''}${a.enemyName}`)
-                      .join(', ')}
-                  </span>
-                )}
-                {stanceAlerts.some((a) => !a.isFed && a.stance === 'focus') && (
-                  <span className="text-emerald-300">
-                    🎯 {t('overlay.focus')}:{' '}
-                    {stanceAlerts
-                      .filter((a) => !a.isFed && a.stance === 'focus')
-                      .map((a) => a.enemyName)
-                      .join(', ')}
-                  </span>
-                )}
-              </div>
-            )}
+            <div className="no-drag px-3 py-1.5 bg-black/50 border-b border-white/10 space-y-1">
+              <span className="text-small font-extrabold uppercase tracking-wider text-amber-300">{t('now.title')}</span>
+              {renderNow(3)}
+            </div>
 
             {isClickThrough && (
               <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-small text-center text-red-200 font-semibold">
@@ -1568,6 +1667,17 @@ export function App() {
             {/* ================= TAB 1: ACTIVE BUILD ================= */}
             {activeTab === 'essential' && (
               <div className="space-y-3">
+                {/* What to do now: who is dead in the top bar, my souls, my matchups */}
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-950/40 via-[#15131d] to-[#15131d] border-2 border-amber-500/60 shadow-xl space-y-2">
+                  <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
+                    <h2 className="font-display text-title font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                      <Radio className="w-4 h-4" /> {t('now.title')}
+                    </h2>
+                    <span className="text-small text-slate-400">{t('now.hint')}</span>
+                  </div>
+                  {renderNow(4)}
+                </div>
+
                 {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
                 <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#15131d] to-[#15131d] border-2 border-emerald-500/60 shadow-xl space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">

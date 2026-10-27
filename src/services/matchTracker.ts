@@ -41,8 +41,17 @@ export type MatchPatch = Partial<
   >
 >;
 
+/** Who is alive in each slot of the top bar, from my team's point of view (slots go by lane pairs). */
+export interface TeamBoard {
+  allies: { heroId: string | null; dead: boolean }[]; // 6 slots, hero voted over the match
+  enemies: { heroId: string | null; dead: boolean }[];
+  mySlot: number; // my slot among the allies, -1 when unknown
+}
+
 export interface MatchUpdate {
   patch: MatchPatch;
+  /** Who is dead right now; null once the top bar has not been seen for a while (shop, menus, end of match). */
+  board: TeamBoard | null;
   heroLocked?: boolean; // new lock state of my hero
   clearOwned: boolean; // new match or other hero: owned items (scanned and by hand) are forgotten before `patch`
   /** Decisions for the game log, in order; 'restart': new match detected, the current game log is closed. */
@@ -71,7 +80,10 @@ const FORMAT_SCANS = 3;
 // Deadlock captured this long without any game screen: the HUD is probably not where the scanner looks
 const HUD_MISSING_AFTER_MS = 5 * 60 * 1000;
 
-const LANE_BY_PAIR: LaneColor[] = ['yellow', 'blue', 'orange'];
+export const LANE_BY_PAIR: LaneColor[] = ['yellow', 'blue', 'orange'];
+
+// Who is dead is only shown while the top bar was seen this recently: in the shop or the menus it is unknown
+const BOARD_STALE_MS = 15000;
 
 /** Is the captured frame a valid landscape game resolution (16:9, 16:10, 21:9, 32:9, 4:3, windowed)? */
 export function isSupportedFormat(width?: number, height?: number): boolean {
@@ -132,6 +144,10 @@ export class MatchTracker {
   private lastGameScreenAt = 0;
   private newMatchPossible = true;
   private newMatchUntil = Infinity;
+  // Respawn timer on each portrait (6 allies then 6 enemies), confirmed over 2 scans
+  private deadStabilizers = Array.from({ length: 12 }, () => new StableValue<boolean>(2, String));
+  private dead: boolean[] = new Array(12).fill(false);
+  private lastBoardAt = -Infinity;
   private formatStabilizer = new StableValue<boolean>(FORMAT_SCANS, (ok) => String(ok));
   private formatSupported = true;
   private deadlockSince: number | null = null;
@@ -144,13 +160,19 @@ export class MatchTracker {
     this.foreignInventoryStreak = 0;
   }
 
+  private resetBoard(): void {
+    this.deadStabilizers.forEach((s) => s.reset());
+    this.dead.fill(false);
+    this.lastBoardAt = -Infinity;
+  }
+
   /** My hero was picked by hand: re-detection starts over. */
   resetHero(): void {
     this.heroStabilizer.reset();
   }
 
   push(detection: VisionDetectionResult, state: MatchSnapshot, now: number): MatchUpdate {
-    const update: MatchUpdate = { patch: {}, clearOwned: false, log: [], changes: [], hudMissing: false };
+    const update: MatchUpdate = { patch: {}, board: null, clearOwned: false, log: [], changes: [], hudMissing: false };
     const event = (text: string) => update.log.push({ kind: 'event', text });
     const isGameScreen = Boolean(detection.hudVisible || detection.shopOpen);
 
@@ -175,6 +197,7 @@ export class MatchTracker {
         // A new match may start: its portraits are voted from scratch
         this.allyVoter.reset();
         this.enemyVoter.reset();
+        this.resetBoard();
       }
       this.lastGameScreenAt = now;
     }
@@ -228,6 +251,7 @@ export class MatchTracker {
         this.allyStabilizer.reset();
         this.allyVoter.reset();
         this.enemyVoter.reset();
+        this.resetBoard();
         clearOwned();
         update.changes.push(`hero:${stableHeroId}`);
       }
@@ -258,12 +282,27 @@ export class MatchTracker {
       if (!flipped) {
         this.allyVoter.push(allySlots);
         this.enemyVoter.push(enemySlots);
+        // Who is dead, read from the same frames: the death cam would swap the two teams
+        if (detection.allyDead && detection.enemyDead) {
+          [...detection.allyDead, ...detection.enemyDead].forEach((dead, i) => {
+            const stable = this.deadStabilizers[i].push(dead);
+            if (stable !== undefined) this.dead[i] = stable;
+          });
+          this.lastBoardAt = now;
+        }
       }
     }
     const votedAllies = this.allyVoter.result();
     const votedEnemies = this.enemyVoter.result();
     // My slot among the voted allies gives my lane (slots go by lane pairs) and my lane partner
     const mySlot = votedAllies.indexOf(activeHeroId);
+    if (now - this.lastBoardAt <= BOARD_STALE_MS) {
+      update.board = {
+        allies: votedAllies.map((heroId, i) => ({ heroId, dead: this.dead[i] })),
+        enemies: votedEnemies.map((heroId, i) => ({ heroId, dead: this.dead[6 + i] })),
+        mySlot,
+      };
+    }
     let lanePair = mySlot >= 0 ? Math.floor(mySlot / 2) : -1;
 
     if (!isWatchingOtherHero) {

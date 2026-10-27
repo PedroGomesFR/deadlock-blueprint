@@ -27,7 +27,10 @@ const timeOf = (line: string) => {
   return m ? ((+m[1] * 60 + +m[2]) * 60 + +m[3]) * 1000 + +m[4] : NaN;
 };
 const list = (s: string | undefined) => (s ? s.split(',').filter(Boolean) : []);
-const slotList = (s: string | undefined) => (s === undefined || s === '-' ? undefined : s.split(',').map((id) => (id === '?' ? null : id)));
+// "?" unreadable, "✝" dead (respawn timer; older logs wrote "?" for both)
+const slotList = (s: string | undefined) =>
+  s === undefined || s === '-' ? undefined : s.split(',').map((id) => (id === '?' || id === '✝' ? null : id));
+const deadList = (s: string | undefined) => (s === undefined || s === '-' ? undefined : s.split(',').map((id) => id === '✝'));
 const orUndefined = (s: string | undefined) => (s && s !== '-' ? s : undefined);
 
 function parseSlot(token: string): InventorySlotReading {
@@ -78,6 +81,8 @@ function parseScan(line: string): VisionDetectionResult | null {
     detectedEnemyIds: enemyIds,
     allySlots,
     enemySlots,
+    allyDead: deadList(alliesAt),
+    enemyDead: deadList(enemiesAt),
     detectedOwnedItemIds: [
       ...new Set(inventorySlots.filter((s) => s.state === 'item' || s.state === 'cooldown').map((s) => s.itemId!)),
     ],
