@@ -136,6 +136,42 @@ describe('lineups', () => {
   });
 });
 
+describe('who is dead (board)', () => {
+  const NONE = times(6, false);
+  const dead = (...slots: number[]) => NONE.map((_, i) => slots.includes(i));
+  /** HUD frame with these slots showing a respawn timer (their portrait unreadable). */
+  const withDead = (allyDead: boolean[], enemyDead: boolean[], overrides: Partial<VisionDetectionResult> = {}) =>
+    hud([], {
+      allyDead,
+      enemyDead,
+      allySlots: ALLIES.map((id, i) => (allyDead[i] ? null : id)),
+      enemySlots: ENEMIES.map((id, i) => (enemyDead[i] ? null : id)),
+      ...overrides,
+    });
+
+  it('keeps the voted hero of a dead slot, after 2 scans of respawn timer', () => {
+    const { updates } = run([...times(6, withDead(NONE, NONE)), ...times(2, withDead(NONE, dead(0, 5)))]);
+    expect(updates[6].board!.enemies[0].dead).toBe(false); // a single frame is not enough
+    const board = updates[7].board!;
+    expect(board.mySlot).toBe(2);
+    expect(board.enemies[0]).toEqual({ heroId: 'apollo', dead: true });
+    expect(board.enemies[5]).toEqual({ heroId: 'haze', dead: true });
+    expect(board.allies.every((s) => !s.dead)).toBe(true);
+  });
+
+  it('ignores the death cam: its teams are swapped', () => {
+    const deathCam = withDead(dead(0, 1, 2), NONE, { highlightedHeroId: undefined, allySlots: ENEMIES, enemySlots: ALLIES });
+    const { updates } = run([...times(6, withDead(NONE, NONE)), ...times(10, deathCam)]);
+    expect(updates[updates.length - 1].board!.enemies.every((s) => !s.dead)).toBe(true);
+  });
+
+  it('forgets who is dead 15 s after the top bar was last seen (shop, menus)', () => {
+    const { updates } = run([...times(6, withDead(NONE, dead(3))), ...times(50, detection())]);
+    expect(updates[15].board!.enemies[3].dead).toBe(true); // ~3 s later: still shown
+    expect(updates[updates.length - 1].board).toBeNull(); // ~17 s later
+  });
+});
+
 describe('my hero', () => {
   // A new match after the last one's hero (unlocked by the new lineup): Rat King's portrait not found, his ability
   // icons read as a teammate (Pocket) or as a hero of neither team (Paradox)

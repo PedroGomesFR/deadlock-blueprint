@@ -141,8 +141,29 @@ export const MESSAGES_FR = {
     `En lane avec ${ally} : ${rate} de victoires (d'habitude ${usual}) · ${games} parties`,
   'enemies.stripTitle': 'Ennemis — clique sur un ennemi fed',
   'enemies.stripHint': 'Clique pour marquer / démarquer fed : ses contres passent en premier',
-  'overlay.avoid': 'Évite',
-  'overlay.focus': 'Focus',
+  'now.title': 'Maintenant',
+  'now.hint':
+    "D'après qui est mort (portraits en haut de l'écran), tes âmes et tes matchups. L'application ne voit pas la carte.",
+  'now.and': 'et',
+  'now.dead': (item: string, missing: string | null) =>
+    missing ? `Tu es mort : prochain achat ${item}, il te manque ${missing} âmes` : `Tu es mort : prochain achat ${item}`,
+  'now.deadCanBuy': (item: string) => `Tu es mort : tu as les âmes pour ${item}`,
+  'now.deadNoItem': 'Tu es mort : regarde où en est ton équipe',
+  'now.buy': (item: string) => `Achète ${item} : tu as les âmes`,
+  'now.farm': (missing: string, item: string) => `Farm : il te manque ${missing} âmes pour ${item}`,
+  'now.safe': (allies: number, enemies: number) =>
+    `Joue safe : ${allies} alliés morts contre ${enemies} ennemis. Farm sans te battre`,
+  'now.push': (enemies: number, allies: number) =>
+    `${enemies} ennemis morts contre ${allies} alliés : pousse, prends un gardien ou un objectif`,
+  'now.partnerDead': (ally: string) => `${ally} est mort : recule vers ta tour, ne prends pas le 2 contre 1`,
+  'now.pushLane': (enemies: string, count: number) =>
+    `${enemies} ${count > 1 ? 'sont morts' : 'est mort'} : pousse ta lane`,
+  'now.help': (lane: string, ally: string, enemies: string) => `Va aider ${lane} : ${ally} est seul face à ${enemies}`,
+  'now.focus': (enemy: string, rate: string | null) =>
+    rate ? `Vise ${enemy} en priorité : tu gagnes ${rate} de tes parties contre lui` : `Vise ${enemy} en priorité`,
+  'now.focusFed': (enemy: string) => `Focus ${enemy} en teamfight (fed), jamais en 1v1`,
+  'now.avoid': (enemies: string) => `Évite les 1v1 contre ${enemies}`,
+  'now.empty': 'Rien de pressé : farm et suis ton build',
 
   // Diagnostic
   'diag.title': "Diagnostic & Choix de l'Écran",

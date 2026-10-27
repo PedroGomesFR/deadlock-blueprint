@@ -26,6 +26,7 @@
         "highlighted": "infernus",
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
         "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", "haze"],
+        "dead": "000000|000000",
         "slots": ["extra_spirit", ".", ".", ".", ".", "lock", "extra_regen", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": null
@@ -57,6 +58,7 @@
         "highlighted": "infernus",
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "mirage", "billy"],
         "enemySlots": ["apollo", "warden", "paige", "wraith", "rat_king", null],
+        "dead": "000000|000001",
         "slots": ["extra_regen", "return_fire", "swift_striker", ".", ".", "lock", "reactive_barrier", "improved_spirit", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 2346
@@ -89,6 +91,7 @@
         "highlighted": "infernus",
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", "paradox", null],
         "enemySlots": ["apollo", null, "paige", "wraith", "rat_king", null],
+        "dead": "000001|010001",
         "slots": ["extra_regen", "reactive_barrier", "improved_spirit", "titanic_magazine", ".", "lock", "high_velocity_mag", "return_fire", "swift_striker", "debuff_remover", "lock", "lock"],
         "locked": 3,
         "souls": 452
@@ -120,6 +123,7 @@
         "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -213,6 +217,7 @@
         "highlighted": "infernus",
         "allySlots": ["mo_and_krill", "graves", "infernus", null, "haze", "deadman_danny"],
         "enemySlots": ["doorman", "apollo", null, "seven", "lady_geist", null],
+        "dead": "000100|000001",
         "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", ".", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "."],
         "locked": 0,
         "souls": 2335
@@ -275,6 +280,7 @@
         "highlighted": "infernus",
         "allySlots": ["mo_and_krill", "graves", "infernus", null, null, "deadman_danny"],
         "enemySlots": [null, null, "doorman", null, null, null],
+        "dead": "000110|110111",
         "slots": ["slowing_hex", "return_fire", "suppressor", "pristine_emblem", "recharging_rush", "express_shot", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "toxic_bullets", "lock"],
         "locked": 1,
         "souls": 3580
@@ -307,6 +313,7 @@
         "highlighted": "infernus",
         "allySlots": [null, null, "infernus", "victor", "haze", "deadman_danny"],
         "enemySlots": [null, "apollo", null, "seven", null, "billy"],
+        "dead": "010000|101010",
         "slots": ["swift_striker", "suppressor", "healbane", "?vitality", "express_shot", "spirit_rend", "improved_spirit", "titanic_magazine", "reactive_barrier", "toxic_bullets", "metal_skin", "lock"],
         "locked": 1,
         "souls": 3386
@@ -328,6 +335,7 @@
         "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -349,6 +357,7 @@
         "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -370,6 +379,7 @@
         "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -391,6 +401,7 @@
         "highlighted": null,
         "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
         "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
         "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
         "locked": 2,
         "souls": 3724
@@ -410,6 +421,7 @@
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
         "enemySlots": ["mirage", "mo_and_krill", "vindicta", "grey_talon", "billy", "mina"],
+        "dead": "000000|000000",
         "slots": [".", ".", ".", ".", ".", "lock", ".", ".", ".", ".", "lock", "lock"],
         "locked": 3,
         "souls": 600

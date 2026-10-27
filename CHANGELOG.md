@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### New
+- **Now**: a new section at the top of the main window and of the overlay says what to do right now, from who is dead on each side (the respawn timers of the portraits at the top of the screen), your souls and your matchups. For example: "Buy Mystic Burst: you have the souls", "Farm: 450 souls short of Mystic Burst", "4 enemies dead against 1 ally: push, take a guardian or an objective", "Play safe: 3 allies dead", "Go help York Avenue: Vindicta is alone against Apollo and Warden", "Paige and Wraith are dead: push your lane", "Focus Haze first: you win 56% of your games against them", "Avoid 1v1s against Warden". On the overlay, it replaces the "Avoid · Focus" line. The app does not see the map (positions, health, objectives), so these orders are only about who is alive in each lane.
+
 ## [1.4.8] — 2026-10-27
 
 Suggestions from a player.

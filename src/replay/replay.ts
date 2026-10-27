@@ -32,6 +32,7 @@ export interface ReplaySummary {
   mySlot: number;
   allySlots: (string | null)[] | null;
   enemySlots: (string | null)[] | null;
+  dead: string | null; // respawn timers, allies | enemies: "000100|110000"
   slots: string[]; // '.' empty, 'lock', '?category' unknown, item id ('~id' on cooldown)
   occupied: number;
   locked: number;
@@ -57,6 +58,10 @@ function summarize(d: VisionDetectionResult): ReplaySummary {
     mySlot: d.mySlotIndex ?? -1,
     allySlots: d.allySlots ?? null,
     enemySlots: d.enemySlots ?? null,
+    dead:
+      d.allyDead && d.enemyDead
+        ? `${d.allyDead.map(Number).join('')}|${d.enemyDead.map(Number).join('')}`
+        : null,
     slots: (d.inventorySlots ?? []).map((s) =>
       s.state === 'empty'
         ? '.'

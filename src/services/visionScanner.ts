@@ -21,6 +21,8 @@ export interface VisionDetectionResult {
   abilityHeroId?: string; // hero matched by the ability icons (less reliable, cooldown numbers fool it)
   allySlots?: (string | null)[]; // hero of each of the 6 ally portraits (left), null when unreadable
   enemySlots?: (string | null)[]; // hero of each of the 6 enemy portraits (right)
+  allyDead?: boolean[]; // respawn timer over each of the 6 ally portraits (dead), set with allySlots
+  enemyDead?: boolean[];
   mySlotIndex?: number; // ally slot used as mine for the lane (-1 when unknown)
   frameWidth?: number; // size of the captured frame (analysed once normalized to 1920x1080); unset if not analysed
   frameHeight?: number;
@@ -1672,6 +1674,8 @@ export async function analyzeDeadlockScreen(
         // Dead heroes (respawn timer over a grey portrait) count as unreadable for the lineup votes
         allySlots: isDeadlockTopBarVisible ? allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id)) : undefined,
         enemySlots: isDeadlockTopBarVisible ? enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id)) : undefined,
+        allyDead: isDeadlockTopBarVisible ? [...allyDead] : undefined,
+        enemyDead: isDeadlockTopBarVisible ? [...enemyDead] : undefined,
         mySlotIndex,
         frameWidth: rawW,
         frameHeight: rawH,
