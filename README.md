@@ -30,6 +30,8 @@ It watches your screen, recognizes your match and tells you what to buy, right n
   </tr>
 </table>
 
+## For now HDR is not supported! so to use the app please turn it off or else the app won't be able to correctly read your screen.
+
 ## ✨ Features
 
 ### 👁️ Automatic detection, without touching the game
