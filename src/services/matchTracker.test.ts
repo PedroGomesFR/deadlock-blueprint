@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { InventorySlotReading, VisionDetectionResult } from './visionScanner';
-import { MatchSnapshot, MatchTracker, MatchUpdate, isForeignInventory, isSupportedFormat } from './matchTracker';
+import { MatchSnapshot, MatchTracker, MatchUpdate, clockAt, isForeignInventory, isSupportedFormat } from './matchTracker';
 import { readJournal, replayJournal } from '../test/journalReplay';
 
 const ALLIES = ['celeste', 'vindicta', 'infernus', 'sinclair', 'mirage', 'billy'];
@@ -163,6 +163,46 @@ describe('who is dead (board)', () => {
     const deathCam = withDead(dead(0, 1, 2), NONE, { highlightedHeroId: undefined, allySlots: ENEMIES, enemySlots: ALLIES });
     const { updates } = run([...times(6, withDead(NONE, NONE)), ...times(10, deathCam)]);
     expect(updates[updates.length - 1].board!.enemies.every((s) => !s.dead)).toBe(true);
+  });
+
+  it('reads the match clock: two agreeing readings, extrapolated in between, a misread ignored', () => {
+    const t0 = 1_000_000;
+    // One top bar reading every ~4 s (12 scans), as the scanner's background OCR
+    const frames = [945, 949, 1949, 957, 961].flatMap((clockS, k) =>
+      times(12, withDead(NONE, NONE, { topBar: { clockS, at: t0 + k * 12 * 350, allySlots: ALLIES, enemySlots: ENEMIES } }))
+    );
+    const { updates } = run(frames, snapshot(), new MatchTracker(), t0);
+    expect(updates[5].board!.clock).toBeUndefined(); // a single reading is not trusted yet
+    const clock = updates[30].board!.clock!;
+    expect(clockAt(clock, t0 + 30 * 350)).toBeCloseTo(945 + 10.5, 0); // extrapolated
+    // 1949 (32:29, scans 24-35) disagrees: kept at the last good reading, then the next ones agree again
+    expect(updates[30].board!.clock!.seconds).toBe(949);
+    expect(updates[40].board!.clock!.seconds).toBe(957);
+    expect(updates[updates.length - 1].board!.clock!.seconds).toBe(961);
+  });
+
+  it('reads the team souls from my point of view only (never the death cam)', () => {
+    const reading = (ally: number, enemy: number, at: number, flipped = false) =>
+      withDead(NONE, NONE, {
+        topBar: {
+          allySouls: ally,
+          enemySouls: enemy,
+          at,
+          allySlots: flipped ? ENEMIES : ALLIES,
+          enemySlots: flipped ? ALLIES : ENEMIES,
+        },
+      });
+    const t0 = 1_000_000;
+    const frames = [
+      ...times(8, reading(62, 72, t0)),
+      ...times(8, reading(63, 73, t0 + 8 * 350)),
+      // Death cam: the killer's top bar, their team on the left
+      ...times(8, reading(74, 63, t0 + 16 * 350, true)),
+      ...times(8, reading(74, 63, t0 + 24 * 350, true)),
+    ];
+    const { updates } = run(frames, snapshot(), new MatchTracker(), t0);
+    expect(updates[15].board!.souls).toEqual({ ally: 63, enemy: 73 });
+    expect(updates[updates.length - 1].board!.souls).toEqual({ ally: 63, enemy: 73 });
   });
 
   it('forgets who is dead 15 s after the top bar was last seen (shop, menus)', () => {

@@ -46,7 +46,18 @@ export interface TeamBoard {
   allies: { heroId: string | null; dead: boolean }[]; // 6 slots, hero voted over the match
   enemies: { heroId: string | null; dead: boolean }[];
   mySlot: number; // my slot among the allies, -1 when unknown
+  clock?: MatchClock; // match clock, read every few seconds and extrapolated in between (clockAt)
+  souls?: { ally: number; enemy: number }; // souls of each team, in thousands as the top bar shows them
 }
+
+/** The match clock read at a given time: `seconds` on the clock at `at` (Date.now()). */
+export interface MatchClock {
+  seconds: number;
+  at: number;
+}
+
+/** The match clock at `now`, extrapolated from its last reading. */
+export const clockAt = (clock: MatchClock, now: number) => clock.seconds + Math.max(0, now - clock.at) / 1000;
 
 export interface MatchUpdate {
   patch: MatchPatch;
@@ -84,6 +95,11 @@ export const LANE_BY_PAIR: LaneColor[] = ['yellow', 'blue', 'orange'];
 
 // Who is dead is only shown while the top bar was seen this recently: in the shop or the menus it is unknown
 const BOARD_STALE_MS = 15000;
+// Top bar OCR (one reading every ~4 s): a reading that disagrees with the current value is only adopted once the next
+// one agrees with it (OCR slip, or a new match / a paused game)
+const CLOCK_TOLERANCE_S = 3;
+const TEAM_SOULS_TOLERANCE = 0.15; // the team souls only grow: at most 15 % (or 5k) between two readings
+const TEAM_SOULS_MIN_TOLERANCE = 5;
 
 /** Is the captured frame a valid landscape game resolution (16:9, 16:10, 21:9, 32:9, 4:3, windowed)? */
 export function isSupportedFormat(width?: number, height?: number): boolean {
@@ -117,6 +133,37 @@ const overlap = (a: (string | null | undefined)[], b: (string | null | undefined
 
 const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((id, i) => id === b[i]);
 
+/**
+ * A value read by OCR every few seconds: kept while each reading agrees with it, replaced only by two readings in a
+ * row that agree with each other.
+ */
+class CheckedReading<T> {
+  value: T | null = null;
+  private candidate: T | null = null;
+
+  constructor(private readonly agrees: (current: T, next: T) => boolean) {}
+
+  push(next: T): void {
+    if (this.value && this.agrees(this.value, next)) {
+      this.value = next;
+      this.candidate = null;
+    } else if (this.candidate && this.agrees(this.candidate, next)) {
+      this.value = next;
+      this.candidate = null;
+    } else {
+      this.candidate = next;
+    }
+  }
+
+  reset(): void {
+    this.value = null;
+    this.candidate = null;
+  }
+}
+
+const teamSoulsAgree = (a: number, b: number) =>
+  b >= a - 1 && b - a <= Math.max(TEAM_SOULS_MIN_TOLERANCE, a * TEAM_SOULS_TOLERANCE);
+
 export class MatchTracker {
   // Anti-flicker: a detection is applied only once it has been seen several scans in a row (350 ms each)
   private heroStabilizer = new StableValue<string>(3, (id) => id);
@@ -148,6 +195,14 @@ export class MatchTracker {
   private deadStabilizers = Array.from({ length: 12 }, () => new StableValue<boolean>(2, String));
   private dead: boolean[] = new Array(12).fill(false);
   private lastBoardAt = -Infinity;
+  // Match clock and team souls of the top bar (background OCR: each reading is handled once)
+  private clock = new CheckedReading<MatchClock>(
+    (current, next) => Math.abs(next.seconds - clockAt(current, next.at)) <= CLOCK_TOLERANCE_S
+  );
+  private teamSouls = new CheckedReading<{ ally: number; enemy: number }>(
+    (current, next) => teamSoulsAgree(current.ally, next.ally) && teamSoulsAgree(current.enemy, next.enemy)
+  );
+  private lastTopBarAt = -Infinity;
   private formatStabilizer = new StableValue<boolean>(FORMAT_SCANS, (ok) => String(ok));
   private formatSupported = true;
   private deadlockSince: number | null = null;
@@ -164,6 +219,23 @@ export class MatchTracker {
     this.deadStabilizers.forEach((s) => s.reset());
     this.dead.fill(false);
     this.lastBoardAt = -Infinity;
+    this.clock.reset();
+    this.teamSouls.reset();
+  }
+
+  /**
+   * The death cam shows the killer's top bar: their team on the left (my enemies), mine on the right (me included).
+   * My hero among the enemies only counts once my team's votes confirm it (a hero locked from the last match may be
+   * played by an enemy in the new one).
+   */
+  private isFlippedView(allySlots: (string | null)[], enemySlots: (string | null)[], myHeroId: string): boolean {
+    const votedAllies = this.allyVoter.result();
+    const votedEnemies = this.enemyVoter.result();
+    return (
+      (votedAllies.includes(myHeroId) && enemySlots.includes(myHeroId)) ||
+      overlap(allySlots, votedEnemies) >= 2 ||
+      overlap(enemySlots, votedAllies) >= 2
+    );
   }
 
   /** My hero was picked by hand: re-detection starts over. */
@@ -273,13 +345,7 @@ export class MatchTracker {
     const allySlots = detection.allySlots;
     const enemySlots = detection.enemySlots;
     if (detection.hudVisible && allySlots && enemySlots) {
-      const votedAllies = this.allyVoter.result();
-      const votedEnemies = this.enemyVoter.result();
-      const flipped =
-        (votedAllies.includes(activeHeroId) && enemySlots.includes(activeHeroId)) ||
-        overlap(allySlots, votedEnemies) >= 2 ||
-        overlap(enemySlots, votedAllies) >= 2;
-      if (!flipped) {
+      if (!this.isFlippedView(allySlots, enemySlots, activeHeroId)) {
         this.allyVoter.push(allySlots);
         this.enemyVoter.push(enemySlots);
         // Who is dead, read from the same frames: the death cam would swap the two teams
@@ -292,6 +358,21 @@ export class MatchTracker {
         }
       }
     }
+    // Match clock and team souls, read in the background from an earlier frame: the clock is the same on every
+    // screen, the team souls only count from my team's point of view (that frame's portraits, not the death cam's)
+    const topBar = detection.topBar;
+    if (topBar && topBar.at > this.lastTopBarAt) {
+      this.lastTopBarAt = topBar.at;
+      if (topBar.clockS !== undefined) this.clock.push({ seconds: topBar.clockS, at: topBar.at });
+      if (
+        topBar.allySouls !== undefined &&
+        topBar.enemySouls !== undefined &&
+        !this.isFlippedView(topBar.allySlots, topBar.enemySlots, activeHeroId)
+      ) {
+        this.teamSouls.push({ ally: topBar.allySouls, enemy: topBar.enemySouls });
+      }
+    }
+
     const votedAllies = this.allyVoter.result();
     const votedEnemies = this.enemyVoter.result();
     // My slot among the voted allies gives my lane (slots go by lane pairs) and my lane partner
@@ -301,6 +382,8 @@ export class MatchTracker {
         allies: votedAllies.map((heroId, i) => ({ heroId, dead: this.dead[i] })),
         enemies: votedEnemies.map((heroId, i) => ({ heroId, dead: this.dead[6 + i] })),
         mySlot,
+        ...(this.clock.value ? { clock: this.clock.value } : {}),
+        ...(this.teamSouls.value ? { souls: this.teamSouls.value } : {}),
       };
     }
     let lanePair = mySlot >= 0 ? Math.floor(mySlot / 2) : -1;

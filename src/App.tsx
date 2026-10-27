@@ -38,8 +38,8 @@ import {
 } from './data/deadlockData';
 import { getDataInfo } from './data/dataSource';
 import { analyzeDeadlockScreen, VisionDetectionResult } from './services/visionScanner';
-import { LANE_BY_PAIR, MatchSnapshot, MatchTracker, MatchUpdate, TeamBoard } from './services/matchTracker';
-import { NowAdvice, getNowAdvice } from './services/nowAdvice';
+import { LANE_BY_PAIR, MatchSnapshot, MatchTracker, MatchUpdate, TeamBoard, clockAt } from './services/matchTracker';
+import { MidBossState, NowAdvice, getNowAdvice, midBossBackAt } from './services/nowAdvice';
 import {
   INVENTORY_SLOTS,
   InventoryStatus,
@@ -153,6 +153,9 @@ const NOW_STYLE: Record<NowAdvice['kind'], { icon: string; className: string }> 
   farm: { icon: '🌾', className: 'text-teal-200' },
   safe: { icon: '🛡', className: 'text-red-300' },
   push: { icon: '⚔', className: 'text-emerald-300' },
+  midBoss: { icon: '🐉', className: 'text-fuchsia-300' },
+  soulsBehind: { icon: '📉', className: 'text-red-300' },
+  soulsAhead: { icon: '📈', className: 'text-emerald-300' },
   partnerDead: { icon: '⚠', className: 'text-red-300' },
   pushLane: { icon: '➡', className: 'text-emerald-300' },
   help: { icon: '🤝', className: 'text-sky-300' },
@@ -165,6 +168,8 @@ const HERO_LOCKED_KEY = 'dl_heroLocked';
 const FED_ENEMIES_KEY = 'dl_fedEnemies';
 // Who is dead in the top bar right now (services/matchTracker.ts), written by the main window only when it changes
 const BOARD_KEY = 'dl_board';
+// Mid Boss kills marked by hand this match (services/nowAdvice.ts), shared with the overlay
+const MID_BOSS_KEY = 'dl_midBoss';
 // First launch done (language and game logs chosen)
 const ONBOARDED_KEY = 'dl_onboarded';
 
@@ -267,6 +272,26 @@ export function App() {
       return null;
     }
   });
+  // Mid Boss kills marked by hand ("Mid Boss taken"): the app cannot see it, it only counts its respawn time
+  const [midBoss, setMidBoss] = useState<MidBossState | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(MID_BOSS_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  });
+  const storeMidBoss = useCallback((state: MidBossState | null) => {
+    setMidBoss(state);
+    if (state) localStorage.setItem(MID_BOSS_KEY, JSON.stringify(state));
+    else localStorage.removeItem(MID_BOSS_KEY);
+  }, []);
+  // Ticks every second while the match clock or a Mid Boss timer is shown (both are extrapolated)
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!board?.clock && !midBoss) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [board?.clock, midBoss]);
   const [currentSouls, setCurrentSouls] = useState<number | null>(() => {
     const saved = localStorage.getItem('dl_currentSouls');
     return saved ? parseInt(saved, 10) : null;
@@ -341,6 +366,7 @@ export function App() {
         setOwnedItems(JSON.parse(localStorage.getItem('dl_ownedItems') || '[]'));
         setFedEnemyIds(JSON.parse(localStorage.getItem(FED_ENEMIES_KEY) || '[]'));
         setBoard(JSON.parse(localStorage.getItem(BOARD_KEY) || 'null'));
+        setMidBoss(JSON.parse(localStorage.getItem(MID_BOSS_KEY) || 'null'));
         setLockedNext(JSON.parse(localStorage.getItem('dl_lockedNext') || 'null'));
         setInventoryStatus(JSON.parse(localStorage.getItem('dl_inventoryStatus') || 'null'));
       } catch {
@@ -510,12 +536,19 @@ export function App() {
     [nextToBuyQueue, ownedItems, inventoryStatus, sellCandidates]
   );
 
+  // Match clock (extrapolated between two readings) and when the Mid Boss is back after a kill marked by hand
+  const clockS = board?.clock ? Math.floor(clockAt(board.clock, nowMs)) : undefined;
+  const midBossBack = midBossBackAt(midBoss);
+  const midBossAlive = midBossBack === null || nowMs >= midBossBack;
+
   // "Now": a few orders from who is dead in the top bar, my souls and my real matchups (services/nowAdvice.ts)
   const nowAdvice = useMemo(
     () =>
       getNowAdvice(
         {
           board,
+          clockS,
+          midBossAlive,
           nextItem: nextToBuyQueue[0] && { id: nextToBuyQueue[0].item.id, cost: nextToBuyQueue[0].item.cost },
           souls: currentSouls,
           enemies: tacticalPlan.matchupAlerts.map((a) => ({
@@ -528,7 +561,7 @@ export function App() {
         },
         4
       ),
-    [board, nextToBuyQueue, currentSouls, tacticalPlan.matchupAlerts]
+    [board, clockS, midBossAlive, nextToBuyQueue, currentSouls, tacticalPlan.matchupAlerts]
   );
 
   // Static list of the active build's items: a tie-breaker for the inventory scanner that does not
@@ -598,13 +631,19 @@ export function App() {
   useEffect(() => {
     const deadSlots = (slots: TeamBoard['allies']) =>
       slots.flatMap((s, i) => (s.dead ? [`${i}:${s.heroId ?? '?'}`] : [])).join(',');
+    // Written when it changes: the clock only to the minute, or this line would come every second
+    const clockMin = clockS === undefined ? '?' : Math.floor(clockS / 60);
     logState(
       'MAINTENANT',
-      `${board ? `morts alliés=[${deadSlots(board.allies)}] ennemis=[${deadSlots(board.enemies)}]` : 'barre du haut non vue'} → ${
-        nowAdvice.map(({ kind, ...rest }) => `${kind} ${JSON.stringify(rest)}`).join(' • ') || 'rien'
-      }`
+      `${
+        board
+          ? `chrono=${clockMin} min âmes équipes=${board.souls ? `${board.souls.ally}k/${board.souls.enemy}k` : '?'} mid boss=${
+              midBossAlive ? 'vivant' : 'pris'
+            } morts alliés=[${deadSlots(board.allies)}] ennemis=[${deadSlots(board.enemies)}]`
+          : 'barre du haut non vue'
+      } → ${nowAdvice.map(({ kind, ...rest }) => `${kind} ${JSON.stringify(rest)}`).join(' • ') || 'rien'}`
     );
-  }, [board, nowAdvice]);
+  }, [board, nowAdvice, clockS, midBossAlive]);
 
   const manuallyExcludedRef = useRef<Set<string>>(new Set());
   const isScanningRef = useRef<boolean>(false);
@@ -641,7 +680,8 @@ export function App() {
     setOwnedItems([]);
     setInventoryStatus(null);
     storeFedEnemies([]);
-  }, [storeFedEnemies]);
+    storeMidBoss(null);
+  }, [storeFedEnemies, storeMidBoss]);
 
   const boardJsonRef = useRef<string>(JSON.stringify(board));
 
@@ -1051,6 +1091,14 @@ export function App() {
         return t('now.safe', a.alliesDead, a.enemiesDead);
       case 'push':
         return t('now.push', a.enemiesDead, a.alliesDead);
+      case 'midBoss':
+        return a.soulLead !== undefined && a.enemiesDead - a.alliesDead < 3
+          ? t('now.midBossLead', a.enemiesDead, formatNumber(a.soulLead))
+          : t('now.midBoss', a.enemiesDead, a.alliesDead);
+      case 'soulsBehind':
+        return t('now.soulsBehind', formatNumber(a.diff));
+      case 'soulsAhead':
+        return t('now.soulsAhead', formatNumber(a.diff));
       case 'partnerDead':
         return t('now.partnerDead', nameList([a.partnerId]));
       case 'pushLane':
@@ -1067,21 +1115,103 @@ export function App() {
         return t('now.avoid', nameList(a.enemyIds));
     }
   };
-  /** The "Now" orders, most urgent first. */
-  const renderNow = (max: number) => (
-    <ul className="space-y-1">
-      {nowAdvice.length === 0 ? (
-        <li className="text-body text-slate-400">{t('now.empty')}</li>
-      ) : (
-        nowAdvice.slice(0, max).map((a) => (
-          <li key={a.kind} className={`flex items-start gap-1.5 text-body font-semibold ${NOW_STYLE[a.kind].className}`}>
-            <span className="shrink-0 w-4 text-center">{NOW_STYLE[a.kind].icon}</span>
-            <span>{nowText(a)}</span>
-          </li>
-        ))
-      )}
-    </ul>
-  );
+  /** The heroes an order is about (their portraits are shown with it), or the item it is about. */
+  const nowVisual = (a: NowAdvice): { heroIds: string[]; itemId?: string } => {
+    switch (a.kind) {
+      case 'partnerDead':
+        return { heroIds: [a.partnerId] };
+      case 'pushLane':
+      case 'avoid':
+        return { heroIds: a.enemyIds };
+      case 'help':
+        return { heroIds: [a.allyId, ...a.enemyIds] };
+      case 'focus':
+        return { heroIds: [a.enemyId] };
+      case 'dead':
+        return { heroIds: [], itemId: a.itemId };
+      case 'buy':
+      case 'farm':
+        return { heroIds: [], itemId: a.itemId };
+      default:
+        return { heroIds: [] };
+    }
+  };
+  const formatClock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  /** The "Now" orders, most urgent first, with the portraits of the heroes they name; then the Mid Boss timer. */
+  const renderNow = (max: number, compact: boolean) => {
+    const size = compact ? 22 : 28;
+    return (
+      <div className="space-y-1.5">
+        <ul className="space-y-1">
+          {nowAdvice.length === 0 ? (
+            <li className="text-body text-slate-400">{t('now.empty')}</li>
+          ) : (
+            nowAdvice.slice(0, max).map((a) => {
+              const { heroIds, itemId } = nowVisual(a);
+              const item = itemId ? ITEMS[itemId] : undefined;
+              return (
+                <li key={a.kind} className={`flex items-center gap-1.5 text-body font-semibold ${NOW_STYLE[a.kind].className}`}>
+                  <span className="shrink-0 w-4 text-center">{NOW_STYLE[a.kind].icon}</span>
+                  {heroIds.length > 0 && (
+                    <span className="shrink-0 flex items-center -space-x-1">
+                      {heroIds.map((id) => (
+                        <HeroPortraitIcon
+                          key={id}
+                          heroId={id}
+                          color={HEROES.find((h) => h.id === id)?.accentColor ?? '#64748b'}
+                          size={size}
+                        />
+                      ))}
+                    </span>
+                  )}
+                  {item && <ItemArtworkIcon itemId={item.id} category={item.category} size={size} />}
+                  <span className="min-w-0">{nowText(a)}</span>
+                </li>
+              );
+            })
+          )}
+        </ul>
+        {renderMidBoss(compact)}
+      </div>
+    );
+  };
+  /** Match clock, Mid Boss state and the button marking it killed (the app cannot see it). */
+  const renderMidBoss = (compact: boolean) => {
+    const canClick = !(compact && isClickThrough);
+    return (
+      <div className="flex items-center gap-2 flex-wrap text-small text-slate-400">
+        {clockS !== undefined && <span className="tabular-nums">⏱ {formatClock(clockS)}</span>}
+        <span className={midBossAlive ? 'text-fuchsia-300' : ''}>
+          🐉{' '}
+          {midBossAlive
+            ? t('now.midBossUp')
+            : t('now.midBossBack', formatClock(Math.max(0, (midBossBack! - nowMs) / 1000)))}
+        </span>
+        {canClick && (
+          <span className="flex items-center gap-1">
+            <button
+              onClick={() =>
+                storeMidBoss({ kills: (midBoss?.kills ?? 0) + 1, lastKillAt: Date.now(), previous: midBoss ?? undefined })
+              }
+              title={t('now.midBossTakenTitle')}
+              className="px-2 py-0.5 rounded-md border border-fuchsia-400/40 bg-fuchsia-500/15 hover:bg-fuchsia-500/30 font-bold text-fuchsia-200"
+            >
+              {t('now.midBossTaken')}
+            </button>
+            {midBoss && (
+              <button
+                onClick={() => storeMidBoss(midBoss.previous ?? null)}
+                title={t('now.midBossUndoTitle')}
+                className="px-1.5 py-0.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/15 font-bold text-slate-300"
+              >
+                ↶
+              </button>
+            )}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   // ================= DEDICATED TRANSPARENT IN-GAME OVERLAY HUD WINDOW =================
   if (isDedicatedOverlayWindow) {
@@ -1167,7 +1297,7 @@ export function App() {
 
             <div className="no-drag px-3 py-1.5 bg-black/50 border-b border-white/10 space-y-1">
               <span className="text-small font-extrabold uppercase tracking-wider text-amber-300">{t('now.title')}</span>
-              {renderNow(3)}
+              {renderNow(3, true)}
             </div>
 
             {isClickThrough && (
@@ -1675,7 +1805,7 @@ export function App() {
                     </h2>
                     <span className="text-small text-slate-400">{t('now.hint')}</span>
                   </div>
-                  {renderNow(4)}
+                  {renderNow(4, false)}
                 </div>
 
                 {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
@@ -1828,27 +1958,85 @@ export function App() {
                   </div>
                 </div>
 
-                {/* Enemies: avoid their 1v1s / even / focus (real matchup of my hero); click = fed */}
+                {/* Counter the enemies: one card each (lane opponents first) with its stance (real matchup of my hero),
+                    its ultimate and the best items against it; click the header = fed */}
                 {stanceAlerts.length > 0 && (
                   <div className="p-3 rounded-xl bg-deadlock-panel border border-white/10 space-y-2">
-                    <span className="text-body font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                      <Swords className="w-3.5 h-3.5 text-red-400" /> {t('enemies.stripTitle')}
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
+                      <span className="text-body font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                        <Swords className="w-3.5 h-3.5 text-red-400" /> {t('enemies.countersTitle')}
+                      </span>
+                      <span className="text-small text-slate-400">{t('enemies.countersHint')}</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {stanceAlerts.map((alert) => (
-                        <button
+                        <div
                           key={alert.enemyId}
-                          onClick={() => toggleFed(alert.enemyId)}
-                          title={[matchupStatText(alert), t('enemies.stripHint')].filter(Boolean).join('\n')}
-                          className={`flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-lg border transition hover:brightness-125 ${stanceStyle(
-                            alert
-                          )}`}
+                          className={`rounded-lg border bg-black/30 p-2 space-y-1.5 ${
+                            alert.isFed ? 'border-orange-400' : alert.isInMyLane ? 'border-red-500/50' : 'border-white/10'
+                          }`}
                         >
-                          <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={24} />
-                          <span className="text-body font-bold">{alert.enemyName}</span>
-                          {alert.isInMyLane && <span className="text-small">🎯</span>}
-                          {stanceLabel(alert) && <span className="text-small font-semibold">{stanceLabel(alert)}</span>}
-                        </button>
+                          <button
+                            onClick={() => toggleFed(alert.enemyId)}
+                            title={[matchupStatText(alert), t('enemies.stripHint')].filter(Boolean).join('\n')}
+                            className="w-full flex items-center gap-2 text-left rounded-md hover:bg-white/5 transition"
+                          >
+                            <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={36} />
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-center gap-1 text-title font-extrabold text-white">
+                                <span className="truncate">{alert.enemyName}</span>
+                                {alert.isInMyLane && <span className="text-small">🎯</span>}
+                                {board?.enemies.some((s) => s.heroId === alert.enemyId && s.dead) && (
+                                  <span className="text-small font-bold text-slate-400 shrink-0">💀 {t('enemies.dead')}</span>
+                                )}
+                              </span>
+                              {stanceLabel(alert) && (
+                                <span className={`inline-block px-1.5 rounded border text-small font-bold ${stanceStyle(alert)}`}>
+                                  {stanceLabel(alert)}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                          {alert.ult && (
+                            <div className="flex items-center gap-1.5 text-small text-slate-300" title={t('enemies.ultTitle')}>
+                              {getAbilityIcon(alert.enemyId, '4') && (
+                                <img
+                                  src={getAbilityIcon(alert.enemyId, '4')}
+                                  alt=""
+                                  className="w-6 h-6 shrink-0 rounded-md bg-[#1a1524] border border-purple-400/50 object-contain p-0.5"
+                                  draggable={false}
+                                />
+                              )}
+                              <span className="font-semibold text-purple-300 shrink-0">{t('enemies.ult')}</span>
+                              <span className="truncate">{alert.ult.name.split('(')[0].trim()}</span>
+                            </div>
+                          )}
+                          {alert.counters.length > 0 ? (
+                            <ul className="space-y-1">
+                              {alert.counters.map(({ item, reason }) => {
+                                const owned = effectiveOwned.has(item.id);
+                                return (
+                                  <li
+                                    key={item.id}
+                                    title={reason}
+                                    className={`flex items-center gap-1.5 ${owned ? 'opacity-50' : ''}`}
+                                  >
+                                    <ItemArtworkIcon itemId={item.id} category={item.category} size={26} />
+                                    <span className="min-w-0">
+                                      <span className="block text-body font-bold text-white truncate">
+                                        {owned && '✓ '}
+                                        {item.name.split('(')[0].trim()}
+                                      </span>
+                                      <span className="block text-small text-slate-400 truncate">{reason}</span>
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="text-small text-slate-500">{t('enemies.noCounters')}</p>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>

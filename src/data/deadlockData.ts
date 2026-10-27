@@ -2590,6 +2590,9 @@ export function getHeroMetaInfo(heroId: string): { badgeMin: number; matches: nu
 }
 
 // ================= TACTICAL COUNTER ENGINE =================
+// Counter items shown on each enemy's card
+const ENEMY_COUNTERS_SHOWN = 3;
+
 export interface TacticalRecommendation {
   priorityItems: {
     item: DeadlockItem;
@@ -2610,6 +2613,10 @@ export interface TacticalRecommendation {
     stat?: MatchupStat;
     /** Marked fed by the player: its counters weigh more */
     isFed: boolean;
+    /** Its ultimate (ability 4), name in the interface language */
+    ult?: { key: '4'; name: string };
+    /** The best items against this enemy (statistics, threat tags, hand-written matchups), best first */
+    counters: { item: DeadlockItem; reason: string }[];
   }[];
   laneStrategy: {
     laneTitle: string;
@@ -2768,9 +2775,14 @@ export function generateTacticalPlan(
   const allyHero = allyPartnerId ? heroes.find((h) => h.id === allyPartnerId) : null;
 
   const itemScores: Record<string, { score: number; reasons: string[]; urgency: Urgency }> = {};
+  // Counters of the enemy being evaluated, for its own card: best score per item, reason without "[LANE] " / "🔥 "
+  let enemyCounters: Record<string, { score: number; reason: string }> | null = null;
 
   const addItemRecommendation = (itemId: string, score: number, reason: string, urgency: Urgency) => {
     if (!items[itemId]) return;
+    if (enemyCounters && (!enemyCounters[itemId] || score > enemyCounters[itemId].score)) {
+      enemyCounters[itemId] = { score, reason: reason.replace(/^(🔥 )?\[(LANE|TEAM)\] /, '') };
+    }
     if (!itemScores[itemId]) {
       itemScores[itemId] = { score: 0, reasons: [], urgency };
     }
@@ -2820,6 +2832,7 @@ export function generateTacticalPlan(
         stance,
         stat,
         isFed,
+        counters: [], // filled by evaluateEnemyCard
       });
       specific.mustBuyItems.forEach((itemId, idx) => {
         addItemRecommendation(
@@ -2861,6 +2874,7 @@ export function generateTacticalPlan(
         stance,
         stat,
         isFed,
+        counters: [], // filled by evaluateEnemyCard
       });
     }
 
@@ -2901,8 +2915,21 @@ export function generateTacticalPlan(
     }
   };
 
-  laneEnemies.forEach((e) => evaluateEnemy(e, true));
-  otherTeamEnemies.forEach((e) => evaluateEnemy(e, false));
+  // Each enemy gets one card (matchupAlerts) with its ultimate and its own best counters
+  const evaluateEnemyCard = (enemy: DeadlockHero, isInMyLane: boolean) => {
+    enemyCounters = {};
+    evaluateEnemy(enemy, isInMyLane);
+    const card = matchupAlerts[matchupAlerts.length - 1];
+    const ult = enemy.builds[0]?.abilitiesDetails.find((a) => a.key === '4');
+    if (ult) card.ult = { key: '4', name: ult.name };
+    card.counters = Object.entries(enemyCounters)
+      .sort((a, b) => b[1].score - a[1].score || items[a[0]].cost - items[b[0]].cost || a[0].localeCompare(b[0]))
+      .slice(0, ENEMY_COUNTERS_SHOWN)
+      .map(([itemId, c]) => ({ item: items[itemId], reason: c.reason }));
+    enemyCounters = null;
+  };
+  laneEnemies.forEach((e) => evaluateEnemyCard(e, true));
+  otherTeamEnemies.forEach((e) => evaluateEnemyCard(e, false));
 
   // Lane & Ally Partner adjustments
   let allySynergyTip: string | undefined = undefined;

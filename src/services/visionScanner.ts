@@ -21,6 +21,7 @@ export interface VisionDetectionResult {
   abilityHeroId?: string; // hero matched by the ability icons (less reliable, cooldown numbers fool it)
   allySlots?: (string | null)[]; // hero of each of the 6 ally portraits (left), null when unreadable
   enemySlots?: (string | null)[]; // hero of each of the 6 enemy portraits (right)
+  topBar?: TopBarReading; // last match clock and team souls read (background OCR, possibly from an earlier frame)
   allyDead?: boolean[]; // respawn timer over each of the 6 ally portraits (dead), set with allySlots
   enemyDead?: boolean[];
   mySlotIndex?: number; // ally slot used as mine for the lane (-1 when unknown)
@@ -47,6 +48,17 @@ export interface InventorySlotReading {
   error?: number;
   secondId?: string;
   secondError?: number;
+}
+
+/** Match clock and team souls of the top bar, read by OCR in the background from one frame. */
+export interface TopBarReading {
+  clockS?: number; // match clock (seconds) on that frame
+  allySouls?: number; // souls of the team on the left (thousands, as shown: "62 k")
+  enemySouls?: number;
+  at: number; // Date.now() when that frame was analysed
+  // Portraits of that frame: the death cam shows the killer's top bar, whose left side is not my team
+  allySlots: (string | null)[];
+  enemySlots: (string | null)[];
 }
 
 const HERO_ICONS = officialIconsMap.heroes as Record<string, string>;
@@ -174,6 +186,36 @@ function getDigitsOcrWorker(): Promise<Tesseract.Worker> {
   return ocrWorkerPromise;
 }
 
+// Top bar OCR (match clock, team souls): its own worker, set to a single line of digits
+let topBarWorkerPromise: Promise<Tesseract.Worker> | null = null;
+let isTopBarOcrBusy = false;
+let lastTopBarOcrAt = -Infinity;
+let cachedTopBar: TopBarReading | undefined = undefined;
+
+function getTopBarOcrWorker(): Promise<Tesseract.Worker> {
+  if (!topBarWorkerPromise) {
+    const local = (p: string) => new URL(`./tesseract/${p}`, document.baseURI).href;
+    topBarWorkerPromise = Tesseract.createWorker('eng', 1, {
+      workerPath: local('worker.min.js'),
+      corePath: local('core/'),
+      langPath: local('lang'),
+      workerBlobURL: false,
+      cacheMethod: 'none',
+      gzip: true,
+    }).then(async (worker) => {
+      await worker.setParameters({
+        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE,
+        tessedit_char_whitelist: '0123456789:',
+      });
+      return worker;
+    });
+    topBarWorkerPromise.catch(() => {
+      topBarWorkerPromise = null;
+    });
+  }
+  return topBarWorkerPromise;
+}
+
 async function getPortraitTemplates(): Promise<HeroPortraitTemplate[]> {
   if (cachedPortraitTemplates) return cachedPortraitTemplates;
   const templates: HeroPortraitTemplate[] = [];
@@ -293,6 +335,127 @@ const OWN_BOX_SINGLE_SIDE_MIN = 0.75;
 const RESPAWN_DIGIT_MIN_PIXELS = 30;
 const isRespawnDigitPixel = (d: Uint8ClampedArray, i: number) =>
   d[i] > 220 && d[i + 1] > 45 && d[i + 1] < 115 && d[i + 2] < 60;
+
+// Match clock and team souls of the top bar (measured on the 12 frames of tests/vision, 0:32 to 35:01). The clock
+// ("15:45", light grey, 9 px high) sits in a dark box above the score boxes; each score box shows its team's souls
+// in thousands ("62 k", 20 px high): white on the blue box, black on the amber one, followed by a faint "k". The
+// left box's number ends before its team icon (right-aligned), the right box's starts after its icon.
+const CLOCK_BOX = { x: 925, y: 14, w: 70, h: 18 };
+const LEFT_SOULS_BOX = { x: 855, y: 48, w: 67, h: 30 };
+const RIGHT_SOULS_BOX = { x: 998, y: 48, w: 67, h: 30 };
+// Read every few seconds only: the application extrapolates the clock, and the team souls change slowly
+const TOP_BAR_OCR_INTERVAL_MS = 4000;
+const isWhiteTextPixel = (d: Uint8ClampedArray, i: number) => d[i] > 190 && d[i + 1] > 190 && d[i + 2] > 190;
+const isDarkTextPixel = (d: Uint8ClampedArray, i: number) => d[i] < 90 && d[i + 1] < 80 && d[i + 2] < 70;
+
+/**
+ * Text pixels of a region as a black-on-white image for the OCR (scaled up, padded), keeping only the glyphs as tall
+ * as the tallest one: the faint "k" after the team souls is shorter, and is dropped when some of it passes the test.
+ */
+function textImageForOcr(
+  data: Uint8ClampedArray,
+  w: number,
+  h: number,
+  isText: (d: Uint8ClampedArray, i: number) => boolean,
+  scale: number
+): string | null {
+  const on = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) on[i] = isText(data, i * 4) ? 1 : 0;
+  // Glyphs = runs of columns holding text pixels
+  const glyphs: { x0: number; x1: number; y0: number; y1: number }[] = [];
+  let current: { x0: number; x1: number; y0: number; y1: number } | null = null;
+  for (let x = 0; x < w; x++) {
+    let y0 = h;
+    let y1 = -1;
+    for (let y = 0; y < h; y++) {
+      if (on[y * w + x]) {
+        y0 = Math.min(y0, y);
+        y1 = y;
+      }
+    }
+    if (y1 < 0) {
+      current = null;
+      continue;
+    }
+    if (!current) glyphs.push((current = { x0: x, x1: x, y0, y1 }));
+    current.x1 = x;
+    current.y0 = Math.min(current.y0, y0);
+    current.y1 = Math.max(current.y1, y1);
+  }
+  const tallest = Math.max(0, ...glyphs.map((g) => g.y1 - g.y0 + 1));
+  if (tallest < 6) return null;
+  const kept = glyphs.filter((g) => g.y1 - g.y0 + 1 >= tallest * 0.7);
+  if (kept.length === 0) return null;
+  const pad = 12;
+  const canvas = document.createElement('canvas');
+  canvas.width = w * scale + pad * 2;
+  canvas.height = h * scale + pad * 2;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#000000';
+  for (const g of kept) {
+    for (let x = g.x0; x <= g.x1; x++) {
+      for (let y = 0; y < h; y++) if (on[y * w + x]) ctx.fillRect(pad + x * scale, pad + y * scale, scale, scale);
+    }
+  }
+  return canvas.toDataURL('image/png');
+}
+
+/**
+ * Small light text on a box of any shade (the clock): dark-on-white grey levels from the box's own contrast (its
+ * median is the background, its brightest pixels the text), scaled up smoothly. A fixed colour test lost most of the
+ * 9 px anti-aliased digits, and all of them on the lighter box of a bright map area.
+ */
+function contrastImageForOcr(data: Uint8ClampedArray, w: number, h: number, scale: number): string | null {
+  const lum = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) lum[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+  const sorted = Array.from(lum).sort((a, b) => a - b);
+  const background = sorted[Math.floor(sorted.length / 2)];
+  const text = sorted[Math.floor(sorted.length * 0.97)];
+  if (text - background < 40) return null; // no text on the box
+  const small = document.createElement('canvas');
+  small.width = w;
+  small.height = h;
+  const smallCtx = small.getContext('2d');
+  if (!smallCtx) return null;
+  const out = smallCtx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    const v = Math.min(1, Math.max(0, (lum[i] - background) / (text - background)));
+    const grey = Math.round(255 * (1 - v));
+    out.data[i * 4] = out.data[i * 4 + 1] = out.data[i * 4 + 2] = grey;
+    out.data[i * 4 + 3] = 255;
+  }
+  smallCtx.putImageData(out, 0, 0);
+  const pad = 16;
+  const canvas = document.createElement('canvas');
+  canvas.width = w * scale + pad * 2;
+  canvas.height = h * scale + pad * 2;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(small, pad, pad, w * scale, h * scale);
+  return canvas.toDataURL('image/png');
+}
+
+/** "15:45", "1545" -> 945 s; "0:32" -> 32 s. */
+export function parseClock(text: string): number | undefined {
+  const digits = text.replace(/[^0-9]/g, '');
+  if (digits.length < 3 || digits.length > 4) return undefined;
+  const minutes = parseInt(digits.slice(0, -2), 10);
+  const seconds = parseInt(digits.slice(-2), 10);
+  return seconds < 60 && minutes <= 120 ? minutes * 60 + seconds : undefined;
+}
+
+/** "62", "219" (thousands of souls); the "k" and anything else is ignored. */
+export function parseTeamSouls(text: string): number | undefined {
+  const digits = text.replace(/[^0-9]/g, '');
+  return digits.length >= 1 && digits.length <= 3 ? parseInt(digits, 10) : undefined;
+}
 
 /** Share of the pixels (every `step` bytes) passing `test`. */
 function colorRatio(
@@ -572,13 +735,15 @@ export function resetScannerState(): void {
   lastMintPixels = -1;
   lastMintXSum = -1;
   cachedDetectedSouls = undefined;
+  lastTopBarOcrAt = -Infinity;
+  cachedTopBar = undefined;
   lastProvenLayout = null;
 }
 
-/** Resolves once the background souls OCR is done (replay harness: the next scan of the frame reads the souls). */
+/** Resolves once the background OCR (souls, top bar) is done (replay harness: the next scan of the frame reads it). */
 export async function waitForOcrIdle(timeoutMs = 15000): Promise<void> {
   const start = Date.now();
-  while (isOcrBusy && Date.now() - start < timeoutMs) {
+  while ((isOcrBusy || isTopBarOcrBusy) && Date.now() - start < timeoutMs) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 }
@@ -1639,6 +1804,65 @@ export async function analyzeDeadlockScreen(
         }
       }
 
+      // 4. NON-BLOCKING TOP BAR OCR: match clock and team souls, every few seconds while the top bar is visible
+      const frameAllySlots = allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id));
+      const frameEnemySlots = enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id));
+      const frameAt = Date.now();
+      if (isDeadlockTopBarVisible && !isTopBarOcrBusy && frameAt - lastTopBarOcrAt >= TOP_BAR_OCR_INTERVAL_MS) {
+        try {
+          const region = (box: { x: number; y: number; w: number; h: number }) => {
+            const sw = Math.max(1, Math.round((w * box.w) / 1920));
+            const sh = Math.max(1, Math.round((h * box.h) / 1080));
+            const data = fullCtx.getImageData(Math.round((w * box.x) / 1920), Math.round((h * box.y) / 1080), sw, sh).data;
+            return { data, sw, sh };
+          };
+          // The left box is my team's colour (amber: black digits; sapphire: white digits), the right one the other
+          const leftText = isMyTeamAmber ? isDarkTextPixel : isWhiteTextPixel;
+          const rightText = isMyTeamAmber ? isWhiteTextPixel : isDarkTextPixel;
+          const clock = region(CLOCK_BOX);
+          const left = region(LEFT_SOULS_BOX);
+          const right = region(RIGHT_SOULS_BOX);
+          const images = [
+            contrastImageForOcr(clock.data, clock.sw, clock.sh, 4),
+            textImageForOcr(left.data, left.sw, left.sh, leftText, 2),
+            textImageForOcr(right.data, right.sw, right.sh, rightText, 2),
+          ];
+          lastTopBarOcrAt = frameAt;
+          isTopBarOcrBusy = true;
+          getTopBarOcrWorker()
+            .then(async (worker) => {
+              const read = async (image: string | null) => (image ? (await worker.recognize(image)).data.text || '' : '');
+              const clockOcr = await read(images[0]);
+              const leftOcr = await read(images[1]);
+              const rightOcr = await read(images[2]);
+              cachedTopBar = {
+                clockS: parseClock(clockOcr),
+                allySouls: parseTeamSouls(leftOcr),
+                enemySouls: parseTeamSouls(rightOcr),
+                at: frameAt,
+                allySlots: frameAllySlots,
+                enemySlots: frameEnemySlots,
+              };
+            })
+            .catch(() => {})
+            .finally(() => {
+              isTopBarOcrBusy = false;
+            });
+        } catch {
+          isTopBarOcrBusy = false;
+        }
+      }
+      if (cachedTopBar) {
+        const c = cachedTopBar;
+        const clockText =
+          c.clockS === undefined ? '?' : `${Math.floor(c.clockS / 60)}:${String(c.clockS % 60).padStart(2, '0')}`;
+        debugLogs.push(
+          `Barre du haut (il y a ${((frameAt - c.at) / 1000).toFixed(1)} s) : chrono ${clockText}, âmes ${c.allySouls ?? '?'}k / ${
+            c.enemySouls ?? '?'
+          }k`
+        );
+      }
+
       const detectedAllyIds = validAllies.filter((id) => id !== detectedHeroId);
       const inventoryScanned = isDeadlockTopBarVisible || totalOccupiedSlots > 0;
       const confidence =
@@ -1668,6 +1892,7 @@ export async function analyzeDeadlockScreen(
         enemySlots: isDeadlockTopBarVisible ? enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id)) : undefined,
         allyDead: isDeadlockTopBarVisible ? [...allyDead] : undefined,
         enemyDead: isDeadlockTopBarVisible ? [...enemyDead] : undefined,
+        topBar: cachedTopBar,
         mySlotIndex,
         frameWidth: rawW,
         frameHeight: rawH,
