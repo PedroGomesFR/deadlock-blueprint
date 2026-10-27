@@ -1,22 +1,31 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] — 2026-10-27
+
+The app no longer only tells you what to buy: it now tells you **what to do right now** and **how to beat each enemy**. This version also includes everything planned for 1.4.8, which was never published.
 
 ### New
-- **Now**: a new section at the top of the main window and of the overlay says what to do right now, from who is dead on each side (the respawn timers of the portraits at the top of the screen), your souls and your matchups. For example: "Buy Mystic Burst: you have the souls", "Farm: 450 souls short of Mystic Burst", "4 enemies dead against 1 ally: push, take a guardian or an objective", "Play safe: 3 allies dead", "Go help York Avenue: Vindicta is alone against Apollo and Warden", "Paige and Wraith are dead: push your lane", "Focus Haze first: you win 56% of your games against them", "Avoid 1v1s against Warden". On the overlay, it replaces the "Avoid · Focus" line. Each order shows the **portraits** of the heroes it names, so you see at a glance who it is. The app does not see the map (positions, health, objectives), so these orders are only about who is alive in each lane, the match clock and the team souls.
+- **Now**: a new section at the top of the main window and of the overlay says what to do right now, from who is dead on each side (the respawn timers of the portraits at the top of the screen), your souls and your matchups. For example: "Buy Mystic Burst: you have the souls", "Farm: 450 souls short of Mystic Burst", "4 enemies dead against 1 ally: push, take a guardian or an objective", "Play safe: 3 allies dead", "Go help York Avenue: Vindicta is alone against Apollo and Warden", "Paige and Wraith are dead: push your lane", "Focus Haze first: you win 56% of your games against them", "Avoid 1v1s against Warden". Each order shows the **portraits** of the heroes it names, so you see at a glance who it is. The app does not see the map (positions, health, objectives), so these orders are only about who is alive in each lane, the match clock and the team souls.
 - **Mid Boss**: "Take the Mid Boss with your team" when your team has the advantage (3 enemies dead and 2 more than allies, or a soul lead with 2 more enemies dead), after 10:00. The app can't see whether it is alive: click **Mid Boss taken** when a team kills it, and it counts its respawn (7, then 6, then 5 min) with a timer.
 - **Team souls**: the app reads the match clock and both teams' souls at the top of the screen. "Your team is 10k souls behind: stay grouped, farm" or "10k souls ahead: force the guardians and objectives".
-- **Counter the enemies**: one card per enemy in the main window, with their portrait, whether to avoid or focus them, whether they are dead, their ultimate (icon and name), and the 3 best items against them with the reason ("Immunity to Wraith's bullets", "+1.9 pts win rate against Paige"…). Click a card to mark that enemy fed. It replaces the "Enemies" strip.
-
-## [1.4.8] — 2026-10-27
-
-Suggestions from a player.
-
-### New
-- **Who to avoid, who to focus**: each enemy is now rated from your hero's real win rate against them in high-rank games (in lane for your lane opponents): **Avoid 1v1s**, **Even** or **Focus**, with the numbers ("You win 44.9% of games laning against them, usually 47.8%"). The danger level comes from it too: before, it only depended on what the enemy does (any enemy with crowd control was "High"), whatever hero you played. Shown in the Matchups tab, in a new **Enemies** strip of the main window, and as one line of the overlay.
+- **Counter the enemies**: one card per enemy in the main window, with their portrait, whether to avoid or focus them, whether they are dead, their ultimate (icon and name), and the 3 best items against them with the reason ("Immunity to Wraith's bullets", "+1.9 pts win rate against Paige"…). Click a card to mark that enemy fed.
+- **Who to avoid, who to focus**: each enemy is now rated from your hero's real win rate against them in high-rank games (in lane for your lane opponents): **Avoid 1v1s**, **Even** or **Focus**, with the numbers ("You win 44.9% of games laning against them, usually 47.8%"). The danger level comes from it too: before, it only depended on what the enemy does (any enemy with crowd control was "High"), whatever hero you played. Shown in the Matchups tab, on the enemy cards and in the "Now" orders.
 - **Lane outlook and duo**: the Matchups tab says whether your lane is hard, even or favourable against your opponents, and how your hero does with your lane partner.
 - **Items that win against each enemy**: the counters now include the items that win more than usual for your hero when that enemy is on the other team ("+2.1 pts win rate against Haze"), on top of the anti-heal / resist / CC-immunity rules.
-- **Mark an enemy as fed**: click them in the Enemies strip (or "Mark fed" in the Matchups tab). Their counters come first, they are always "Avoid 1v1s", and the overlay reminds you. Cleared at the next match.
+- **Mark an enemy as fed**: click their card (or "Mark fed" in the Matchups tab). Their counters come first, they are always "Avoid 1v1s", and the "Now" orders tell you to focus them in fights. Cleared at the next match.
+- **Where to imbue**: an imbue item now shows the ability most players put it on ("Imbue on Napalm 53%"), from the week's most popular published builds. Thanks to [@roroos](https://github.com/roroos) ([#7](https://github.com/PedroGomesFR/deadlock-blueprint/pull/7)).
+
+### Changed
+- **Buy right now** follows the moment high-rank players usually buy each item, instead of the build's fixed order: an item bought around 23:00 no longer sits above items bought around 15:00. Thanks to [@roroos](https://github.com/roroos) ([#6](https://github.com/PedroGomesFR/deadlock-blueprint/pull/6)).
+- **Counters no longer take over the purchase list**: at most one Tier I-II and one Tier III-IV counter are added to it, and only those that answer your lane opponent or at least two enemies (one Bebop on the other side was enough to put Spirit Resilience at #1). The counters panel is unchanged. Thanks to [@roroos](https://github.com/roroos) ([#6](https://github.com/PedroGomesFR/deadlock-blueprint/pull/6)).
+- On the overlay, the "Now" orders replace the "Avoid · Focus" line.
+
+### Fixed
+- **Some items you bought stayed "unknown"** at 2560×1440 (Spirit Resilience, Greater Expansion): a match slightly above the limit is now accepted when it clearly beats every other item. Thanks to [@roroos](https://github.com/roroos) ([#8](https://github.com/PedroGomesFR/deadlock-blueprint/pull/8)).
+- A component consumed by an upgrade you own (Mystic Expansion once you have Greater Expansion) no longer shows as missing in the counters list and the build columns. Thanks to [@roroos](https://github.com/roroos) ([#6](https://github.com/PedroGomesFR/deadlock-blueprint/pull/6)).
+
+### Thanks
+Thanks to everyone who contributed to this version and the ones before it: [@roroos](https://github.com/roroos) (#5, #6, #7, #8), [@vshtykhnov](https://github.com/vshtykhnov) (#3), and the players who suggested features and reported problems in the issues.
 
 ## [1.4.7] — 2026-10-26
 

@@ -1,7 +1,7 @@
 /**
  * Hero-versus-hero statistics of the generated data (scripts/update-builds.mjs, high ranks over 30 days): how a hero
  * does against each enemy (in lane and over the game), with each lane partner, and which items win more than usual
- * against each enemy. Optional fields since 1.4.8: a data file cached by an older version has none, every function
+ * against each enemy. Optional fields since 2.0.0: a data file cached by an older version has none, every function
  * then returns undefined / [] and the app falls back on the hand-written threat tags.
  */
 import { getMetaData } from './dataSource';

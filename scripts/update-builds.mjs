@@ -840,7 +840,7 @@ function validateGenerated(catalogJson, metaJson) {
       if (n < 6) errors.push(`${id}/${b.kind} : ${n} objets`);
       for (const phase of Object.values(b.phases)) for (const itemId of phase) if (!items[itemId]) errors.push(`${id} : objet inconnu ${itemId}`);
     }
-    // Facultatifs (depuis 1.4.8) : absents des fichiers plus anciens
+    // Facultatifs (depuis 2.0.0) : absents des fichiers plus anciens
     const isCount = (n) => Number.isInteger(n) && n >= 0;
     for (const [enemy, row] of Object.entries(h.matchups || {})) {
       if (!heroes[enemy]) errors.push(`${id} : matchup contre un héros inconnu ${enemy}`);

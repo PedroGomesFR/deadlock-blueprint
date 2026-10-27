@@ -11,7 +11,7 @@ const meta = {
       laneDuos: { ally: [550, 1000] },
       counterItems: { hard: [['healbane', 0.031], ['metal_skin', 0.012]] },
     },
-    old: {}, // data file cached by a version before 1.4.8: no pair statistics
+    old: {}, // data file cached by a version before 2.0.0: no pair statistics
   },
 };
 

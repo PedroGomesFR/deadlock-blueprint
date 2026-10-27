@@ -18,7 +18,7 @@ let section = '';
 if (start >= 0) {
   const rest = changelog.slice(start);
   const next = rest.slice(3).search(/^## /m);
-  section = (next >= 0 ? rest.slice(0, next + 3) : rest).replace(/^## .*\n/, '').trim();
+  section = (next >= 0 ? rest.slice(0, next + 3) : rest).replace(/^## [^\n]*\n/, '').trim();
 }
 
 const sums = path.join(ROOT, 'release', 'SHA256SUMS.txt');
