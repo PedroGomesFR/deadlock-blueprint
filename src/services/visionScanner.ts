@@ -395,6 +395,10 @@ const MATCH_GRID = 20;
 // Max error (mean absolute RGB difference, 0-255) for an inventory slot to be accepted as an item.
 // Measured on a real capture: correct items 4-9, best wrong candidate >= 29.
 const ITEM_MATCH_MAX_MAE = 20;
+// A slightly worse match is still accepted when it clearly beats the runner-up: on a real 2560x1440 capture,
+// Spirit Resilience read 20.7 (2nd: 38.0) and Greater Expansion 27.3 (2nd: 44.1) and were left unknown.
+const ITEM_MATCH_CLEAR_WINNER_MAX_MAE = 30;
+const ITEM_MATCH_CLEAR_WINNER_MARGIN = 15;
 // Tie-breaker in favour of the active build's items.
 const BUILD_ITEM_MAE_BONUS = 2;
 
@@ -1159,7 +1163,11 @@ export async function analyzeDeadlockScreen(
               }
             }
 
-            const accepted = bestItem !== null && bestEffectiveMAE <= ITEM_MATCH_MAX_MAE;
+            const accepted =
+              bestItem !== null &&
+              (bestEffectiveMAE <= ITEM_MATCH_MAX_MAE ||
+                (bestEffectiveMAE <= ITEM_MATCH_CLEAR_WINNER_MAX_MAE &&
+                  secondEffectiveMAE - bestEffectiveMAE >= ITEM_MATCH_CLEAR_WINNER_MARGIN));
             let recognizedItem: string | null = accepted ? bestItem : null;
             let cooldownError: number | undefined;
             if (accepted) {
