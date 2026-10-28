@@ -1,0 +1,202 @@
+{
+  "description": "Street Brawl pick screen frames (tests/streetBrawl/frames, made with prepareFrames.ts from 2560x1440 captures) and what src/streetBrawl/pickScreen.ts must read in each. Cards are listed top centre, bottom left, bottom right; only the fields given are compared.",
+  "cases": [
+    {
+      "frame": "pick_r1_c1_rare_enhanced",
+      "description": "Round 1, choice 1 of 3. Left card rare and enhanced (blue-recoloured Titanic Magazine).",
+      "open": true,
+      "round": 1,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "close_quarters", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "titanic_magazine", "rare": true, "enhanced": true, "bonusItemId": null },
+        { "itemId": "mystic_burst", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 1,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r1_c2",
+      "description": "Round 1, choice 2 of 3.",
+      "open": true,
+      "round": 1,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "stalker", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "spirit_sap", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "guardian_ward", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 2,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r1_c3",
+      "description": "Round 1, choice 3 of 3.",
+      "open": true,
+      "round": 1,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "counterspell", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "greater_expansion", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "lifestrike", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 3,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r3_c1_rare",
+      "description": "Round 3, choice 1 of 3. Left card rare (teal ring), not enhanced.",
+      "open": true,
+      "round": 3,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "cold_front", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "escalating_resilience", "rare": true, "enhanced": false, "bonusItemId": null },
+        { "itemId": "bullet_resist_shredder", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 1,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r3_c3_enhanced_no_reroll",
+      "description": "Round 3, choice 3 of 3. Left card enhanced (Healing Tempo), \"0 Re-Rolls Remaining\".",
+      "open": true,
+      "round": 3,
+      "rerolls": 0,
+      "cards": [
+        { "itemId": "colossus", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "healing_tempo", "rare": false, "enhanced": true, "bonusItemId": null },
+        { "itemId": "arctic_blast", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 3,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r4_c1_bonus",
+      "description": "Round 4, choice 1 of 3. Centre card rare with a \"BONUS!\" tag: Boundless Spirit + Recharging Rush.",
+      "open": true,
+      "round": 4,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "boundless_spirit", "rare": true, "enhanced": false, "hasBonus": true, "bonusItemId": "recharging_rush" },
+        { "itemId": "berserker", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "shadow_weave", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 1,
+      "hero": "nurse_harrow"
+    },
+    {
+      "frame": "pick_r4_c2_enhanced_portrait",
+      "description": "Round 4, choice 2 of 3. Left card enhanced Spirit Rend (read 0.31 by brightness alone, 0.07 by best channel pair); a teammate's portrait over the top card; right card rare.",
+      "open": true,
+      "round": 4,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "fury_trance", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "spirit_rend", "rare": false, "enhanced": true, "bonusItemId": null },
+        { "itemId": "divine_barrier", "rare": true, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 2,
+      "hero": "ivy"
+    },
+    {
+      "frame": "pick_r4_c3_legendary",
+      "description": "Round 4, choice 3 of 3. Left card \"LEGENDARY\": Celestial Blessing, a Street Brawl-only item (streetBrawl.json › legendaryItems).",
+      "open": true,
+      "round": 4,
+      "rerolls": 1,
+      "cards": [
+        { "itemId": "colossus", "rare": false, "enhanced": false, "bonusItemId": null },
+        { "itemId": "celestial_blessing", "enhanced": false, "bonusItemId": null },
+        { "itemId": "plated_armor", "rare": false, "enhanced": false, "bonusItemId": null }
+      ],
+      "choice": 3,
+      "hero": "ivy"
+    },
+    {
+      "frame": "pick_r2_c1_two_rerolls",
+      "description": "Round 2, choice 1 of 3, random hero: \"2 Re-Rolls Remaining\". Left card Compress Cooldown (id improved_cooldown), read 0.004 with Grit only 0.107 behind.",
+      "open": true,
+      "round": 2,
+      "rerolls": 2,
+      "choice": 1,
+      "cards": [
+        { "itemId": "healbane", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "improved_cooldown", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "enduring_speed", "rare": false, "enhanced": false, "hasBonus": false }
+      ],
+      "hero": "deadman_danny"
+    },
+    {
+      "frame": "pick_r4_c1_bonus_monster_rounds",
+      "description": "Round 4, choice 1 of 3. Top card Sharpshooter with a \"BONUS!\" tag: Monster Rounds (0.12, Compress Cooldown 0.08 behind).",
+      "open": true,
+      "round": 4,
+      "rerolls": 1,
+      "choice": 1,
+      "cards": [
+        { "itemId": "sharpshooter", "rare": false, "enhanced": false, "hasBonus": true, "bonusItemId": "monster_rounds" },
+        { "itemId": "superior_stamina", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "torment_pulse", "rare": false, "enhanced": false, "hasBonus": false }
+      ],
+      "hero": "deadman_danny"
+    },
+    {
+      "frame": "pick_tier4_warden",
+      "description": "Round 2, choice 2 of 3, \"0 Re-Rolls Remaining\". Right card rare: Plated Armor, a tier 4 item offered in round 2 (rare cards are one tier up). Hero Warden.",
+      "open": true,
+      "round": 2,
+      "rerolls": 0,
+      "choice": 2,
+      "hero": "warden",
+      "cards": [
+        { "itemId": "greater_expansion", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "hollow_point", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "plated_armor", "rare": true, "enhanced": false, "hasBonus": false }
+      ]
+    },
+    {
+      "frame": "pick_r2_c2_enhanced_superior_cooldown",
+      "description": "Round 2, choice 2 of 3. Left card enhanced Superior Cooldown: 0.189 by shape with Arcane Surge (tier 2) 0.043 behind; read among tier 3, the tier of the pick's two other normal cards.",
+      "open": true,
+      "round": 2,
+      "rerolls": 1,
+      "choice": 2,
+      "cards": [
+        { "itemId": "spirit_rend", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "superior_cooldown", "rare": false, "enhanced": true, "hasBonus": false },
+        { "itemId": "improved_burst", "rare": false, "enhanced": false, "hasBonus": false }
+      ]
+    },
+    {
+      "frame": "pick_r1_c2_tooltip_over_centre",
+      "description": "Round 1, choice 2 of 3, the left card hovered: its tooltip covers the centre card and the re-roll line. Neither is read (nor misread); the panel keeps them from the previous scan (holdCoveredCards).",
+      "open": true,
+      "round": 1,
+      "choice": 2,
+      "cards": [
+        { "itemId": null },
+        { "itemId": "guardian_ward", "rare": false, "enhanced": false, "hasBonus": false },
+        { "itemId": "intensifying_magazine", "rare": false, "enhanced": false, "hasBonus": false }
+      ]
+    },
+    {
+      "frame": "in_play",
+      "description": "Round 1 in play (HUD, no pick screen).",
+      "open": false,
+      "hero": null
+    },
+    {
+      "frame": "round_complete_loss",
+      "description": "\"ROUND COMPLETE 0-2\", red tint.",
+      "open": false,
+      "hero": null
+    },
+    {
+      "frame": "round_complete_win",
+      "description": "\"ROUND COMPLETE 1-2\", orange tint.",
+      "open": false,
+      "hero": null
+    }
+  ]
+}
