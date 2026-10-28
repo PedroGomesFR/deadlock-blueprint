@@ -30,6 +30,12 @@ jobs:
       - name: Download the statistics and the item catalogue
         run: npm run update-builds
 
+      # Street Brawl statistics (src/streetBrawl, docs/STREET_BRAWL.md), from the files written above. A failure keeps
+      # last week's file and does not hold back the normal-mode update.
+      - name: Download the Street Brawl statistics
+        run: npm run update-street-brawl
+        continue-on-error: true
+
       # The script refuses to write broken data; the tests also check the translations and the builds
       - name: Tests
         run: npm test
@@ -38,7 +44,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/generated public/icons/items/api public/icons/abilities/api
+          git add src/data/generated public/icons/items/api public/icons/abilities/api public/icons/items/streetBrawl
           if git diff --cached --quiet; then
             echo "Nothing changed."
             exit 0
