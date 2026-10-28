@@ -28,6 +28,7 @@ npm run dev          # Vite with hot reload + Electron
 | `src/i18n/` | Interface texts (`fr.ts`, `en.ts`) |
 | `tests/replays/` | Recorded game logs replayed through the rules |
 | `tests/vision/` | Saved game frames and what the scanner must read in them |
+| `src/streetBrawl/` | Street Brawl mode, separate from the rest: see [`STREET_BRAWL.md`](STREET_BRAWL.md) |
 
 ## Tests
 
