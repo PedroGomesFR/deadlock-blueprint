@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Settings,
   ShoppingCart,
+  Shuffle,
   Swords,
   Terminal,
   Unlock,
@@ -72,8 +73,11 @@ import { ReportContent, ReportDialog } from './components/ReportDialog';
 import { DiagnosticsTab } from './components/DiagnosticsTab';
 import { I18nContext, makeI18n } from './i18n';
 import { Lang, detectLang, readStoredLang, storeLang } from './i18n/lang';
+// Street Brawl mode: everything lives in src/streetBrawl, the app only shows its tab
+import { StreetBrawlPanel } from './streetBrawl/StreetBrawlPanel';
+import { streetBrawlText } from './streetBrawl/i18n';
 
-type MainTab = 'essential' | 'builds' | 'powers' | 'matchups' | 'logs';
+type MainTab = 'essential' | 'builds' | 'powers' | 'matchups' | 'logs' | 'streetBrawl';
 
 interface LockedNextPurchase {
   key: string; // `${heroId}|${buildId}` — the lock is dropped when the hero or the build changes
@@ -845,12 +849,13 @@ export function App() {
   }, [isDedicatedOverlayWindow]);
 
   useEffect(() => {
-    if (!autoScanEnabled || isDedicatedOverlayWindow) return;
+    // The Street Brawl tab runs its own reader: the normal-mode rules would misread its 4v4 HUD
+    if (!autoScanEnabled || isDedicatedOverlayWindow || activeTab === 'streetBrawl') return;
     const timer = setInterval(() => {
       performScreenScan();
     }, 350);
     return () => clearInterval(timer);
-  }, [autoScanEnabled, isDedicatedOverlayWindow, performScreenScan]);
+  }, [autoScanEnabled, isDedicatedOverlayWindow, performScreenScan, activeTab]);
 
   useEffect(() => {
     if (!window.electronAPI) return;
@@ -1411,6 +1416,14 @@ export function App() {
 
   const showUpdateBanner =
     !updateDismissed && (updateStatus.state === 'available' || updateStatus.state === 'ready');
+  // The normal scan is paused on the Street Brawl tab and never reads its 4v4 HUD: its warning does not apply there
+  const showHudMissing = hudMissing && activeTab !== 'streetBrawl';
+  /** The hero the Street Brawl tab read from its ability icons: selected like a hand pick, without locking it. */
+  const selectHeroFromStreetBrawl = (heroId: string) => {
+    setMyHeroId(heroId);
+    snapshotRef.current = { ...snapshotRef.current, myHeroId: heroId };
+    trackerRef.current.resetHero();
+  };
 
   return (
     <I18nContext.Provider value={i18n}>
@@ -1682,6 +1695,7 @@ export function App() {
                 { id: 'builds', label: t('tabs.builds'), icon: Package },
                 { id: 'matchups', label: t('tabs.matchups', totalSelectedEnemies), icon: Swords },
                 { id: 'logs', label: t('tabs.logs'), icon: Terminal },
+                { id: 'streetBrawl', label: streetBrawlText(lang).tab, icon: Shuffle },
               ] as const
             ).map((tab) => {
               const TabIcon = tab.icon;
@@ -1723,7 +1737,7 @@ export function App() {
         </div>
 
         {/* Notices: update available, unsupported screen format, HUD never found */}
-        {(showUpdateBanner || formatIssue || hudMissing) && (
+        {(showUpdateBanner || formatIssue || showHudMissing) && (
           <div className="px-3 pt-2 space-y-2 shrink-0">
             {showUpdateBanner && (
               <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
@@ -1775,7 +1789,7 @@ export function App() {
                 </button>
               </div>
             )}
-            {!formatIssue && hudMissing && (
+            {!formatIssue && showHudMissing && (
               <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-500/40 flex items-start gap-2 text-small text-amber-100">
                 <Info className="w-4 h-4 text-amber-300 shrink-0" />
                 <span>
@@ -2247,6 +2261,17 @@ export function App() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* ================= STREET BRAWL (src/streetBrawl) ================= */}
+            {activeTab === 'streetBrawl' && (
+              <StreetBrawlPanel
+                heroId={myHeroId}
+                heroName={myHero.name}
+                lang={lang}
+                sourceId={selectedSourceId}
+                onHeroDetected={selectHeroFromStreetBrawl}
+              />
             )}
 
             {/* ================= TAB 5: DIAGNOSTICS ================= */}
