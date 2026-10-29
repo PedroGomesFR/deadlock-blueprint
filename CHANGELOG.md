@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.1] — 2026-10-29
+
+### New
+- **Street Brawl tab**: helps with the item picks of the Street Brawl mode. At the start of each round the game offers three cards and a re-roll; the tab reads that screen on its own and says which card to take ("Take Close Quarters", "Close call: Extra Spirit or Melee Lifesteal"), or to **re-roll** when the best card is worth less than a re-roll. Cards are ranked for your hero from Street Brawl games: each item against the other items of its tier, what a higher tier is worth, and what its upgrades add. It reads rare, enhanced, legendary and two-item cards, the pick of the round and the re-rolls left, the items you already own (they come last), the round, the end of the game and your hero. It also shows the ability upgrades to take each round, and where to imbue. The normal scan is paused while the tab is open. **Only tested at 2560×1440 (16:9)**: other resolutions are not measured yet, and the tab says so for captures that are not 16:9. Thanks to [@roroos](https://github.com/roroos) ([#9](https://github.com/PedroGomesFR/deadlock-blueprint/pull/9)).
+
 ## [2.0.0] — 2026-10-27
 
 The app no longer only tells you what to buy: it now tells you **what to do right now** and **how to beat each enemy**. This version also includes everything planned for 1.4.8, which was never published.
