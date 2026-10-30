@@ -45,16 +45,13 @@ import {
   INVENTORY_SLOTS,
   InventoryStatus,
   QueueEntry,
-  buildPurchaseOrder,
   effectiveOwnedSet,
   getBuildItemIds,
-  getPurchaseCounters,
-  getNextPurchases,
   getSellCandidates,
-  getSlotPlans,
   isInventoryFull,
   withLockedFirst,
 } from './services/recommendations';
+import { computeBuyQueue, getSpikeSafeSlotPlans } from './services/buyQueue';
 import { inBuyOrder, investmentItems, investmentProgress, spikeBadge, spikeOrder } from './services/investments';
 import {
   isMatchLogEnabled,
@@ -476,21 +473,6 @@ export function App() {
     [tacticalPlan.matchupAlerts]
   );
 
-  /**
-   * Smart Next-To-Buy Queue (services/recommendations.ts): early lane items, urgent counters against the lane
-   * opponents, then mid and late game items. Every item already owned (detected or marked by hand), and every
-   * component consumed by an owned upgrade, is skipped.
-   */
-  const purchaseOrder = useMemo(
-    () => buildPurchaseOrder(activeBuild, tacticalPlan.priorityItems, ITEMS, t),
-    [activeBuild, tacticalPlan.priorityItems, ITEMS, t]
-  );
-
-  const purchaseCounters = useMemo(
-    () => getPurchaseCounters(tacticalPlan.priorityItems),
-    [tacticalPlan.priorityItems]
-  );
-
   const isFull = isInventoryFull(inventoryStatus);
 
   const sellCandidates = useMemo(
@@ -529,16 +511,26 @@ export function App() {
     [buildSpikeOrder, investedItems, clockMinuteS]
   );
 
-  const rawNextToBuyQueue = useMemo(
+  /**
+   * Smart Next-To-Buy Queue (services/buyQueue.ts): early lane items, urgent counters against the lane opponents, then
+   * mid and late game items, by usual buy time, and the 4,800 spike nudge. Every item already owned (detected or
+   * marked by hand), and every component consumed by an owned upgrade, is skipped.
+   */
+  const { queue: rawNextToBuyQueue, counters: purchaseCounters } = useMemo(
     () =>
-      getNextPurchases(
-        purchaseOrder,
+      computeBuyQueue({
+        build: activeBuild,
+        priorityItems: tacticalPlan.priorityItems,
+        items: ITEMS,
+        t,
         ownedItems,
+        investedItems,
         inventoryStatus,
         sellCandidates,
-        (itemId) => getHeroItemStat(myHeroId, itemId)?.buyTimeS
-      ),
-    [purchaseOrder, ownedItems, inventoryStatus, sellCandidates, myHeroId]
+        investment,
+        stat: (itemId) => getHeroItemStat(myHeroId, itemId),
+      }),
+    [activeBuild, tacticalPlan.priorityItems, ITEMS, t, ownedItems, investedItems, inventoryStatus, sellCandidates, investment, myHeroId]
   );
 
   // The #1 stays locked until it is bought or skipped (or the hero/build changes):
@@ -566,8 +558,8 @@ export function App() {
   // What each displayed recommendation does to the inventory: an upgrade replaces its component; with a full
   // inventory, the other ones each need an owned item sold first (the weakest for #1, the next one for #2...)
   const slotPlans = useMemo(
-    () => getSlotPlans(nextToBuyQueue.slice(0, 6), ownedItems, inventoryStatus, sellCandidates),
-    [nextToBuyQueue, ownedItems, inventoryStatus, sellCandidates]
+    () => getSpikeSafeSlotPlans(nextToBuyQueue.slice(0, 6), { ownedItems, investedItems, inventoryStatus, sellCandidates }),
+    [nextToBuyQueue, ownedItems, investedItems, inventoryStatus, sellCandidates]
   );
 
   // When the Mid Boss is back after a kill marked by hand
