@@ -1,3 +1,12 @@
+import { ITEMS_DB } from '../data/deadlockData';
+import type { QueueEntry } from '../services/recommendations';
+
+/** A queue entry for an item, as the buy queue holds it. */
+export const entry = (id: string): QueueEntry => ({ item: ITEMS_DB[id], reason: '' });
+
+/** The item ids of a queue, in order. */
+export const ids = (queue: QueueEntry[]) => queue.map((e) => e.item.id);
+
 /** A build that takes weapon to 4,800 first (Healbane on the way), then spirit, then vitality. */
 export const SPIKE_BUILD = [
   'extended_magazine',
