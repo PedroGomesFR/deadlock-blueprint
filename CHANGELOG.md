@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.2] — 2026-10-30
+
+### New
+- **Investment spikes**: owned items in one shop category (Weapon, Spirit, Vitality) give a bonus at fixed soul totals, the biggest at **4,800**. Good builds and high-rank players take one category to 4,800, then the next, then the last. A line above "Buy right now" now shows the three categories in your build's order, the souls in each, and when players usually have each spike ("most players have it by 12 min"). An item that finishes the next spike says so ("Reaches the 4,800 Spirit spike", "Last 800 souls to…"). The overlay shows the next spike. Thanks to [@roroos](https://github.com/roroos) ([#11](https://github.com/PedroGomesFR/deadlock-blueprint/pull/11)).
+
+### Changed
+- **Buy right now helps you reach the spikes**: when the #2 or #3 finishes the next 4,800 spike and players usually buy it within 2 minutes of the #1, it moves to #1. It never moves above an item bought in 70% of your hero's games. Thanks to [@roroos](https://github.com/roroos) ([#12](https://github.com/PedroGomesFR/deadlock-blueprint/pull/12)).
+- **"Sell X" never breaks a spike you have**: with a full inventory, the app no longer suggests selling the item that holds a category at 4,800 (it did in 9% of simulated games). Thanks to [@roroos](https://github.com/roroos) ([#12](https://github.com/PedroGomesFR/deadlock-blueprint/pull/12)).
+- **Counters come when you need them**: before, a lane counter was in the list in almost every game, and usually came up after laning was over. Now lane counters only show up against a real lane threat (an opponent you usually lose to, one marked fed, or a hard lane), right after your build's first two items, and cheap ones leave the list once laning ends (10 min). Team counters wait for your first 4,800 spike (or 14 min). Counters against a fed enemy come first. No counter is suggested against an enemy your build already answers. In 1,760 simulated games, lane counters came at 1,600 souls spent instead of 12,000. Thanks to [@roroos](https://github.com/roroos) ([#13](https://github.com/PedroGomesFR/deadlock-blueprint/pull/13)).
+- New screenshots in the README ([#10](https://github.com/PedroGomesFR/deadlock-blueprint/issues/10)).
+
+### Fixed
+- **The #1 locked at the end of a game stayed #1 at the start of the next one** (a late Tier III item at 0 items): it is now released when a new match starts. Thanks to [@roroos](https://github.com/roroos) ([#13](https://github.com/PedroGomesFR/deadlock-blueprint/pull/13)).
+- "3 enemies dead against 1 allies" → "1 ally" in the "Now" orders (French, English, Italian).
+
 ## [2.0.1] — 2026-10-29
 
 ### New
