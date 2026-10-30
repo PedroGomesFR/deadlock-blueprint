@@ -47,6 +47,7 @@ import {
   QueueEntry,
   buildPurchaseOrder,
   effectiveOwnedSet,
+  getBuildItemIds,
   getPurchaseCounters,
   getNextPurchases,
   getSellCandidates,
@@ -54,6 +55,7 @@ import {
   isInventoryFull,
   withLockedFirst,
 } from './services/recommendations';
+import { inBuyOrder, investmentItems, investmentProgress, spikeBadge, spikeOrder } from './services/investments';
 import {
   isMatchLogEnabled,
   logEvent,
@@ -65,6 +67,7 @@ import {
 import { grabGameFrame, releaseGameFrame } from './services/screenCapture';
 import type { AppInfo, ElectronSourceInfo, UpdateStatus } from './electron';
 import { ItemCard } from './components/ItemCard';
+import { InvestmentLine, SpikeChip } from './components/InvestmentLine';
 import { HeroPortraitIcon, ItemArtworkIcon, PowerIcon } from './components/DeadlockIcons';
 import { CopyNameButton, ShopTabMarker } from './components/ShopHelpers';
 import { SettingsModal } from './components/SettingsModal';
@@ -499,6 +502,33 @@ export function App() {
   // Owned items plus the components they consumed (owning Greater Expansion means Mystic Expansion is done)
   const effectiveOwned = useMemo(() => effectiveOwnedSet(ownedItems), [ownedItems]);
 
+  // Match clock (extrapolated between two readings)
+  const clockS = board?.clock ? Math.floor(clockAt(board.clock, nowMs)) : undefined;
+
+  // The build takes one category to 4,800 souls, then the next, then the last, in the order players buy its items
+  // (services/investments.ts); a category the player committed to replaces the build's next one
+  const buildSpikeOrder = useMemo(
+    () =>
+      spikeOrder(
+        inBuyOrder(
+          getBuildItemIds(activeBuild),
+          (itemId) => getHeroItemStat(myHeroId, itemId)?.buyTimeS || undefined
+        )
+      ),
+    [activeBuild, myHeroId]
+  );
+  // Hand-marked items ("Skip") count only once the scanner sees them (services/investments.ts)
+  const investedItems = useMemo(
+    () => investmentItems(ownedItems, readManualOwned(), inventoryStatus?.itemIds ?? null),
+    [ownedItems, inventoryStatus]
+  );
+  // The clock by the minute: the push windows of a spike (SPIKES) do not need the second
+  const clockMinuteS = clockS === undefined ? undefined : Math.floor(clockS / 60) * 60;
+  const investment = useMemo(
+    () => investmentProgress(buildSpikeOrder, investedItems, clockMinuteS),
+    [buildSpikeOrder, investedItems, clockMinuteS]
+  );
+
   const rawNextToBuyQueue = useMemo(
     () =>
       getNextPurchases(
@@ -540,8 +570,7 @@ export function App() {
     [nextToBuyQueue, ownedItems, inventoryStatus, sellCandidates]
   );
 
-  // Match clock (extrapolated between two readings) and when the Mid Boss is back after a kill marked by hand
-  const clockS = board?.clock ? Math.floor(clockAt(board.clock, nowMs)) : undefined;
+  // When the Mid Boss is back after a kill marked by hand
   const midBossBack = midBossBackAt(midBoss);
   const midBossAlive = midBossBack === null || nowMs >= midBossBack;
 
@@ -1035,6 +1064,13 @@ export function App() {
     );
   };
 
+  /** The spike badge under an item, after selling what its card says to sell (inventory full). */
+  const renderSpikeHint = (itemId: string, compact = false) => {
+    const plan = slotPlans.get(itemId);
+    const badge = spikeBadge(itemId, investedItems, investment, plan?.kind === 'sell' ? plan.itemId : undefined);
+    return badge ? <SpikeChip badge={badge} compact={compact} /> : null;
+  };
+
   const stanceLabel = (alert: MatchupAlert) =>
     alert.isFed ? t('stance.fed') : alert.stance ? t(STANCE_KEYS[alert.stance]) : null;
   const stanceStyle = (alert: MatchupAlert) => STANCE_STYLE[alert.isFed ? 'fed' : alert.stance ?? 'even'];
@@ -1368,6 +1404,7 @@ export function App() {
                 <span className="text-small font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
                   <ShoppingCart className="w-3 h-3 text-emerald-400" /> {t('overlay.buyNow')}
                 </span>
+                <InvestmentLine investment={investment} clockS={clockS} compact />
                 {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
                   const canAfford = currentSouls !== null && currentSouls >= entry.item.cost;
                   const shortName = entry.item.name.split('(')[0].trim();
@@ -1395,6 +1432,7 @@ export function App() {
                           <ShopTabMarker category={entry.item.category} />
                           {renderSlotPlan(entry.item.id, true)}
                           {renderImbueHint(entry.item.id, true)}
+                          {renderSpikeHint(entry.item.id, true)}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
@@ -1843,6 +1881,10 @@ export function App() {
                       </div>
                     </div>
 
+                    <div className="basis-full">
+                      <InvestmentLine investment={investment} clockS={clockS} />
+                    </div>
+
                     {currentSouls !== null && (
                       <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-body font-extrabold text-teal-200">
                         {t('souls.detected', formatNumber(currentSouls))}
@@ -1922,6 +1964,7 @@ export function App() {
 
                             {renderSlotPlan(item.id)}
                             {renderImbueHint(item.id)}
+                            {renderSpikeHint(item.id)}
 
                             {/* Why this item: meta statistics of this hero */}
                             {why && (

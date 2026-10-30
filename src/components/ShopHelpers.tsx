@@ -3,7 +3,8 @@ import { Check, Copy, Crosshair, HeartPulse, Sparkles } from 'lucide-react';
 import type { ItemCategory, ItemTier } from '../data/deadlockData';
 import { useI18n } from '../i18n';
 
-const TABS = {
+/** Each shop tab's icon and text colour */
+export const SHOP_TABS = {
   weapon: { Icon: Crosshair, className: 'text-orange-300' },
   vitality: { Icon: HeartPulse, className: 'text-emerald-300' },
   spirit: { Icon: Sparkles, className: 'text-purple-300' },
@@ -17,7 +18,7 @@ const ROMAN: Record<ItemTier, string> = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' };
  */
 export const ShopTabMarker: React.FC<{ category: ItemCategory; tier?: ItemTier }> = ({ category, tier }) => {
   const { t } = useI18n();
-  const { Icon, className } = TABS[category];
+  const { Icon, className } = SHOP_TABS[category];
   const tab = t(`category.${category}`);
   return (
     <span className={`inline-flex items-center gap-1 text-small font-bold ${className}`} title={t('shop.tabTitle', tab)}>
