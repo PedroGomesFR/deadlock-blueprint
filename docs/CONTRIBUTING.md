@@ -21,7 +21,7 @@ npm run dev          # Vite with hot reload + Electron
 | `src/services/visionScanner.ts` | The scanner: one frame → what is on screen (portraits, inventory, souls) |
 | `src/services/matchTracker.ts` | The rules: scans over time → my hero, lineups (voted per slot), owned items, new match |
 | `src/services/recommendations.ts` | What to buy next, what to sell |
-| `src/services/buyQueue.ts` | The "buy right now" queue as one pure function: the build by usual buy time, the spike nudge, sale protection ([INVESTMENTS.md](INVESTMENTS.md)) |
+| `src/services/buyQueue.ts` | The whole "buy right now" queue as one pure function: counters, due times, key core items, spike nudge ([INVESTMENTS.md](INVESTMENTS.md)) |
 | `src/services/investments.ts` | The three 4,800 investment spikes in the build's order: souls per category, the target, the badge and its push windows ([INVESTMENTS.md](INVESTMENTS.md)) |
 | `src/services/matchLogger.ts` | Game logs (opt-in) |
 | `src/data/deadlockData.ts` | Heroes, hand-written builds, counters (French); `deadlockData.en.ts` holds their English text |

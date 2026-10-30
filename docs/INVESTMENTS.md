@@ -30,15 +30,44 @@ one category to 4,800, then the next, then the last, and the buy tab follows tha
   (9% of the games), now none.
 - **Key core items keep their place.** An item bought in 70% or more of the hero's games (`KEY_CORE_PICK_RATE`,
   about 6 per hero) is never overtaken: a spike item does not move above one, whatever its buy time.
+- **Lane counters need a lane threat and leave with laning.** A counter that only answers my lane is queued only
+  when a lane enemy is to be avoided (my real win rate against it), is marked fed, or the lane is hard; a Tier 1-2
+  one is dropped at 10 min (the clock, else about 6,400 souls spent; latched for the match). Counters against a
+  fed enemy, or against two enemies or more, are unaffected. See `hasLaneThreat`, `isLaneOver` in
+  `src/services/recommendations.ts`.
 - **The player's own build wins.** A category not at 4,800 yet, with at least 2,400 souls and 1,600 more than the
   build's next category, becomes the target: the line lists it after the finished spikes, its items get the badge,
   and the queue is not reordered (it follows the build the player left). In a recorded Infernus game the build went
   spirit first, the player vitality then weapon, with spirit at 1,600 most of the game.
 
-## The buy queue (`src/services/buyQueue.ts`)
+## Who gets the #1 spot (`src/services/buyQueue.ts`)
 
-The queue is one pure function, `computeBuyQueue`: the build's items not yet owned, by usual buy time, then the spike
-nudge above. Sales are planned by `getSpikeSafeSlotPlans`, the one place that knows a finished 4,800 must not be sold.
+The queue is one pure function, tested on 264 simulated games (`buyQueue.test.ts`). When two items are due together,
+the first of these wins:
+
+1. **A key core item that is due** (bought in 70% or more of the hero's games, at or past its usual buy time). Nothing
+   goes ahead of it, no counter and no spike item.
+2. **A counter against a fed enemy** that nothing owned or in the build answers: at once for Tier 1-2, at its usual
+   buy time for Tier 3-4 (which is already past when an enemy is marked fed late).
+3. **A lane counter** against a real lane threat, right after the build's first two items, gone at 10 min.
+4. **A spike item**, up to 2 min early and only while its spike is worth it.
+5. **The other build items**, by usual buy time.
+6. **A team counter** (against two enemies or more): released once the first 4,800 is done or at 14 min, then by its
+   usual buy time. The counters panel still lists it before that.
+
+An enemy is **answered** when one of its three best counters is owned or in the active build (bought or still to
+come): nothing outside the build is queued against it. Measured on 1,760 simulated lineups, 24% of the lane enemies
+already had one in the build. Simulated lineups (44 heroes, random enemies, the #1 always bought, 12 slots):
+
+| | Before | After |
+| --- | --- | --- |
+| Lane counters bought after laning (6,400 souls) | 79% of the Tier 1-2 counters, median 12,000 souls | 0% of lane counters, median 1,600 souls |
+| Games where a Tier 1-2 counter outside the build is bought | 1,546 of 1,760 | 1,315 of 1,760, the team ones at a median 14,400 souls |
+| Sales that drop a finished 4,800 | 181 | 0 |
+
+The simulation is a regression test: it fails if a counter goes ahead of a due key core item, a team counter is queued
+before the first spike, or a lane counter survives laning. Minutes without a clock are estimated from the souls spent
+(`estimateClockS`: about 6,400 souls at 10 min, 12,000 at 15).
 
 The spike order comes from the build: buying its early, mid and late items **in the order players usually buy them**
 (`itemStats` buy times), the order the categories reach 4,800 (categories it never takes there come last, most souls
