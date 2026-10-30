@@ -14,8 +14,10 @@ import {
   getSlotPlans,
   hasLaneThreat,
   isInventoryFull,
+  isStaleLock,
   withLockedFirst,
 } from './recommendations';
+import { entry } from '../test/queue';
 import { sellKeepsSpikes } from './investments';
 
 const t = makeTranslate('en');
@@ -275,6 +277,20 @@ describe('next purchases', () => {
     const locked = withLockedFirst(next, next[3].item.id);
     expect(locked[0].item.id).toBe(next[3].item.id);
     expect(locked).toHaveLength(next.length);
+  });
+
+  it('lets go of a lock left from the last game, but not of one on an earlier item', () => {
+    // Ivy, 0 items: the head is usually bought at 1:31, Tesla Bullets (locked at the end of the last game) at 9:06
+    const queue = [entry('extended_magazine'), entry('monster_rounds'), entry('tesla_bullets')];
+    const times: Record<string, number> = { extended_magazine: 91, monster_rounds: 170, tesla_bullets: 546 };
+    const buyTimeS = (id: string) => times[id];
+    expect(isStaleLock(queue, 'tesla_bullets', buyTimeS)).toBe(true);
+    expect(isStaleLock(queue, 'monster_rounds', buyTimeS)).toBe(false);
+    expect(isStaleLock(queue, 'extended_magazine', buyTimeS)).toBe(false);
+    // a counter placed first that is bought later than the locked item does not release it
+    expect(isStaleLock([entry('tesla_bullets'), ...queue], 'extended_magazine', buyTimeS)).toBe(false);
+    // without usual buy times nothing is stale
+    expect(isStaleLock(queue, 'tesla_bullets', () => undefined)).toBe(false);
   });
 });
 

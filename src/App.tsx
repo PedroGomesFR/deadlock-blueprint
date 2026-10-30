@@ -49,6 +49,7 @@ import {
   getBuildItemIds,
   getSellCandidates,
   isInventoryFull,
+  isStaleLock,
   withLockedFirst,
 } from './services/recommendations';
 import { computeBuyQueue, getSpikeSafeSlotPlans, isLaneOver } from './services/buyQueue';
@@ -577,14 +578,16 @@ export function App() {
   useEffect(() => {
     if (isDedicatedOverlayWindow) return; // the overlay follows the main window's lock
     const stillValid =
-      lockedItemId !== null && rawNextToBuyQueue.some((entry) => entry.item.id === lockedItemId);
+      lockedItemId !== null &&
+      rawNextToBuyQueue.some((entry) => entry.item.id === lockedItemId) &&
+      !isStaleLock(rawNextToBuyQueue, lockedItemId, (id) => getHeroItemStat(myHeroId, id)?.buyTimeS);
     if (stillValid) return;
     const nextId = rawNextToBuyQueue[0]?.item.id;
     const next = nextId ? { key: lockKey, itemId: nextId } : null;
     setLockedNext(next);
     if (next) localStorage.setItem('dl_lockedNext', JSON.stringify(next));
     else localStorage.removeItem('dl_lockedNext');
-  }, [isDedicatedOverlayWindow, lockKey, lockedItemId, rawNextToBuyQueue]);
+  }, [isDedicatedOverlayWindow, lockKey, lockedItemId, rawNextToBuyQueue, myHeroId]);
 
   const nextToBuyQueue = useMemo(
     () => withLockedFirst(rawNextToBuyQueue, lockedItemId),
@@ -743,6 +746,9 @@ export function App() {
     storeFedEnemies([]);
     storeMidBoss(null);
     setLaneOverLatched(false);
+    // A new match starts from the queue's head, not from the item locked at the end of the last one
+    setLockedNext(null);
+    localStorage.removeItem('dl_lockedNext');
   }, [storeFedEnemies, storeMidBoss]);
 
   const boardJsonRef = useRef<string>(JSON.stringify(board));

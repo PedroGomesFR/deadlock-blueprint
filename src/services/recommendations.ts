@@ -277,6 +277,24 @@ export function getNextPurchases(
   return sortByBuyTime(unowned, buyTimeS);
 }
 
+/** A locked #1 usually bought this much later than the queue's head is left over from an earlier game (seconds). */
+export const STALE_LOCK_GAP_S = 300;
+
+/**
+ * The lock is saved between launches and games, so a Tier III item locked at the end of the last game was still
+ * #1 at 0 items (Tesla Bullets, usually bought at 9:06, over Golden Goose Egg at 1:31). It is let go when the
+ * queue's head is usually bought more than STALE_LOCK_GAP_S earlier. A lock on an earlier item always holds.
+ */
+export function isStaleLock(
+  queue: QueueEntry[],
+  lockedItemId: string,
+  buyTimeS: (itemId: string) => number | undefined
+): boolean {
+  const lockedTime = buyTimeS(lockedItemId);
+  const headTime = queue[0] && buyTimeS(queue[0].item.id);
+  return lockedTime !== undefined && headTime !== undefined && lockedTime - headTime > STALE_LOCK_GAP_S;
+}
+
 /** The locked #1 first, the rest in order. */
 export function withLockedFirst(queue: QueueEntry[], lockedItemId: string | null): QueueEntry[] {
   const lockedIdx = lockedItemId ? queue.findIndex((entry) => entry.item.id === lockedItemId) : -1;
