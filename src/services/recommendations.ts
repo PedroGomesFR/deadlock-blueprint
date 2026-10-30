@@ -38,6 +38,13 @@ export function getComponentIds(itemId: string): Set<string> {
   return components;
 }
 
+/** The item ids of a build in its phase order: early, mid, late (the situational ones only against a threat). */
+export const getBuildItemIds = (build: HeroBuildArchetype): string[] => [
+  ...build.phases.early,
+  ...build.phases.mid,
+  ...build.phases.late,
+];
+
 /** Owned items + the components they consumed (owning Titanic Magazine means Extended Magazine is done). */
 export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   const owned = new Set<string>(ownedItems);
