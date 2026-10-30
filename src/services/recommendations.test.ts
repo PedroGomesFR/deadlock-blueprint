@@ -4,12 +4,15 @@ import { makeTranslate } from '../i18n';
 import {
   InventoryStatus,
   buildPurchaseOrder,
+  counterRole,
+  dropAnsweredCounters,
   effectiveOwnedSet,
   getComponentIds,
   getNextPurchases,
   getPurchaseCounters,
   getSellCandidates,
   getSlotPlans,
+  hasLaneThreat,
   isInventoryFull,
   withLockedFirst,
 } from './recommendations';
@@ -124,6 +127,107 @@ describe('purchase order', () => {
     expect(frenchOrder[0].reason).toBe(french('reason.earlyPriority'));
     expect(frenchOrder[0].reason).not.toBe(englishOrder[0].reason);
     expect(frenchOrder.map((entry) => entry.item.id)).toEqual(englishOrder.map((entry) => entry.item.id));
+  });
+});
+
+describe('lane counters', () => {
+  const lane = counter('extra_charge', '[LANE] Sustain vs Abrams'); // Tier 1, lane-only
+  const laneT3 = counter('metal_skin', '[LANE] Metal Skin vs Abrams'); // Tier 3
+  const fed = counter('extra_regen', '🔥 [LANE] Sustain vs Ivy'); // Tier 1
+  const twoEnemies = {
+    ...counter('spirit_resilience', '[TEAM] Resist vs Abrams', 'Haute (Teamfight / Mid)'),
+    reasons: ['[TEAM] Resist vs Abrams', '[TEAM] Resist vs Kelvin'],
+  };
+  const queuedIds = (priorities: ReturnType<typeof counter>[], context = {}) =>
+    getPurchaseCounters(priorities, context).map((r) => r.item.id);
+
+  it('needs a real lane threat: a lane enemy to avoid, a fed lane enemy or a hard lane', () => {
+    const alert = (over: object) => ({ isInMyLane: true, isFed: false, stance: 'even' as const, ...over });
+    expect(hasLaneThreat([alert({})], 'even')).toBe(false);
+    expect(hasLaneThreat([alert({ stance: 'avoid' })])).toBe(true);
+    expect(hasLaneThreat([alert({ isFed: true })])).toBe(true);
+    expect(hasLaneThreat([alert({})], 'hard')).toBe(true);
+    expect(hasLaneThreat([alert({ isInMyLane: false, stance: 'avoid' })], 'favourable')).toBe(false);
+  });
+
+  it('keeps a lane-only counter out of the queue without a lane threat', () => {
+    expect(queuedIds([lane, laneT3], { laneThreat: false })).toEqual([]);
+    expect(queuedIds([lane, laneT3], { laneThreat: true })).toEqual(['extra_charge', 'metal_skin']);
+  });
+
+  it('drops a Tier 1-2 lane-only counter once laning is over, and keeps a Tier 3-4 one', () => {
+    expect(queuedIds([lane, laneT3], { laneThreat: true, laneOver: true })).toEqual(['metal_skin']);
+  });
+
+  it('never touches the counters against a fed enemy or against two enemies', () => {
+    const noLane = { laneThreat: false, laneOver: true };
+    expect(queuedIds([fed, twoEnemies], noLane)).toEqual(['extra_regen', 'spirit_resilience']);
+  });
+
+  it('counts an item against both lane enemies as a lane counter, not one that also answers a team enemy', () => {
+    const bothLane = { ...lane, reasons: ['[LANE] Sustain vs Abrams', '[LANE] Sustain vs Kelvin'] };
+    const laneAndTeam = { ...lane, reasons: ['[LANE] Sustain vs Abrams', '[TEAM] Sustain vs Kelvin'] };
+    expect(queuedIds([bothLane], { laneThreat: false })).toEqual([]);
+    expect(queuedIds([laneAndTeam], { laneThreat: false })).toEqual(['extra_charge']);
+  });
+
+  it('keeps the old behaviour without a context', () => {
+    expect(queuedIds([lane, laneT3])).toEqual(['extra_charge', 'metal_skin']);
+  });
+
+  it('puts the lane counter after the first two early items, and nowhere once laning is over', () => {
+    const early = (context: object) =>
+      buildPurchaseOrder(BUILD, [lane], ITEMS_DB, t, context).map((e) => e.item.id);
+    expect(early({ laneThreat: true, laneOver: false }).slice(0, 3)).toEqual(['extra_spirit', 'extended_magazine', 'extra_charge']);
+    expect(early({ laneThreat: true, laneOver: true })).toEqual(
+      buildPurchaseOrder(BUILD, [], ITEMS_DB, t).map((e) => e.item.id)
+    );
+  });
+
+});
+
+describe('counter roles', () => {
+  it('gives each counter its role: fed, a Tier 1-2 lane counter, or team', () => {
+    const rec = (id: string, reasons: string[], urgency: TacticalRecommendation['priorityItems'][number]['urgency'] = 'Critique (En Face / Lane)') => ({
+      item: ITEMS_DB[id],
+      reasons,
+      urgency,
+    });
+    expect(counterRole(rec('extra_regen', ['🔥 [LANE] Sustain vs Ivy']))).toBe('fed');
+    expect(counterRole(rec('extra_regen', ['[LANE] Sustain vs Abrams', '[LANE] Sustain vs Kelvin']))).toBe('lane');
+    expect(counterRole(rec('metal_skin', ['[LANE] Metal Skin vs Abrams']))).toBe('team'); // Tier 3: cannot be a lane item
+    expect(counterRole(rec('extra_regen', ['[LANE] Sustain vs Abrams', '[TEAM] Sustain vs Kelvin']))).toBe('team');
+  });
+
+
+  it('marks only the counters outside the build with a role', () => {
+    const lane = { item: ITEMS_DB.extra_charge, reasons: ['[LANE] Sustain vs Abrams'], urgency: 'Critique (En Face / Lane)' as const };
+    const inBuild = { item: ITEMS_DB.extra_spirit, reasons: ['[LANE] Sustain vs Abrams'], urgency: 'Critique (En Face / Lane)' as const };
+    const order = buildPurchaseOrder(BUILD, [lane, inBuild], ITEMS_DB, t);
+    expect(order.find((e) => e.item.id === 'extra_charge')?.role).toBeUndefined(); // in the build: keeps its place
+    const outside = buildPurchaseOrder(build({ early: ['extra_spirit'] }), [lane], ITEMS_DB, t);
+    expect(outside.find((e) => e.item.id === 'extra_charge')?.role).toBe('lane');
+  });
+});
+
+describe('answered threats', () => {
+  const alert = (counterIds: string[]) => ({ counters: counterIds.map((id) => ({ item: ITEMS_DB[id] })) });
+  const rec = (id: string) => ({ item: ITEMS_DB[id], reasons: ['[LANE] x'], urgency: 'Critique (En Face / Lane)' as const });
+
+  it('drops a counter whose enemies each have a counter in the build or owned', () => {
+    const alerts = [alert(['metal_skin', 'healbane']), alert(['metal_skin', 'toxic_bullets'])];
+    expect(dropAnsweredCounters([rec('metal_skin')], alerts, new Set(['healbane', 'toxic_bullets'])).length).toBe(0);
+  });
+
+  it('keeps a counter while one of its enemies is not answered yet', () => {
+    const alerts = [alert(['metal_skin', 'healbane']), alert(['metal_skin', 'toxic_bullets'])];
+    expect(dropAnsweredCounters([rec('metal_skin')], alerts, new Set(['healbane'])).map((r) => r.item.id)).toEqual(['metal_skin']);
+  });
+
+  it('keeps an item that is itself in the build, and a counter no enemy lists', () => {
+    const alerts = [alert(['healbane'])];
+    expect(dropAnsweredCounters([rec('healbane')], alerts, new Set(['healbane'])).length).toBe(1);
+    expect(dropAnsweredCounters([rec('monster_rounds')], alerts, new Set(['healbane'])).length).toBe(1);
   });
 });
 

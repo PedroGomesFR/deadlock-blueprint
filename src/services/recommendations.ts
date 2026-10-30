@@ -3,6 +3,7 @@
  * build, the counters and what the player owns (tested in recommendations.test.ts).
  */
 import { DeadlockItem, HeroBuildArchetype, ITEMS_DB, TacticalRecommendation } from '../data/deadlockData';
+import type { LaneOutlook, MatchupStance } from '../data/matchupStats';
 import type { Translate } from '../i18n';
 
 export const INVENTORY_SLOTS = 12;
@@ -14,10 +15,14 @@ export interface InventoryStatus {
   unmatched: number;
 }
 
+/** What kind of counter a queued item outside the build is (placeCounters): against a fed enemy, my lane, or the team. */
+export type CounterRole = 'fed' | 'lane' | 'team';
+
 export interface QueueEntry {
   item: DeadlockItem;
   reason: string;
   phase?: 'early' | 'mid' | 'late' | 'situational'; // phase of the active build that holds the item
+  role?: CounterRole; // set on a counter that is not part of the build
 }
 
 export type SlotPlan =
@@ -60,21 +65,94 @@ export function effectiveOwnedSet(ownedItems: string[]): Set<string> {
   return owned;
 }
 
+type PriorityItem = TacticalRecommendation['priorityItems'][number];
+
+const isFedReason = (reason: string) => reason.startsWith('🔥');
+const isTeamReason = (reason: string) => reason.startsWith('[TEAM]');
+
 /**
  * A counter only goes into the purchase queue when the threat is real: it answers the enemy in my lane, or
  * at least two different enemies (one team enemy alone is not worth bending the build for).
  */
-const isStrongCounter = (r: TacticalRecommendation['priorityItems'][number]) =>
-  r.urgency === 'Critique (En Face / Lane)' || r.reasons.length >= 2;
+const isStrongCounter = (r: PriorityItem) => r.urgency === 'Critique (En Face / Lane)' || r.reasons.length >= 2;
+
+/**
+ * A lane threat worth a counter: a lane enemy to avoid (my real win rate against it), a lane enemy marked fed, or a
+ * hard lane. Measured on 1,760 simulated lineups, every lane enemy's counters are "critical", so a lane counter
+ * was queued in 98% of games while only 28% had a lane enemy to avoid.
+ */
+export function hasLaneThreat(
+  alerts: { isInMyLane: boolean; isFed: boolean; stance?: MatchupStance }[],
+  outlook?: LaneOutlook
+): boolean {
+  return outlook === 'hard' || alerts.some((a) => a.isInMyLane && (a.isFed || a.stance === 'avoid'));
+}
+
+export interface CounterContext {
+  /** A real lane threat (hasLaneThreat): without one, lane-only counters stay out of the queue. Default: yes */
+  laneThreat?: boolean;
+  /** Laning is over (isLaneOver): a Tier 1-2 lane-only counter leaves the queue. Default: no */
+  laneOver?: boolean;
+}
+
+/**
+ * A counter that only answers my lane (critical, every reason a lane one: "[LANE]" or an unprefixed lane tip, none
+ * "[TEAM]" nor fed "🔥"): the lane items of the first minutes. An item against both lane enemies (two reasons)
+ * is still a lane counter; one that also answers a team enemy or a fed enemy is not.
+ */
+const isLaneOnlyCounter = (r: PriorityItem) =>
+  r.urgency === 'Critique (En Face / Lane)' && r.reasons.every((reason) => !isFedReason(reason) && !isTeamReason(reason));
+
+/**
+ * A counter's role in the queue: against a fed enemy, my lane (Tier 1-2: the lane items of the first minutes), or the
+ * team. A Tier 3-4 counter against my lane cannot be bought in the lane phase: it is a team counter by timing.
+ */
+export function counterRole(r: PriorityItem): CounterRole {
+  if (r.reasons.some(isFedReason)) return 'fed';
+  if (isLaneOnlyCounter(r) && r.item.tier <= 2) return 'lane';
+  return 'team';
+}
+
+/**
+ * The counters whose threat is not answered yet. An enemy is answered when one of its best counters (the three the
+ * cards show) is owned or in the build, bought or still to come: nothing outside the build is queued against it.
+ * Measured on 1,760 simulated lineups, 24% of the lane enemies already had one of their top 3 counters in the build.
+ * An item that is itself owned or in the build keeps its counter reason, and a counter no enemy lists (a lane tip)
+ * is kept.
+ */
+export function dropAnsweredCounters(
+  priorityItems: TacticalRecommendation['priorityItems'],
+  alerts: { counters: { item: { id: string } }[] }[],
+  answeredIds: ReadonlySet<string>
+): TacticalRecommendation['priorityItems'] {
+  const answered = new Set(alerts.filter((a) => a.counters.some((c) => answeredIds.has(c.item.id))));
+  return priorityItems.filter((r) => {
+    if (answeredIds.has(r.item.id)) return true;
+    const countered = alerts.filter((a) => a.counters.some((c) => c.item.id === r.item.id));
+    return countered.length === 0 || countered.some((a) => !answered.has(a));
+  });
+}
+
+/** Whether a counter goes into the queue: a lane-only one needs a lane threat, and a Tier 1-2 one leaves with laning. */
+function isQueuedCounter(r: PriorityItem, { laneThreat = true, laneOver = false }: CounterContext) {
+  if (!isStrongCounter(r)) return false;
+  if (!isLaneOnlyCounter(r)) return true;
+  if (!laneThreat) return false;
+  return !(laneOver && r.item.tier <= 2);
+}
 
 /**
  * The counter items included in the purchase queue and highlighted in the interface: at most one Tier 1-2
- * and one Tier 3-4, so that following the queue still follows the build.
+ * and one Tier 3-4, so that following the queue still follows the build. A lane-only counter needs a real lane
+ * threat, and a Tier 1-2 one leaves once laning is over (a lane counter bought at a median 15 min was a counter to
+ * a lane that was over). Counters against a fed enemy or against two enemies are unaffected.
  */
-export const getPurchaseCounters = (priorityItems: TacticalRecommendation['priorityItems']) => {
-  const strong = priorityItems.filter(isStrongCounter);
-  return [...strong.filter((r) => r.item.tier <= 2).slice(0, 1), ...strong.filter((r) => r.item.tier >= 3).slice(0, 1)];
-};
+export function getPurchaseCounters(priorityItems: PriorityItem[], context: CounterContext = {}) {
+  const queued = priorityItems.filter((r) => isQueuedCounter(r, context));
+  const tier12 = queued.filter((r) => r.item.tier <= 2);
+  const tier34 = queued.filter((r) => r.item.tier >= 3);
+  return [...tier12.slice(0, 1), ...tier34.slice(0, 1)];
+}
 
 /**
  * Full purchase order of the build, counters included:
@@ -85,11 +163,12 @@ export function buildPurchaseOrder(
   build: HeroBuildArchetype,
   priorityItems: TacticalRecommendation['priorityItems'],
   items: Record<string, DeadlockItem>,
-  t: Translate
+  t: Translate,
+  counterContext?: CounterContext
 ): QueueEntry[] {
   const queue: QueueEntry[] = [];
   const seen = new Set<string>();
-  const counters = getPurchaseCounters(priorityItems);
+  const counters = getPurchaseCounters(priorityItems, counterContext);
   const phaseOf = (id: string): QueueEntry['phase'] =>
     (['early', 'mid', 'late', 'situational'] as const).find((p) => build.phases[p].includes(id));
 
@@ -100,7 +179,9 @@ export function buildPurchaseOrder(
     const counter = counters.find((r) => r.item.id === id);
     if (counter) reason = counter.reasons[0] ?? t(item.tier <= 2 ? 'reason.laneCounter' : 'reason.teamfightCounter');
     seen.add(id);
-    queue.push({ item, phase: phaseOf(id), reason });
+    const phase = phaseOf(id);
+    // A counter outside the build gets its role: placeCounters times it (a counter in the build keeps its place)
+    queue.push({ item, phase, reason, ...(counter && !phase ? { role: counterRole(counter) } : {}) });
   };
 
   build.phases.early.slice(0, 2).forEach((id) => pushItem(id, t('reason.earlyPriority')));
