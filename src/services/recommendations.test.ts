@@ -13,6 +13,7 @@ import {
   isInventoryFull,
   withLockedFirst,
 } from './recommendations';
+import { sellKeepsSpikes } from './investments';
 
 const t = makeTranslate('en');
 
@@ -193,5 +194,51 @@ describe('inventory full', () => {
     const plans = getSlotPlans(shown, owned, full, getSellCandidates(full, BUILD, new Set()));
     expect(plans.get('improved_spirit')).toEqual({ kind: 'upgrade', itemId: 'extra_spirit' });
     expect(plans.get('titanic_magazine')).toEqual({ kind: 'sell', itemId: 'healbane' });
+  });
+
+  describe('finished 4,800 spikes', () => {
+    // Weapon at 4,800 with Tesla Bullets and Long Range; Healbane (vitality, 800) is the weakest item
+    const owned = ['tesla_bullets', 'long_range', 'healbane', 'extra_regen'];
+    const full = status(owned, 12);
+    const candidates = getSellCandidates(full, build({}), new Set());
+
+    it('tells a sale that drops a finished spike from one that does not', () => {
+      expect(sellKeepsSpikes(owned, 'long_range', 'extended_magazine')).toBe(false);
+      expect(sellKeepsSpikes(owned, 'long_range', 'close_quarters')).toBe(false);
+      expect(sellKeepsSpikes(owned, 'healbane', 'extended_magazine')).toBe(true);
+    });
+
+    it('lets the new item bring the category back to 4,800', () => {
+      expect(sellKeepsSpikes(owned, 'long_range', 'swift_striker')).toBe(true); // 1,600 for 1,600
+    });
+
+    it('suggests the next weakest item when the first would break a spike', () => {
+      const shown = [{ item: ITEMS_DB.extended_magazine, reason: '' }];
+      const plain = getSlotPlans(shown, owned, full, ['long_range', 'healbane']);
+      expect(plain.get('extended_magazine')).toEqual({ kind: 'sell', itemId: 'long_range' });
+      const guarded = getSlotPlans(shown, owned, full, ['long_range', 'healbane'], (sold, item) =>
+        sellKeepsSpikes(owned, sold, item)
+      );
+      expect(guarded.get('extended_magazine')).toEqual({ kind: 'sell', itemId: 'healbane' });
+      expect(candidates).toContain('healbane');
+    });
+
+    it('says the inventory is full when every candidate would break a spike', () => {
+      const shown = [{ item: ITEMS_DB.extended_magazine, reason: '' }];
+      const plans = getSlotPlans(shown, owned, full, ['long_range'], (sold, item) => sellKeepsSpikes(owned, sold, item));
+      expect(plans.get('extended_magazine')).toEqual({ kind: 'full' });
+    });
+
+    it('does not suggest the same sale twice', () => {
+      const shown = [
+        { item: ITEMS_DB.extended_magazine, reason: '' },
+        { item: ITEMS_DB.close_quarters, reason: '' },
+      ];
+      const plans = getSlotPlans(shown, owned, full, ['long_range', 'healbane', 'extra_regen'], (sold, item) =>
+        sellKeepsSpikes(owned, sold, item)
+      );
+      expect(plans.get('extended_magazine')).toEqual({ kind: 'sell', itemId: 'healbane' });
+      expect(plans.get('close_quarters')).toEqual({ kind: 'sell', itemId: 'extra_regen' });
+    });
   });
 });

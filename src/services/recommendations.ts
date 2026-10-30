@@ -206,12 +206,15 @@ export function withLockedFirst(queue: QueueEntry[], lockedItemId: string | null
 /**
  * What each shown recommendation does to the inventory: an upgrade replaces its component; with a full
  * inventory, the other ones each need an owned item sold first (the weakest for #1, the next one for #2...).
+ * `canSell` refuses a sale for an item: the weakest item that could be sold is skipped when selling it would drop
+ * a finished 4,800 spike (services/investments.ts › sellKeepsSpikes), and the next one is suggested.
  */
 export function getSlotPlans(
   shown: QueueEntry[],
   ownedItems: string[],
   status: InventoryStatus | null,
-  sellCandidates: string[]
+  sellCandidates: string[],
+  canSell?: (soldId: string, itemId: string) => boolean
 ): Map<string, SlotPlan> {
   const plans = new Map<string, SlotPlan>();
   const upgradedComponents = new Set<string>();
@@ -225,10 +228,11 @@ export function getSlotPlans(
   if (isInventoryFull(status)) {
     // Never sell a component that one of the shown upgrades is about to consume
     const toSell = sellCandidates.filter((id) => !upgradedComponents.has(id));
-    let nextSell = 0;
+    const sold = new Set<string>();
     for (const entry of shown) {
       if (plans.has(entry.item.id)) continue;
-      const sellId = toSell[nextSell++];
+      const sellId = toSell.find((id) => !sold.has(id) && (canSell?.(id, entry.item.id) ?? true));
+      if (sellId) sold.add(sellId);
       plans.set(entry.item.id, sellId ? { kind: 'sell', itemId: sellId } : { kind: 'full' });
     }
   }
