@@ -21,11 +21,11 @@ It watches your screen, recognizes your match and tells you what to buy, right n
 
 <table>
   <tr>
-    <td width="74%"><img src="docs/app-en.png" alt="Main window: next purchases with the item to sell when the inventory is full, why each item, counters" /></td>
+    <td width="74%"><img src="docs/app-en.png" alt="Main window: what to do now, next purchases with the 4,800 investment spikes and the item to sell when the inventory is full, counters for each enemy" /></td>
     <td width="26%"><img src="docs/overlay-en.png" alt="In-game overlay" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>Main window: next purchases, what to sell when your inventory is full, and why each item</sub></td>
+    <td align="center"><sub>Main window: what to do now, next purchases (what to sell when your inventory is full, why each item, the 4,800 spikes) and how to counter each enemy</sub></td>
     <td align="center"><sub>Overlay on top of the game</sub></td>
   </tr>
 </table>

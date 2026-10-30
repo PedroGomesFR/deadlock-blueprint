@@ -161,9 +161,11 @@ export const MESSAGES_IT: Messages = {
   'now.deadNoItem': 'Sei morto: guarda come sta la tua squadra',
   'now.buy': (item) => `Compra ${item}: hai le anime`,
   'now.farm': (missing, item) => `Farma: ti mancano ${missing} anime per ${item}`,
-  'now.safe': (allies, enemies) => `Gioca sicuro: ${allies} alleati morti contro ${enemies} nemici. Farma senza combattere`,
-  'now.push': (enemies, allies) => `${enemies} nemici morti contro ${allies} alleati: spingi, prendi un guardiano o un obiettivo`,
-  'now.midBoss': (enemies, allies) => `Fai il Mid Boss con la tua squadra: ${enemies} nemici morti contro ${allies} alleati`,
+  'now.safe': (allies, enemies) => `Gioca sicuro: ${allies} alleati morti contro ${enemies} ${enemies === 1 ? 'nemico' : 'nemici'}. Farma senza combattere`,
+  'now.push': (enemies, allies) =>
+    `${enemies} nemici morti contro ${allies} ${allies === 1 ? 'alleato' : 'alleati'}: spingi, prendi un guardiano o un obiettivo`,
+  'now.midBoss': (enemies, allies) =>
+    `Fai il Mid Boss con la tua squadra: ${enemies} nemici morti contro ${allies} ${allies === 1 ? 'alleato' : 'alleati'}`,
   'now.midBossLead': (enemies, lead) => `Fai il Mid Boss con la tua squadra: ${enemies} nemici morti e ${lead}k anime di vantaggio`,
   'now.soulsBehind': (diff) => `La tua squadra è indietro di ${diff}k anime: resta in gruppo, farma, evita gli scontri allo scoperto`,
   'now.soulsAhead': (diff) => `La tua squadra è avanti di ${diff}k anime: forza i guardiani e gli obiettivi`,

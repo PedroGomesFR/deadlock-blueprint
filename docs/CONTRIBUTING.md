@@ -112,6 +112,10 @@ When Valve releases a hero, `npm run update-builds` lists it under *"Heroes abse
 
 The executables are not code-signed, hence the SmartScreen warning on first launch. A code-signing certificate (or [SignPath Foundation](https://signpath.org), free for open-source projects) would remove it: electron-builder signs with `CSC_LINK` / `CSC_KEY_PASSWORD`.
 
+## README screenshots
+
+`npm run screenshots` builds the app, then `scripts/readme-screenshots.cjs` opens it in hidden windows with a throwaway profile, writes a staged match into its `localStorage` (Infernus at 13 min, full inventory, 3 enemies dead) and saves `docs/app.png`, `docs/overlay.png` and their `-en` versions. Run it again whenever the interface changes, and look at the four images before committing them. To show something else, change the staged state at the top of the script.
+
 ## Recording the demo
 
 The README is missing a 15-second GIF. It should show: the shop open, buying the #1 recommended item, and the list moving on to the next item.

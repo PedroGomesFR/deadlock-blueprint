@@ -19,11 +19,11 @@ Il lit ton écran, reconnaît ta partie et te dit quoi acheter, maintenant.
 
 <table>
   <tr>
-    <td width="74%"><img src="docs/app.png" alt="Fenêtre principale : prochains achats, objet à vendre quand l'inventaire est plein, contres" /></td>
+    <td width="74%"><img src="docs/app.png" alt="Fenêtre principale : consignes du moment, prochains achats avec les paliers 4 800 et l'objet à vendre quand l'inventaire est plein, contres de chaque ennemi" /></td>
     <td width="26%"><img src="docs/overlay.png" alt="Overlay en jeu" /></td>
   </tr>
   <tr>
-    <td align="center"><sub>Fenêtre principale : prochains achats, contres et objet à vendre quand l'inventaire est plein</sub></td>
+    <td align="center"><sub>Fenêtre principale : consignes du moment, prochains achats (objet à vendre quand l'inventaire est plein, paliers 4 800) et comment contrer chaque ennemi</sub></td>
     <td align="center"><sub>Overlay par-dessus le jeu</sub></td>
   </tr>
 </table>

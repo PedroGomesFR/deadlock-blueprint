@@ -160,9 +160,11 @@ export const MESSAGES_EN: Messages = {
   'now.deadNoItem': 'You are dead: check how your team is doing',
   'now.buy': (item) => `Buy ${item}: you have the souls`,
   'now.farm': (missing, item) => `Farm: ${missing} souls short of ${item}`,
-  'now.safe': (allies, enemies) => `Play safe: ${allies} allies dead against ${enemies} enemies. Farm, don't fight`,
-  'now.push': (enemies, allies) => `${enemies} enemies dead against ${allies} allies: push, take a guardian or an objective`,
-  'now.midBoss': (enemies, allies) => `Take the Mid Boss with your team: ${enemies} enemies dead against ${allies} allies`,
+  'now.safe': (allies, enemies) => `Play safe: ${allies} allies dead against ${enemies} ${enemies === 1 ? 'enemy' : 'enemies'}. Farm, don't fight`,
+  'now.push': (enemies, allies) =>
+    `${enemies} enemies dead against ${allies} ${allies === 1 ? 'ally' : 'allies'}: push, take a guardian or an objective`,
+  'now.midBoss': (enemies, allies) =>
+    `Take the Mid Boss with your team: ${enemies} enemies dead against ${allies} ${allies === 1 ? 'ally' : 'allies'}`,
   'now.midBossLead': (enemies, lead) => `Take the Mid Boss with your team: ${enemies} enemies dead and ${lead}k souls ahead`,
   'now.soulsBehind': (diff) => `Your team is ${diff}k souls behind: stay grouped, farm, avoid fights in the open`,
   'now.soulsAhead': (diff) => `Your team is ${diff}k souls ahead: force the guardians and objectives`,

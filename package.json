@@ -23,6 +23,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:vision": "npm run build && electron scripts/vision-replay.cjs --check tests/vision",
+    "screenshots": "npm run build && electron scripts/readme-screenshots.cjs",
     "update-builds": "node scripts/update-builds.mjs",
     "update-street-brawl": "node scripts/update-street-brawl.mjs",
     "check-data": "node scripts/update-builds.mjs --check",

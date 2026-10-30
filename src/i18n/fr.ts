@@ -172,11 +172,11 @@ export const MESSAGES_FR = {
   'now.buy': (item: string) => `Achète ${item} : tu as les âmes`,
   'now.farm': (missing: string, item: string) => `Farm : il te manque ${missing} âmes pour ${item}`,
   'now.safe': (allies: number, enemies: number) =>
-    `Joue safe : ${allies} alliés morts contre ${enemies} ennemis. Farm sans te battre`,
+    `Joue safe : ${allies} alliés morts contre ${enemies} ${enemies > 1 ? 'ennemis' : 'ennemi'}. Farm sans te battre`,
   'now.push': (enemies: number, allies: number) =>
-    `${enemies} ennemis morts contre ${allies} alliés : pousse, prends un gardien ou un objectif`,
+    `${enemies} ennemis morts contre ${allies} ${allies > 1 ? 'alliés' : 'allié'} : pousse, prends un gardien ou un objectif`,
   'now.midBoss': (enemies: number, allies: number) =>
-    `Va faire le Mid Boss avec ton équipe : ${enemies} ennemis morts contre ${allies} alliés`,
+    `Va faire le Mid Boss avec ton équipe : ${enemies} ennemis morts contre ${allies} ${allies > 1 ? 'alliés' : 'allié'}`,
   'now.midBossLead': (enemies: number, lead: string) =>
     `Va faire le Mid Boss avec ton équipe : ${enemies} ennemis morts et ${lead}k âmes d'avance`,
   'now.soulsBehind': (diff: string) =>
