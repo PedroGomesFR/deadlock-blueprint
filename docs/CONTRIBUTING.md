@@ -21,6 +21,7 @@ npm run dev          # Vite with hot reload + Electron
 | `src/services/visionScanner.ts` | The scanner: one frame → what is on screen (portraits, inventory, souls) |
 | `src/services/matchTracker.ts` | The rules: scans over time → my hero, lineups (voted per slot), owned items, new match |
 | `src/services/recommendations.ts` | What to buy next, what to sell |
+| `src/services/investments.ts` | The three 4,800 investment spikes in the build's order: souls per category, the target, the badge and its push windows ([INVESTMENTS.md](INVESTMENTS.md)) |
 | `src/services/matchLogger.ts` | Game logs (opt-in) |
 | `src/data/deadlockData.ts` | Heroes, hand-written builds, counters (French); `deadlockData.en.ts` holds their English text |
 | `src/data/generated/` | Item catalogue and meta builds from deadlock-api.com (`npm run update-builds`) |
