@@ -51,8 +51,15 @@ import {
   isInventoryFull,
   withLockedFirst,
 } from './services/recommendations';
-import { computeBuyQueue, getSpikeSafeSlotPlans } from './services/buyQueue';
-import { inBuyOrder, investmentItems, investmentProgress, spikeBadge, spikeOrder } from './services/investments';
+import { computeBuyQueue, getSpikeSafeSlotPlans, isLaneOver } from './services/buyQueue';
+import {
+  inBuyOrder,
+  investmentItems,
+  investmentProgress,
+  spikeBadge,
+  spikeOrder,
+  totalInvested,
+} from './services/investments';
 import {
   isMatchLogEnabled,
   logEvent,
@@ -487,6 +494,15 @@ export function App() {
   // Match clock (extrapolated between two readings)
   const clockS = board?.clock ? Math.floor(clockAt(board.clock, nowMs)) : undefined;
 
+  // Laning ends at 10 min (the clock, else about 6,400 souls spent). Latched for the match: the clock is forgotten 15 s
+  // after the top bar was last seen, and a lane counter must not come back with it
+  const soulsSpent = useMemo(() => totalInvested(ownedItems), [ownedItems]);
+  const [laneOverLatched, setLaneOverLatched] = useState(false);
+  const laneOver = laneOverLatched || isLaneOver(clockS, soulsSpent);
+  useEffect(() => {
+    if (laneOver && !laneOverLatched) setLaneOverLatched(true);
+  }, [laneOver, laneOverLatched]);
+
   // The build takes one category to 4,800 souls, then the next, then the last, in the order players buy its items
   // (services/investments.ts); a category the player committed to replaces the build's next one
   const buildSpikeOrder = useMemo(
@@ -504,7 +520,7 @@ export function App() {
     () => investmentItems(ownedItems, readManualOwned(), inventoryStatus?.itemIds ?? null),
     [ownedItems, inventoryStatus]
   );
-  // The clock by the minute: the push windows of a spike (SPIKES) do not need the second
+  // The clock by the minute: the push windows of a spike (SPIKES) and the due times do not need the second
   const clockMinuteS = clockS === undefined ? undefined : Math.floor(clockS / 60) * 60;
   const investment = useMemo(
     () => investmentProgress(buildSpikeOrder, investedItems, clockMinuteS),
@@ -512,15 +528,18 @@ export function App() {
   );
 
   /**
-   * Smart Next-To-Buy Queue (services/buyQueue.ts): early lane items, urgent counters against the lane opponents, then
-   * mid and late game items, by usual buy time, and the 4,800 spike nudge. Every item already owned (detected or
-   * marked by hand), and every component consumed by an owned upgrade, is skipped.
+   * Smart Next-To-Buy Queue (services/buyQueue.ts): key core items first, counters placed by the time they are due, the
+   * build in its usual buy order, the 4,800 spike nudge. Lane-only counters need a real lane threat and leave with
+   * laning. Every item already owned (detected or marked by hand), and every component consumed by an owned
+   * upgrade, is skipped.
    */
   const { queue: rawNextToBuyQueue, counters: purchaseCounters } = useMemo(
     () =>
       computeBuyQueue({
         build: activeBuild,
         priorityItems: tacticalPlan.priorityItems,
+        matchupAlerts: tacticalPlan.matchupAlerts,
+        laneOutlook: tacticalPlan.laneStrategy.outlook?.outlook,
         items: ITEMS,
         t,
         ownedItems,
@@ -529,8 +548,25 @@ export function App() {
         sellCandidates,
         investment,
         stat: (itemId) => getHeroItemStat(myHeroId, itemId),
+        clockS: clockMinuteS,
+        laneOver,
       }),
-    [activeBuild, tacticalPlan.priorityItems, ITEMS, t, ownedItems, investedItems, inventoryStatus, sellCandidates, investment, myHeroId]
+    [
+      activeBuild,
+      tacticalPlan.priorityItems,
+      tacticalPlan.matchupAlerts,
+      tacticalPlan.laneStrategy.outlook,
+      ITEMS,
+      t,
+      ownedItems,
+      investedItems,
+      inventoryStatus,
+      sellCandidates,
+      investment,
+      myHeroId,
+      clockMinuteS,
+      laneOver,
+    ]
   );
 
   // The #1 stays locked until it is bought or skipped (or the hero/build changes):
@@ -706,6 +742,7 @@ export function App() {
     setInventoryStatus(null);
     storeFedEnemies([]);
     storeMidBoss(null);
+    setLaneOverLatched(false);
   }, [storeFedEnemies, storeMidBoss]);
 
   const boardJsonRef = useRef<string>(JSON.stringify(board));

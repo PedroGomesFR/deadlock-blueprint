@@ -92,6 +92,11 @@ export function investedSouls(ownedItems: string[]): Record<ItemCategory, number
   return souls;
 }
 
+/** All the souls invested, over the three categories. */
+export function totalInvested(ownedItems: string[]): number {
+  return Object.values(investedSouls(ownedItems)).reduce((sum, souls) => sum + souls, 0);
+}
+
 /**
  * The build's items in the order players buy them (itemStats). The phases are tiers (T1 early, T2 mid, T3-4
  * late, scripts/update-builds.mjs), not times: walking them in order counted a 3,200 item usually bought at
