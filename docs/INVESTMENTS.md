@@ -14,17 +14,31 @@ one category to 4,800, then the next, then the last, and the buy tab follows tha
 - **"Reaches the 4,800 … spike"** on a shown item that takes the *next* spike's category to 4,800. A neutral chip
   with the tab colour on its icon: amber stays for "late", violet for imbue hints. With a full inventory, the item
   the card says to sell leaves first, so a sale in the same category never promises a spike it takes back.
+- **Gentle nudge**: when #2 or #3 has that badge, the #1 does not, and players usually buy the two within
+  2 minutes of each other, that item becomes #1. Nothing else is reordered, and a locked #1 stays locked.
 - **A spike is pushed inside a window.** The first until 14 min, the second until 20, the third until 24 (any item
   before 22 min, only a top-up of 800 souls or less after). Without a clock, the first two are pushed and the third
-  only as a top-up. Past its window the spike has no badge and no amber; the line says so. See "How much it
+  only as a top-up. Past its window the spike has no badge, no nudge and no amber; the line says so. See "How much it
   matters" below.
 - **"Last 800 souls"**: when the target category already holds 4,000 or more and a shown item crosses 4,800 by adding
   800 souls or less, the badge says so. Same chip, never a reorder.
 - **What counts**: the owned items, except those marked by hand ("Skip" or a click) that the scanner does not see
   in the inventory: skipping an item is not buying it. Without an inventory read, the hand-marked items count.
+- **Sales keep finished spikes.** With a full inventory the card suggests selling the weakest item, but never one
+  whose sale drops a category from 4,800 to below it (unless the new item brings it back): the next weakest is
+  suggested, or "inventory full" when every candidate would. Measured on 1,760 simulated games: 2% of the sales did
+  (9% of the games), now none.
+- **Key core items keep their place.** An item bought in 70% or more of the hero's games (`KEY_CORE_PICK_RATE`,
+  about 6 per hero) is never overtaken: a spike item does not move above one, whatever its buy time.
 - **The player's own build wins.** A category not at 4,800 yet, with at least 2,400 souls and 1,600 more than the
-  build's next category, becomes the target: the line lists it after the finished spikes, its items get the badge. In a recorded Infernus game the build went
+  build's next category, becomes the target: the line lists it after the finished spikes, its items get the badge,
+  and the queue is not reordered (it follows the build the player left). In a recorded Infernus game the build went
   spirit first, the player vitality then weapon, with spirit at 1,600 most of the game.
+
+## The buy queue (`src/services/buyQueue.ts`)
+
+The queue is one pure function, `computeBuyQueue`: the build's items not yet owned, by usual buy time, then the spike
+nudge above. Sales are planned by `getSpikeSafeSlotPlans`, the one place that knows a finished 4,800 must not be sold.
 
 The spike order comes from the build: buying its early, mid and late items **in the order players usually buy them**
 (`itemStats` buy times), the order the categories reach 4,800 (categories it never takes there come last, most souls
@@ -60,7 +74,7 @@ clustered by match; win-rate points with 95% intervals; correlations, skill is n
 - Each later spike is worth +0.7 to +1 while it is early (the second at 15 min +0.9, the third at 20 min +0.7), +0.3
   at 25 min and 0 at 30. Earlier is better, about 0.3 point per minute for the first spike.
 - That is why the app pushes a spike only inside a window (`SPIKES` in `investments.ts`): the first until 14 min, the second
-  until 20, the third until 24 (any item before 22 min, only a top-up after). No badge or "late"
+  until 20, the third until 24 (any item before 22 min, only a top-up after). No reordering, badge or "late"
   colour after that.
 - 38% of players sit at 4,000-4,799 before their first spike (median wait 1.9 min at rank 81+, 2.6 at 1-40), and 46%
   of the crossings add only 800 (800 to 1,600 upgrades such as Extra Spirit to Improved Spirit). The badge then says
@@ -70,4 +84,5 @@ clustered by match; win-rate points with 95% intervals; correlations, skill is n
 - Only 32% of the items finishing the first two spikes are key core items (pick rate 70% or more), and core versus
   flexible makes no difference to win rate.
 
-These are correlations, so the spike is a hint on a card, never a rule.
+These are correlations, which is why the app nudges a spike item by at most 2 minutes and never above a key core
+item rather than reordering the build.
