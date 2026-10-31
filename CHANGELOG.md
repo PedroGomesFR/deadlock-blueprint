@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.3] — 2026-10-31
 
 ### Changed
 - **The list goes on after your build**: the meta builds stop at 18 items, with a single 6,400 item for most heroes, so "Buy right now" ran dry late in the game (in 250 of 264 simulated games, at about 40,000 souls spent). Once your build is done it now goes on with its situational items and the late items your hero's high-rank players buy ("Late game: after the build"), such as Juggernaut or Witchmail for Rat King, most picked first. With a full inventory, they only replace a weaker item.
