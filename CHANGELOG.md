@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- **The list goes on after your build**: the meta builds stop at 18 items, with a single 6,400 item for most heroes, so "Buy right now" ran dry late in the game (in 250 of 264 simulated games, at about 40,000 souls spent). Once your build is done it now goes on with its situational items and the late items your hero's high-rank players buy ("Late game: after the build"), such as Juggernaut or Witchmail for Rat King, most picked first. With a full inventory, they only replace a weaker item.
+- **No more lanes after 10 minutes**: from 10:00 everyone roams with the team, so the app stops reasoning in lanes. The "Now" orders no longer say "push your lane", "your partner is dead" or "go help a lane"; every enemy is rated from your whole-game win rate against them and weighs the same in the counters; the enemy cards are sorted by danger (fed, avoid, even, focus) instead of lane first. A "🛣 Laning" / "⚔ Teamfights" label next to the clock shows which phase the app is in.
+- **Your souls**: a reading with a digit added or dropped by the text recognition (2,472 read as 24,388, 3,312 as 331) is no longer shown: a big jump is only taken once the next reading agrees, or after 2 seconds. On a recorded 40-minute game, souls were shown 3 times too high or too low 10 times out of 2,192 readings instead of 32.
+- The game log (opt-in) now keeps the full image at the captured size every minute when the capture is not 1920×1080, and writes the capture size, so the scanner can be checked on a real 2K or 4K image.
+
+### Fixed
+- **An item you sold came back at once in "Buy right now"**, often with "Sell" another item of the same tier. Items you sell are now remembered for the match and never suggested again (nor the items they were built from). An item turned into an upgrade is not a sale. Buy it back, or mark it by hand, and it counts again. In simulated games, a sold item came back among the 6 cards after 1,003 of 1,274 sales; now never.
+- **Items not recognized at 2560×1440 (2K)**: Deadlock places the item slots 82 px apart at 1440p, not exactly 4/3 of their 1080p spacing, so the last columns were read 2-3 px off (Spirit Burn and Spirit Rend stayed unknown on real 2K captures). Captures that are not 1920×1080 now read each slot at both spacings and keep the better match. 1080p is unchanged.
+- With a full inventory, a strong item outside your build (the first one to sell) could hide every lower-tier item of your build from "Buy right now".
+
 ## [2.0.2] — 2026-10-30
 
 ### New

@@ -66,6 +66,17 @@ describe('what to do now', () => {
     expect(kinds(input({ board: board([0], [1, 2]) }))).not.toContain('help');
   });
 
+  it('gives no lane-pair order once laning is over: no lanes any more', () => {
+    for (const b of [board([], [2, 3]), board([3]), board([0], [2])]) {
+      const after = kinds(input({ board: b, laneOver: true }));
+      expect(after).not.toContain('pushLane');
+      expect(after).not.toContain('partnerDead');
+      expect(after).not.toContain('help');
+    }
+    // The team orders stay
+    expect(kinds(input({ board: board([], [0, 1, 4]), laneOver: true }))).toContain('push');
+  });
+
   it('focuses a fed enemy first, otherwise my best matchup, never a dead one', () => {
     const enemies: NowEnemy[] = [
       { id: 'apollo', stance: 'focus', diff: 0.03, winRate: 0.53, isFed: false },

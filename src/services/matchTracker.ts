@@ -15,6 +15,7 @@ export interface MatchSnapshot {
   myHeroId: string;
   heroLocked: boolean;
   ownedItems: string[];
+  soldItems: string[]; // left the inventory this match without being upgraded: never suggested again this match
   manualOwned: Set<string>; // marked by hand ("Skip"): never removed by the scanner
   manuallyExcluded: Set<string>; // removed by hand: never added back by the scanner
   laneColor: LaneColor;
@@ -36,6 +37,7 @@ export type MatchPatch = Partial<
     | 'laneEnemyIds'
     | 'teamEnemyIds'
     | 'ownedItems'
+    | 'soldItems'
     | 'currentSouls'
     | 'inventoryStatus'
   >
@@ -161,6 +163,14 @@ class CheckedReading<T> {
   }
 }
 
+// My souls (OCR of the bottom-left counter, kept by the scanner until its digits change): a reading only grows by
+// farming. A jump (a digit added or dropped by the OCR: 2,472 -> 24,388, 3,312 -> 331 in a 2.0.2 game log, or a
+// purchase) is adopted once a newer reading agrees with it, or once it stayed the reading for SOULS_HOLD_MS. Replay
+// of that 40 min game: souls shown 3x too high or too low 10 times out of 2,192 samples instead of 32.
+const SOULS_HOLD_MS = 2000;
+const soulsAgree = (current: number, next: number) =>
+  next >= current - 30 && next - current <= Math.max(2500, current * 0.6);
+
 const teamSoulsAgree = (a: number, b: number) =>
   b >= a - 1 && b - a <= Math.max(TEAM_SOULS_MIN_TOLERANCE, a * TEAM_SOULS_TOLERANCE);
 
@@ -203,6 +213,7 @@ export class MatchTracker {
     (current, next) => teamSoulsAgree(current.ally, next.ally) && teamSoulsAgree(current.enemy, next.enemy)
   );
   private lastTopBarAt = -Infinity;
+  private pendingSouls: { value: number; since: number } | null = null;
   private formatStabilizer = new StableValue<boolean>(FORMAT_SCANS, (ok) => String(ok));
   private formatSupported = true;
   private deadlockSince: number | null = null;
@@ -236,6 +247,22 @@ export class MatchTracker {
       overlap(allySlots, votedEnemies) >= 2 ||
       overlap(enemySlots, votedAllies) >= 2
     );
+  }
+
+  /** The souls to show for this reading (SOULS_HOLD_MS), null to keep the current ones. */
+  private checkSouls(value: number, current: number | null, now: number): number | null {
+    const pending = this.pendingSouls;
+    const adopt =
+      current === null ||
+      soulsAgree(current, value) ||
+      (pending !== null && pending.value !== value && soulsAgree(pending.value, value)) ||
+      (pending !== null && pending.value === value && now - pending.since >= SOULS_HOLD_MS);
+    if (adopt) {
+      this.pendingSouls = null;
+      return value;
+    }
+    if (pending?.value !== value) this.pendingSouls = { value, since: now };
+    return null;
   }
 
   /** My hero was picked by hand: re-detection starts over. */
@@ -458,8 +485,9 @@ export class MatchTracker {
       }
     }
 
-    if (!isWatchingOtherHero && detection.detectedSouls !== undefined && detection.detectedSouls !== state.currentSouls) {
-      update.patch.currentSouls = detection.detectedSouls;
+    if (!isWatchingOtherHero && detection.detectedSouls !== undefined) {
+      const souls = this.checkSouls(detection.detectedSouls, state.currentSouls, now);
+      if (souls !== null && souls !== state.currentSouls) update.patch.currentSouls = souls;
     }
 
     // Inventory Sync: the owned list mirrors the inventory on screen.
@@ -534,6 +562,20 @@ export class MatchTracker {
       if (!sameList(merged, owned)) {
         update.patch.ownedItems = merged;
         update.changes.push(`items:${merged.length}`);
+      }
+
+      // Sold: gone without an owned item (or one on screen) having consumed it as a component. Once sold, the item
+      // left the build's queue for good: it came back at once, often with "⇄ Sell" another item of the same tier (late
+      // game, the item to sell is the build's weakest). Seen again in the inventory (bought back, or a misread
+      // removal), it is no longer sold.
+      const previousSold = update.clearOwned ? [] : state.soldItems;
+      const kept = new Set([...merged, ...detection.detectedOwnedItemIds]);
+      const consumed = new Set([...kept].flatMap((id) => [...getComponentIds(id)]));
+      const newlySold = goneItemIds.filter((id) => !consumed.has(id) && !previousSold.includes(id));
+      const sold = [...previousSold.filter((id) => !kept.has(id)), ...newlySold];
+      if (!sameList(sold, previousSold)) {
+        update.patch.soldItems = sold;
+        if (newlySold.length > 0) event(`Objet(s) vendu(s) : [${newlySold.join(', ')}] (plus proposé(s) cette partie)`);
       }
     }
 

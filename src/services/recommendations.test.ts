@@ -258,6 +258,27 @@ describe('next purchases', () => {
     expect(next.every((e) => e.item.tier >= 2)).toBe(true);
   });
 
+  it('with a full inventory, compares with the weakest item that could go, not the first one to sell', () => {
+    // Leech (Tier 4) is outside the build: sold first, it used to hide every Tier 2-3 item of the build
+    const full = status(['leech', 'extra_spirit', 'extended_magazine', 'extra_regen'], 12);
+    const sell = getSellCandidates(full, BUILD, new Set());
+    expect(sell[0]).toBe('leech');
+    const next = getNextPurchases(order, full.itemIds, full, sell);
+    expect(next.map((e) => e.item.id)).toContain('improved_spirit');
+  });
+
+  it('puts the late items beyond the build after its own items, and before its leftover Tier 1 items', () => {
+    const late = { item: ITEMS_DB.juggernaut, reason: '', extra: true };
+    const owned = ['extra_spirit', 'extended_magazine', 'extra_regen', 'improved_spirit'];
+    const next = getNextPurchases([...order, late], owned, null, []).map((e) => e.item.id);
+    expect(next.indexOf('juggernaut')).toBeGreaterThan(next.indexOf('boundless_spirit'));
+    expect(next.indexOf('juggernaut')).toBeLessThan(next.indexOf('extra_charge'));
+    // Inventory full: a late item only replaces a weaker one
+    const fullOfTier4 = status(['leech', 'siphon_bullets'], 10, 2);
+    const sell = getSellCandidates(fullOfTier4, BUILD, new Set(['leech', 'siphon_bullets']));
+    expect(getNextPurchases([late], fullOfTier4.itemIds, fullOfTier4, sell)).toEqual([]);
+  });
+
   it('orders by the usual buy time, items without a time keeping their position', () => {
     const times: Record<string, number> = { titanic_magazine: 600, improved_spirit: 1200, boundless_spirit: 300 };
     const next = getNextPurchases(order, ['extra_spirit', 'extended_magazine', 'extra_regen'], null, [], (id) => times[id]);

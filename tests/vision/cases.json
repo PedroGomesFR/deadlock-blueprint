@@ -483,6 +483,16 @@
         "locked": 3,
         "souls": 191
       }
+    },
+    {
+      "name": "street_brawl_real_1440p_12_items",
+      "description": "Real 2560x1440 capture (Street Brawl's HUD, same item slots: tests/streetBrawl/frames), reduced to 1080p for the Street Brawl tests and scaled back here. At 2560x1440 the slots are 82 px apart, 61.5 px at 1080p instead of 62: on the 1080p grid alone, Spirit Burn (6th column) was unknown. Arctic Blast is a Street Brawl enhanced (recoloured) item.",
+      "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
+      "parts": [{ "file": "../streetBrawl/frames/pick_r5_c1_inventory_12_items.png", "x": 0, "y": 0 }],
+      "expect": {
+        "frame": "2560x1440",
+        "slots": ["extra_spirit", "enchanters_barrier", "superior_stamina", "rapid_recharge", "spiritual_overflow", "arctic_blast", "recharging_rush", "healbane", "greater_expansion", "transcendent_cooldown", "magic_carpet", "spirit_burn"]
+      }
     }
   ]
 }

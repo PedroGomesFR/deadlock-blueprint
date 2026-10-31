@@ -23,6 +23,7 @@ export interface QueueEntry {
   reason: string;
   phase?: 'early' | 'mid' | 'late' | 'situational'; // phase of the active build that holds the item
   role?: CounterRole; // set on a counter that is not part of the build
+  extra?: boolean; // beyond the build: a late item (situational, or bought by the hero's players) once the build runs out
 }
 
 export type SlotPlan =
@@ -200,18 +201,19 @@ export const isInventoryFull = (status: InventoryStatus | null) =>
 
 /**
  * Items of the inventory to sell when it is full, weakest first: outside the active build and the counters,
- * then lowest tier, then earliest build phase, then cheapest.
+ * then lowest tier, then earliest build phase, then cheapest. `wantedIds`: the counters, and the late items beyond the
+ * build (a Tier 4 bought from the queue's late items must not be the first to go).
  */
 export function getSellCandidates(
   status: InventoryStatus | null,
   build: HeroBuildArchetype,
-  counterIds: Set<string>
+  wantedIds: Set<string>
 ): string[] {
   if (!status) return [];
   const { early, mid, late, situational } = build.phases;
   const phaseRank = (id: string) =>
     late.includes(id) ? 3 : mid.includes(id) || situational.includes(id) ? 2 : early.includes(id) ? 1 : 0;
-  const isWanted = (id: string) => phaseRank(id) > 0 || counterIds.has(id);
+  const isWanted = (id: string) => phaseRank(id) > 0 || wantedIds.has(id);
   return status.itemIds
     .filter((id) => ITEMS_DB[id])
     .sort(
@@ -247,9 +249,10 @@ export function sortByBuyTime(queue: QueueEntry[], buyTimeS?: (itemId: string) =
 
 /**
  * Next purchases, nothing owned (nor consumed by an owned upgrade). With a full inventory, an item needing a
- * free slot must be worth at least the weakest item it replaces. Once the early slots are filled (4+ items, or
- * 3+ Tier 1), the mid / late items come first. With `buyTimeS`, each of those groups is ordered by the time
- * players usually buy the item.
+ * free slot must be worth at least the weakest item that could go (a late item beyond the build: more than it).
+ * Once the early slots are filled (4+ items, or 3+ Tier 1), the mid / late items come first. With `buyTimeS`, each of
+ * those groups is ordered by the time players usually buy the item. The late items beyond the build (`extra`) come
+ * after the build's, in their own order, and before its leftover Tier 1 items.
  */
 export function getNextPurchases(
   order: QueueEntry[],
@@ -262,19 +265,24 @@ export function getNextPurchases(
   let unowned = order.filter((entry) => !owned.has(entry.item.id));
 
   if (isInventoryFull(status) && sellCandidates.length > 0) {
-    const weakestTier = ITEMS_DB[sellCandidates[0]].tier;
+    // The weakest of them: the first candidate may be a strong item outside the build, which hid every lower tier
+    const weakestTier = Math.min(...sellCandidates.map((id) => ITEMS_DB[id].tier));
     unowned = unowned.filter(
-      (entry) => getUpgradedComponent(entry.item.id, ownedItems) !== undefined || entry.item.tier >= weakestTier
+      (entry) =>
+        getUpgradedComponent(entry.item.id, ownedItems) !== undefined ||
+        (entry.extra ? entry.item.tier > weakestTier : entry.item.tier >= weakestTier)
     );
   }
+  const extras = unowned.filter((entry) => entry.extra);
+  unowned = unowned.filter((entry) => !entry.extra);
 
   const ownedTier1Count = ownedItems.filter((id) => ITEMS_DB[id]?.tier === 1).length;
   if (ownedItems.length >= 4 || ownedTier1Count >= 3) {
     const midAndLate = unowned.filter((entry) => entry.item.tier >= 2);
     const leftoverEarly = unowned.filter((entry) => entry.item.tier === 1);
-    return [...sortByBuyTime(midAndLate, buyTimeS), ...sortByBuyTime(leftoverEarly, buyTimeS)];
+    return [...sortByBuyTime(midAndLate, buyTimeS), ...extras, ...sortByBuyTime(leftoverEarly, buyTimeS)];
   }
-  return sortByBuyTime(unowned, buyTimeS);
+  return [...sortByBuyTime(unowned, buyTimeS), ...extras];
 }
 
 /** A locked #1 usually bought this much later than the queue's head is left over from an earlier game (seconds). */

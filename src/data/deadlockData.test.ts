@@ -68,6 +68,20 @@ describe('counter engine with the matchup statistics', () => {
     expect(plan([], 'solo').laneStrategy.duo).toBeUndefined();
   });
 
+  it('judges every enemy the same once laning is over: whole-game matchups, no lane items nor outlook', () => {
+    const after = generateTacticalPlan('infernus', '', 'yellow', 'duo', ['haze', 'bebop'], ['abrams', 'lash', 'ivy', 'seven'], 'kelvin', 'en', [], true);
+    expect(after.matchupAlerts).toHaveLength(6);
+    for (const a of after.matchupAlerts) {
+      expect(a.isInMyLane, a.enemyId).toBe(false);
+      expect(a.stat?.lane, a.enemyId).toBe(false);
+    }
+    const reasons = after.priorityItems.flatMap((i) => i.reasons);
+    expect(reasons.some((r) => r.startsWith('[LANE]'))).toBe(false);
+    expect(after.priorityItems.some((i) => i.urgency === 'Critique (En Face / Lane)')).toBe(false);
+    expect(after.laneStrategy.outlook).toBeUndefined();
+    expect(after.laneStrategy.duo).toBeUndefined();
+  });
+
   it('never takes the 1v1s of a fed enemy, and puts its counters first', () => {
     const before = plan();
     const after = plan(['ivy']);

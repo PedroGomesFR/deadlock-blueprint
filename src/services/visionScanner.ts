@@ -605,6 +605,22 @@ function isDimCategoryCorner(r: number, g: number, b: number, category: ItemCate
 const EMPTY_SLOT_MAX_VARIANCE = 50;
 const EMPTY_SCANS_TO_FORGET = 6;
 
+// Where the 12 slots are (1920x1080 reference): x = 26 + dx + col * pitch, y = 944 + dy + row * pitch. Deadlock lays
+// its HUD out at the game's own resolution and rounds the slot spacing to whole pixels: at 2560x1440 the slots are
+// 82 px apart, 61.5 px once scaled to 1080p, from (26, 944.5) (fitted on real 2560x1440 captures of the same HUD,
+// docs/STREET_BRAWL.md). On the 62 px grid of 1920x1080 the 4th to 6th columns were 1.5-2.5 px off: Spirit Rend and
+// Spirit Burn were left unknown on two such captures, and Spirit Resilience / Greater Expansion read 20-27 instead
+// of 4-9. A capture that is not 1920x1080 reads each slot on both grids and keeps the better match.
+interface InventoryGrid {
+  pitch: number;
+  dx: number;
+  dy: number;
+}
+const INVENTORY_GRID_1080P: InventoryGrid = { pitch: 62, dx: 0, dy: 0 };
+const INVENTORY_GRID_1440P: InventoryGrid = { pitch: 61.5, dx: 0, dy: 0.5 };
+// The grid most slots matched on in the last frame of that capture size: where the padlocks are looked for
+let lastInventoryGrid: { rawW: number; rawH: number; grid: InventoryGrid } | null = null;
+
 // Per inventory slot (row * 6 + col): last item recognized with certainty, when a padlock was last seen, and how
 // many scans in a row it has looked empty
 const slotLastItem: (string | null)[] = new Array(12).fill(null);
@@ -739,6 +755,7 @@ export function resetScannerState(): void {
   lastMintPixels = -1;
   lastMintXSum = -1;
   cachedDetectedSouls = undefined;
+  lastInventoryGrid = null;
   lastTopBarOcrAt = -Infinity;
   cachedTopBar = undefined;
   lastProvenLayout = null;
@@ -1160,7 +1177,9 @@ export async function analyzeDeadlockScreen(
           } else {
             slotEmptyStreak[slotIndex] = 0;
           }
-          if (isLockedSlot(invData, invW, invX0, invY0, 26 + col * 62, 944 + invDy + row * 62, scaleX, scaleY)) {
+          const lockX = 26 + lockGrid.dx + col * lockGrid.pitch;
+          const lockY = 944 + lockGrid.dy + invDy + row * lockGrid.pitch;
+          if (isLockedSlot(invData, invW, invX0, invY0, lockX, lockY, scaleX, scaleY)) {
             slotLastLockSeen[slotIndex] = scanTime;
           }
           if (scanTime - slotLastLockSeen[slotIndex] < LOCK_HOLD_MS) {
@@ -1171,134 +1190,112 @@ export async function analyzeDeadlockScreen(
           }
         };
 
-        for (let row = 0; row < 2; row++) {
-          for (let col = 0; col < 6; col++) {
-            const slotIndex = row * 6 + col;
-            const ix = Math.round((w * (26 + col * 62)) / 1920);
-            const iy = Math.round((h * (944 + invDy + row * 62)) / 1080);
-            const isz = Math.round((w * 52) / 1920);
+        // A capture that is not 1920x1080 may come from a game laid out at another resolution (INVENTORY_GRID_1440P)
+        const grids =
+          rawW === 1920 && rawH === 1080 ? [INVENTORY_GRID_1080P] : [INVENTORY_GRID_1080P, INVENTORY_GRID_1440P];
+        const lockGrid =
+          lastInventoryGrid && lastInventoryGrid.rawW === rawW && lastInventoryGrid.rawH === rawH
+            ? lastInventoryGrid.grid
+            : INVENTORY_GRID_1080P;
+        const gridWins = new Map<InventoryGrid, number>();
+        const frameCanvas = fullCtx.canvas;
 
-            abCtx.clearRect(0, 0, 20, 20);
-            abCtx.drawImage(sharedFullCanvas, ix, iy, isz, isz, 0, 0, 20, 20);
-            const sData = abCtx.getImageData(0, 0, 20, 20).data;
+        /** What a slot shows where a grid puts it: category corner, contrast and best matching items. */
+        const measureSlot = (row: number, col: number, grid: InventoryGrid) => {
+          const x = 26 + grid.dx + col * grid.pitch;
+          const y = 944 + grid.dy + invDy + row * grid.pitch;
+          const ix = Math.round((w * x) / 1920);
+          const iy = Math.round((h * y) / 1080);
+          const isz = Math.round((w * 52) / 1920);
 
-            // Step 1A: Detect Top-Right Category Corner Triangle (Orange=Weapon, Green=Vitality, Purple=Spirit)
-            const slot = `${row + 1}.${col + 1}`;
-            let trR = 0,
-              trG = 0,
-              trB = 0,
-              trN = 0;
-            // All corner pixels, numerals included: hue of a corner dimmed by the start of a cooldown
-            let cornerR = 0,
-              cornerG = 0,
-              cornerB = 0,
-              cornerN = 0;
-            for (let py = 1; py <= 6; py++) {
-              for (let px = 13; px <= 18; px++) {
-                if (px - 12 >= py) {
-                  const idx = (py * 20 + px) * 4;
-                  const r = sData[idx];
-                  const g = sData[idx + 1];
-                  const b = sData[idx + 2];
-                  const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                  cornerR += r;
-                  cornerG += g;
-                  cornerB += b;
-                  cornerN++;
-                  // Skip dark Roman numeral pixels ('I', 'II', 'III', 'IV') inside the corner badge
-                  if (lum > 70) {
-                    trR += r;
-                    trG += g;
-                    trB += b;
-                    trN++;
-                  }
+          abCtx.clearRect(0, 0, 20, 20);
+          abCtx.drawImage(frameCanvas, ix, iy, isz, isz, 0, 0, 20, 20);
+          const sData = abCtx.getImageData(0, 0, 20, 20).data;
+
+          // Step 1A: Detect Top-Right Category Corner Triangle (Orange=Weapon, Green=Vitality, Purple=Spirit)
+          let trR = 0,
+            trG = 0,
+            trB = 0,
+            trN = 0;
+          // All corner pixels, numerals included: hue of a corner dimmed by the start of a cooldown
+          let cornerR = 0,
+            cornerG = 0,
+            cornerB = 0,
+            cornerN = 0;
+          for (let py = 1; py <= 6; py++) {
+            for (let px = 13; px <= 18; px++) {
+              if (px - 12 >= py) {
+                const idx = (py * 20 + px) * 4;
+                const r = sData[idx];
+                const g = sData[idx + 1];
+                const b = sData[idx + 2];
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                cornerR += r;
+                cornerG += g;
+                cornerB += b;
+                cornerN++;
+                // Skip dark Roman numeral pixels ('I', 'II', 'III', 'IV') inside the corner badge
+                if (lum > 70) {
+                  trR += r;
+                  trG += g;
+                  trB += b;
+                  trN++;
                 }
               }
             }
+          }
 
-            let slotCat: ItemCategory | null = null;
-            if (trN >= 4) {
-              trR /= trN;
-              trG /= trN;
-              trB /= trN;
-              if (trR > 170 && trG > 90 && trB < 90 && trR - trB > 95) {
-                slotCat = 'weapon';
-              } else if (trG > 110 && trG > trR + 8 && trG - trB > 30) {
-                slotCat = 'vitality';
-              } else if (trB > 120 && trR > 85 && trB - trG > 20) {
-                slotCat = 'spirit';
-              }
+          let slotCat: ItemCategory | null = null;
+          if (trN >= 4) {
+            trR /= trN;
+            trG /= trN;
+            trB /= trN;
+            if (trR > 170 && trG > 90 && trB < 90 && trR - trB > 95) {
+              slotCat = 'weapon';
+            } else if (trG > 110 && trG > trR + 8 && trG - trB > 30) {
+              slotCat = 'vitality';
+            } else if (trB > 120 && trR > 85 && trB - trG > 20) {
+              slotCat = 'spirit';
             }
+          }
 
-            // Step 1B: Verify inner card body luminance & contrast (excluding top-right triangle)
-            let lumSum = 0;
-            let lumSq = 0;
-            let innerN = 0;
-            for (let py = 2; py < 18; py++) {
-              for (let px = 2; px < 18; px++) {
-                if (px >= 10 && py <= 10 && px - 9 >= py) continue;
-                const idx = (py * 20 + px) * 4;
-                const lum =
-                  0.299 * sData[idx] + 0.587 * sData[idx + 1] + 0.114 * sData[idx + 2];
-                lumSum += lum;
-                lumSq += lum * lum;
-                innerN++;
-              }
+          // Step 1B: Verify inner card body luminance & contrast (excluding top-right triangle)
+          let lumSum = 0;
+          let lumSq = 0;
+          let innerN = 0;
+          for (let py = 2; py < 18; py++) {
+            for (let px = 2; px < 18; px++) {
+              if (px >= 10 && py <= 10 && px - 9 >= py) continue;
+              const idx = (py * 20 + px) * 4;
+              const lum = 0.299 * sData[idx] + 0.587 * sData[idx + 1] + 0.114 * sData[idx + 2];
+              lumSum += lum;
+              lumSq += lum * lum;
+              innerN++;
             }
+          }
+          const meanLum = lumSum / innerN;
+          const variance = lumSq / innerN - meanLum * meanLum;
+          // Every real Deadlock item card (including dark icons like Healbane/Decay) has high contrast (variance > 600);
+          // an item on cooldown is darker but keeps its category corner and some contrast
+          const isCard =
+            slotCat !== null &&
+            ((meanLum > 45 && variance > 600) ||
+              (meanLum <= COOLDOWN_SLOT_MAX_LUM && variance > COOLDOWN_SLOT_MIN_VARIANCE));
 
-            const meanLum = lumSum / innerN;
-            const variance = lumSq / innerN - meanLum * meanLum;
-
-            // Item at the very start of its cooldown: the whole card, category corner included, is darkened so no
-            // category is found. Only for a slot whose item is known, with the dimmed corner of that item's category.
-            const lastItem = slotLastItem[slotIndex];
-            const lastCategory = lastItem ? ITEMS_DB[lastItem]?.category : undefined;
-            if (
-              !slotCat &&
-              lastItem &&
-              lastCategory &&
-              meanLum <= DARK_CARD_MAX_LUM &&
-              variance > DARK_CARD_MIN_VARIANCE &&
-              isDimCategoryCorner(cornerR / cornerN, cornerG / cornerN, cornerB / cornerN, lastCategory)
-            ) {
-              totalOccupiedSlots++;
-              occupiedCategoryCounts[lastCategory]++;
-              matchedCategoryCounts[lastCategory]++;
-              slotLastLockSeen[slotIndex] = -Infinity;
-              slotEmptyStreak[slotIndex] = 0;
-              if (!detectedOwnedItemIds.includes(lastItem)) detectedOwnedItemIds.push(lastItem);
-              debugLogs.push(`Slot ${slot} [${lastCategory}] ⏳ ${lastItem} en recharge (carte assombrie)`);
-              slotReadings.push({ slot, state: 'cooldown', category: lastCategory, itemId: lastItem });
-              continue;
-            }
-
-            // Every real Deadlock item card (including dark icons like Healbane/Decay) has high contrast (variance > 600);
-            // an item on cooldown is darker but keeps its category corner and some contrast
-            const isItemCard = meanLum > 45 && variance > 600;
-            const isCooldownCard = meanLum <= COOLDOWN_SLOT_MAX_LUM && variance > COOLDOWN_SLOT_MIN_VARIANCE;
-            if (!slotCat || (!isItemCard && !isCooldownCard)) {
-              readEmptySlot(row, col, slotIndex, variance);
-              continue;
-            }
-
-            totalOccupiedSlots++;
-            occupiedCategoryCounts[slotCat]++;
-            slotLastLockSeen[slotIndex] = -Infinity;
-            slotEmptyStreak[slotIndex] = 0;
-
-            // Step 1C: Match against itemTemplates of the SAME category (Weapon/Vitality/Spirit).
-            // The icon artwork sits 2px lower and is 54px wide inside the 52px slot box used above
-            // (calibrated on a real 1920x1080 capture: average error of correct matches 30 -> 9).
-            const mx = Math.round((w * (26 + col * 62)) / 1920);
-            const my = Math.round((h * (946 + invDy + row * 62)) / 1080);
+          // Step 1C: Match against itemTemplates of the SAME category (Weapon/Vitality/Spirit).
+          // The icon artwork sits 2px lower and is 54px wide inside the 52px slot box used above
+          // (calibrated on a real 1920x1080 capture: average error of correct matches 30 -> 9).
+          let bestItem: string | null = null;
+          let bestEffectiveMAE = 999;
+          let secondItem: string | null = null;
+          let secondEffectiveMAE = 999;
+          let mData: Uint8ClampedArray | null = null;
+          if (isCard) {
+            const mx = Math.round((w * x) / 1920);
+            const my = Math.round((h * (y + 2)) / 1080);
             const msz = Math.round((w * 54) / 1920);
-            const mData = areaDownsample(fullCtx.getImageData(mx, my, msz, msz).data, msz, msz);
-
-            let bestItem: string | null = null;
-            let bestEffectiveMAE = 999;
-            let secondItem: string | null = null;
-            let secondEffectiveMAE = 999;
-
+            const matchData = areaDownsample(fullCtx.getImageData(mx, my, msz, msz).data, msz, msz);
+            mData = matchData;
             for (const tpl of itemTemplates) {
               if (tpl.category !== slotCat) continue;
               const tData = tpl.rgba;
@@ -1308,9 +1305,9 @@ export async function analyzeDeadlockScreen(
                 for (let px = 2; px < 18; px++) {
                   if (px >= 10 && py <= 10 && px - 9 >= py) continue;
                   const idx = (py * 20 + px) * 4;
-                  const dr = Math.abs(tData[idx] - mData[idx]);
-                  const dg = Math.abs(tData[idx + 1] - mData[idx + 1]);
-                  const db = Math.abs(tData[idx + 2] - mData[idx + 2]);
+                  const dr = Math.abs(tData[idx] - matchData[idx]);
+                  const dg = Math.abs(tData[idx + 1] - matchData[idx + 1]);
+                  const db = Math.abs(tData[idx + 2] - matchData[idx + 2]);
                   diff += (dr + dg + db) / 3.0;
                   cnt++;
                 }
@@ -1329,12 +1326,80 @@ export async function analyzeDeadlockScreen(
                 secondItem = tpl.itemId;
               }
             }
+          }
+          const accepted =
+            bestItem !== null &&
+            (bestEffectiveMAE <= ITEM_MATCH_MAX_MAE ||
+              (bestEffectiveMAE <= ITEM_MATCH_CLEAR_WINNER_MAX_MAE &&
+                secondEffectiveMAE - bestEffectiveMAE >= ITEM_MATCH_CLEAR_WINNER_MARGIN));
+          const corner: [number, number, number] =
+            cornerN > 0 ? [cornerR / cornerN, cornerG / cornerN, cornerB / cornerN] : [0, 0, 0];
+          return {
+            grid,
+            slotCat,
+            corner,
+            meanLum,
+            variance,
+            isCard,
+            mData,
+            bestItem,
+            bestEffectiveMAE,
+            secondItem,
+            secondEffectiveMAE,
+            accepted,
+          };
+        };
 
-            const accepted =
-              bestItem !== null &&
-              (bestEffectiveMAE <= ITEM_MATCH_MAX_MAE ||
-                (bestEffectiveMAE <= ITEM_MATCH_CLEAR_WINNER_MAX_MAE &&
-                  secondEffectiveMAE - bestEffectiveMAE >= ITEM_MATCH_CLEAR_WINNER_MARGIN));
+        for (let row = 0; row < 2; row++) {
+          for (let col = 0; col < 6; col++) {
+            const slotIndex = row * 6 + col;
+            const slot = `${row + 1}.${col + 1}`;
+            // The grid that reads this slot best: an accepted item, else an item card, else the closest match
+            const measured = grids
+              .map((grid) => measureSlot(row, col, grid))
+              .sort(
+                (a, b) =>
+                  Number(b.accepted) - Number(a.accepted) ||
+                  Number(b.isCard) - Number(a.isCard) ||
+                  a.bestEffectiveMAE - b.bestEffectiveMAE
+              )[0];
+            if (measured.accepted) gridWins.set(measured.grid, (gridWins.get(measured.grid) ?? 0) + 1);
+            const { slotCat, meanLum, variance } = measured;
+
+            // Item at the very start of its cooldown: the whole card, category corner included, is darkened so no
+            // category is found. Only for a slot whose item is known, with the dimmed corner of that item's category.
+            const lastItem = slotLastItem[slotIndex];
+            const lastCategory = lastItem ? ITEMS_DB[lastItem]?.category : undefined;
+            if (
+              !slotCat &&
+              lastItem &&
+              lastCategory &&
+              meanLum <= DARK_CARD_MAX_LUM &&
+              variance > DARK_CARD_MIN_VARIANCE &&
+              isDimCategoryCorner(measured.corner[0], measured.corner[1], measured.corner[2], lastCategory)
+            ) {
+              totalOccupiedSlots++;
+              occupiedCategoryCounts[lastCategory]++;
+              matchedCategoryCounts[lastCategory]++;
+              slotLastLockSeen[slotIndex] = -Infinity;
+              slotEmptyStreak[slotIndex] = 0;
+              if (!detectedOwnedItemIds.includes(lastItem)) detectedOwnedItemIds.push(lastItem);
+              debugLogs.push(`Slot ${slot} [${lastCategory}] ⏳ ${lastItem} en recharge (carte assombrie)`);
+              slotReadings.push({ slot, state: 'cooldown', category: lastCategory, itemId: lastItem });
+              continue;
+            }
+
+            if (!slotCat || !measured.isCard || !measured.mData) {
+              readEmptySlot(row, col, slotIndex, variance);
+              continue;
+            }
+
+            totalOccupiedSlots++;
+            occupiedCategoryCounts[slotCat]++;
+            slotLastLockSeen[slotIndex] = -Infinity;
+            slotEmptyStreak[slotIndex] = 0;
+
+            const { mData, bestItem, bestEffectiveMAE, secondItem, secondEffectiveMAE, accepted } = measured;
             let recognizedItem: string | null = accepted ? bestItem : null;
             let cooldownError: number | undefined;
             if (accepted) {
@@ -1379,6 +1444,13 @@ export async function analyzeDeadlockScreen(
               matchedCategoryCounts[slotCat]++;
             }
           }
+        }
+
+        // The grid most items matched on: where this capture size looks for padlocks from the next frame on
+        const bestGrid = [...gridWins.entries()].sort((a, b) => b[1] - a[1])[0];
+        if (bestGrid) {
+          lastInventoryGrid = { rawW, rawH, grid: bestGrid[0] };
+          if (grids.length > 1) debugLogs.push(`Grille d'inventaire : pas de ${bestGrid[0].pitch} px (${bestGrid[1]} objet(s))`);
         }
 
         // Step 1D: an occupied slot that matches no template stays UNKNOWN. Never guess it from the

@@ -48,6 +48,7 @@ function snapshot(overrides: Partial<MatchSnapshot> = {}): MatchSnapshot {
     myHeroId: 'infernus',
     heroLocked: true,
     ownedItems: [],
+    soldItems: [],
     manualOwned: new Set(),
     manuallyExcluded: new Set(),
     laneColor: 'yellow',
@@ -67,7 +68,7 @@ function run(frames: VisionDetectionResult[], start: MatchSnapshot = snapshot(),
   const updates: MatchUpdate[] = [];
   frames.forEach((frame, i) => {
     const update = tracker.push(frame, state, t0 + i * 350);
-    if (update.clearOwned) state = { ...state, ownedItems: [], inventoryStatus: null };
+    if (update.clearOwned) state = { ...state, ownedItems: [], soldItems: [], inventoryStatus: null };
     state = { ...state, ...update.patch, heroLocked: update.heroLocked ?? state.heroLocked };
     updates.push(update);
   });
@@ -212,6 +213,21 @@ describe('who is dead (board)', () => {
   });
 });
 
+describe('my souls', () => {
+  const souls = (n: number) => hud([], { detectedSouls: n });
+
+  it('ignores a reading with a digit added or dropped, adopts farming at once and a purchase once confirmed', () => {
+    const { updates } = run([souls(2472), souls(24388), souls(2490), souls(249), souls(2510)]);
+    expect(updates.map((u) => u.patch.currentSouls)).toEqual([2472, undefined, 2490, undefined, 2510]);
+    // A purchase (3,312 -> 112): adopted by the next reading that agrees with it, or after 2 s
+    const bought = run([souls(3312), souls(112), souls(130)]);
+    expect(bought.state.currentSouls).toBe(130);
+    const held = run([souls(3312), ...times(7, souls(112))]);
+    expect(held.updates.map((u) => u.patch.currentSouls).filter(Boolean)).toEqual([3312, 112]);
+    expect(held.updates.findIndex((u) => u.patch.currentSouls === 112)).toBe(7); // 6 x 350 ms after the first 112
+  });
+});
+
 describe('my hero', () => {
   // A new match after the last one's hero (unlocked by the new lineup): Rat King's portrait not found, his ability
   // icons read as a teammate (Pocket) or as a hero of neither team (Paradox)
@@ -278,6 +294,19 @@ describe('inventory', () => {
     expect(state.ownedItems.sort()).toEqual(['boundless_spirit', 'extra_spirit']);
   });
 
+  it('remembers a sold item for the match, not a component consumed by an upgrade, and forgets it once seen again', () => {
+    const items = ['extra_regen', 'extra_spirit', 'extended_magazine'];
+    // extended_magazine upgraded into titanic_magazine, extra_regen sold
+    const after = ['extra_spirit', 'titanic_magazine'];
+    const { state, updates } = run([...times(4, hud(items)), ...times(12, hud(after))]);
+    expect(state.ownedItems.sort()).toEqual([...after].sort());
+    expect(state.soldItems).toEqual(['extra_regen']);
+    expect(updates.flatMap((u) => u.log.map((l) => l.text)).some((t) => t.includes('vendu(s) : [extra_regen]'))).toBe(true);
+    // Bought back (or a misread removal): no longer sold
+    const back = run(times(4, hud([...after, 'extra_regen'])), state).state;
+    expect(back.soldItems).toEqual([]);
+  });
+
   it('recognizes a foreign inventory: 2 of my items gone and 2 unknown ones', () => {
     expect(isForeignInventory(['a', 'b', 'c'], ['c', 'x', 'y'], 0)).toBe(true);
     expect(isForeignInventory(['a', 'b', 'c'], ['c', 'x', 'y'], 1)).toBe(false);
@@ -342,6 +371,16 @@ describe('recorded games', () => {
     const everOwned = new Set(steps.flatMap((s) => s.state.ownedItems));
     // Items of the death-cam inventories in this game (see tests/vision: sapphire_death_cam)
     for (const id of ['lifestrike', 'stalker', 'crushing_fists']) expect(everOwned.has(id)).toBe(false);
+  });
+
+  it('yellow_rat_king_full: the 2 items sold in the game are remembered, the 4 upgraded components are not', () => {
+    // 2.0.2 log, Rat King, 40 min: Extra Regen sold at 8 min, Enduring Speed at the end (for Siphon Bullets); Monster
+    // Rounds, High-Velocity Mag, Extra Health and Extended Magazine went into upgrades
+    const steps = replayJournal(readJournal('tests/replays/yellow_rat_king_full.journal.log.gz'));
+    const last = steps[steps.length - 1].state;
+    expect(last.soldItems).toEqual(['extra_regen', 'enduring_speed']);
+    expect(last.ownedItems).toHaveLength(12);
+    expect(last.myHeroId).toBe('rat_king');
   });
 
   it('amber_rat_king: the ability icons (Pocket / Paradox) never change my hero nor wipe my items', () => {

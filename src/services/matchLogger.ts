@@ -7,7 +7,8 @@
  *   état des 12 slots avec l'erreur de reconnaissance), et les lignes ÉTAT / RECO / ÉVÉNEMENT de l'application ;
  * - `images\` : coin inventaire (`inv_*.jpg`, x 0..420, y 820..1080) et cases de score (`top_*.jpg`, x 840..1080,
  *   y 30..80) toutes les 2 s, image complète (`full_*.jpg`) chaque minute, en coordonnées 1920x1080 (l'image telle
- *   que le scanner l'a lue) ; l'image complète d'une capture qui n'est pas en 16:9 est gardée telle quelle.
+ *   que le scanner l'a lue) ; l'image complète d'une capture qui n'est pas en 1920x1080 (2K, 4K, 16:10, ultra-large...)
+ *   est gardée telle quelle, pour recalibrer le scanner sur la vraie image (la ligne DÉBUT donne la taille capturée).
  *
  * Le journal démarre au premier écran de jeu (barre du haut ou boutique) et se ferme 2 min après le dernier, ou
  * quand l'application détecte une nouvelle partie.
@@ -77,7 +78,9 @@ function startLog(detection: VisionDetectionResult): void {
   lastFullImageAt = 0;
   lastScanSignature = '';
   write(
-    `DÉBUT source="${detection.sourceName}" fenêtre Deadlock=${detection.isDeadlockWindow ? 'oui' : 'non'}`
+    `DÉBUT source="${detection.sourceName}" fenêtre Deadlock=${detection.isDeadlockWindow ? 'oui' : 'non'} capture=${
+      detection.frameWidth ?? '?'
+    }x${detection.frameHeight ?? '?'}`
   );
   for (const [key, line] of stateLines) write(`${key} ${line}`);
 }
@@ -192,9 +195,10 @@ export function logScan(detection: VisionDetectionResult, frame: ImageBitmap | s
     saveRegion(normalized, TOP_CROP, `top_${stamp}.jpg`, 0.95);
     if (now - lastFullImageAt >= FULL_IMAGE_INTERVAL_MS) {
       lastFullImageAt = now;
-      // Not 16:9: the capture as it is, to see where the HUD really sits if the layout guessed for it is wrong
-      // (the replay harness normalizes full frames itself)
-      const raw = typeof frame !== 'string' && Math.abs(frame.width / frame.height - 16 / 9) > 0.02 ? frame : null;
+      // Not 1920x1080: the capture as it is, to see where the HUD really sits if the layout guessed for it is wrong, and
+      // to measure the scanner on the real pixels of a 2K or 4K screen, not on their reduction to 1080p (the replay
+      // harness normalizes full frames itself)
+      const raw = typeof frame !== 'string' && (frame.width !== 1920 || frame.height !== 1080) ? frame : null;
       if (raw) saveRegion(raw, { x: 0, y: 0, w: raw.width, h: raw.height }, `full_${stamp}.jpg`, 0.85);
       else saveRegion(normalized, { x: 0, y: 0, w: 1920, h: 1080 }, `full_${stamp}.jpg`, 0.85);
     }

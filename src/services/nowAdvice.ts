@@ -4,7 +4,8 @@
  *
  * The scanner sees no map: no positions, health or objectives. The orders are therefore only about the players alive
  * on each side, by lane pair of the top bar (slots 0-1 York, 2-3 Broadway, 4-5 Orchard), the match clock and the
- * souls of each team (top bar). Whether the Mid Boss is alive is not seen either: it is up from the start of the match
+ * souls of each team (top bar). Once laning is over (10 min) there are no lanes any more, every hero roams with the
+ * team: the lane-pair orders (push your lane, partner dead, help a lane) stop. Whether the Mid Boss is alive is not seen either: it is up from the start of the match
  * (patch of 22 May 2026) and comes back 7, then 6, then 5 min after each kill, which the player marks by hand.
  */
 import type { MatchupStance } from '../data/matchupStats';
@@ -40,6 +41,7 @@ export interface NowInput {
   enemies: NowEnemy[];
   clockS?: number; // match clock now (top bar), unknown when not read
   midBossAlive: boolean; // not marked killed, or back since
+  laneOver?: boolean; // laning is over (isLaneOver, latched for the match): no lane-pair orders any more
 }
 
 // A numbers advantage worth a push (or a retreat): at least 3 dead on one side, 2 more than on the other
@@ -92,7 +94,7 @@ function soulLead(souls: TeamBoard['souls']): number | undefined {
 }
 
 export function getNowAdvice(
-  { board, nextItem, souls, enemies, clockS, midBossAlive }: NowInput,
+  { board, nextItem, souls, enemies, clockS, midBossAlive, laneOver = false }: NowInput,
   max = 3
 ): NowAdvice[] {
   const out: NowAdvice[] = [];
@@ -128,7 +130,7 @@ export function getNowAdvice(
       out.push({ kind: 'soulsAhead', diff: lead });
     }
 
-    if (me && !numbers) {
+    if (me && !numbers && !laneOver) {
       const pair = Math.floor(board.mySlot / 2);
       const partner = board.allies[board.mySlot ^ 1];
       const opponents = board.enemies.slice(pair * 2, pair * 2 + 2).filter((s) => s.heroId);

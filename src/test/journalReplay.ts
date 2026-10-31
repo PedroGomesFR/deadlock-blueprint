@@ -116,6 +116,7 @@ function parseStart(lines: string[]): MatchSnapshot {
     myHeroId: h?.[1] ?? 'infernus',
     heroLocked: Boolean(h?.[2]),
     ownedItems: owned.split(', ').filter(Boolean),
+    soldItems: [],
     manualOwned: new Set(),
     manuallyExcluded: new Set(),
     laneColor: (h?.[3] ?? 'yellow') as LaneColor,
@@ -166,7 +167,7 @@ export function replayJournal(journal: ParsedJournal): ReplayStep[] {
     const end = i + 1 < scans.length ? scans[i + 1].t : scans[i].t + SCAN_INTERVAL_MS;
     for (let t = scans[i].t; t < end; t += SCAN_INTERVAL_MS) {
       const update = tracker.push(scans[i].detection, state, t);
-      if (update.clearOwned) state = { ...state, ownedItems: [], inventoryStatus: null as InventoryStatus | null };
+      if (update.clearOwned) state = { ...state, ownedItems: [], soldItems: [], inventoryStatus: null as InventoryStatus | null };
       state = {
         ...state,
         ...update.patch,

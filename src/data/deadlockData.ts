@@ -2558,6 +2558,23 @@ export function getHeroItemStat(heroId: string, itemId: string): HeroItemStat | 
   return row ? { pickRate: row[0], winRate: row[1], buyTimeS: row[2] } : undefined;
 }
 
+// Beyond the build: the late items players of the hero buy in enough games, once the game is long enough
+const LATE_ITEM_MIN_PICK_RATE = 0.03;
+const LATE_ITEM_MIN_BUY_TIME_S = 15 * 60;
+
+/**
+ * Tier 3-4 items players of this hero buy after 15 min in 3 %+ of their games, most picked first. The meta builds stop
+ * at 18 items, a single Tier 4 for most heroes: measured on 264 simulated games, the queue ran out at a median 40,000
+ * souls spent with 2 Tier 4 items, while games go on well past that (Rat King: Juggernaut 26 %, Witchmail 20 %).
+ */
+export function getHeroLateItems(heroId: string): string[] {
+  const stats = generatedHeroes()[heroId]?.itemStats ?? {};
+  return Object.entries(stats)
+    .filter(([id, [pick, , time]]) => (ITEMS_DB[id]?.tier ?? 0) >= 3 && pick >= LATE_ITEM_MIN_PICK_RATE && time >= LATE_ITEM_MIN_BUY_TIME_S)
+    .sort((a, b) => b[1][0] - a[1][0])
+    .map(([id]) => id);
+}
+
 export interface HeroImbueTarget {
   ability: AbilityKey;
   abilityName: string; // official name in the interface language
@@ -2744,6 +2761,11 @@ function withItalianGameNames<T extends Record<string, string | ((...args: strin
   ) as T;
 }
 
+/**
+ * Counters and matchups against the enemy lineup. `laneOver` (10 min, isLaneOver): there are no lanes any more, every
+ * hero roams with the team, so every enemy is judged like a team enemy (whole-game matchup, same weight) and the lane
+ * items and tips leave.
+ */
 export function generateTacticalPlan(
   myHeroId: string,
   buildId: string,
@@ -2753,7 +2775,8 @@ export function generateTacticalPlan(
   teamEnemyIds: string[] = [],
   allyPartnerId: string | null = null,
   lang: Lang = 'fr',
-  fedEnemyIds: string[] = []
+  fedEnemyIds: string[] = [],
+  laneOver = false
 ): TacticalRecommendation {
   const heroes = getHeroesDb(lang);
   const items = getItemsDb(lang);
@@ -2928,12 +2951,14 @@ export function generateTacticalPlan(
       .map(([itemId, c]) => ({ item: items[itemId], reason: c.reason }));
     enemyCounters = null;
   };
-  laneEnemies.forEach((e) => evaluateEnemyCard(e, true));
+  laneEnemies.forEach((e) => evaluateEnemyCard(e, !laneOver));
   otherTeamEnemies.forEach((e) => evaluateEnemyCard(e, false));
 
   // Lane & Ally Partner adjustments
   let allySynergyTip: string | undefined = undefined;
-  if (laneMode === 'solo') {
+  if (laneOver) {
+    // No lane any more
+  } else if (laneMode === 'solo') {
     addItemRecommendation('high_velocity_mag', 15, text.soloDeny, 'Critique (En Face / Lane)');
     addItemRecommendation('extra_regen', 14, text.soloSustain, 'Critique (En Face / Lane)');
   } else {
@@ -2979,7 +3004,7 @@ export function generateTacticalPlan(
       positioningTip: isOuterLane ? selectedBuild.laneTips.yellow_purple : selectedBuild.laneTips.orange_blue,
       allySynergyTip,
       outlook: laneOutlookOf(laneStats),
-      duo: laneMode === 'duo' && allyHero ? getLaneDuoStat(myHero.id, allyHero.id) : undefined,
+      duo: laneMode === 'duo' && allyHero && !laneOver ? getLaneDuoStat(myHero.id, allyHero.id) : undefined,
     },
   };
 }

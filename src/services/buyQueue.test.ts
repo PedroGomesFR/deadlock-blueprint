@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HEROES_DB, ITEMS_DB, generateTacticalPlan, getHeroItemStat } from '../data/deadlockData';
+import { HEROES_DB, ITEMS_DB, generateTacticalPlan, getHeroItemStat, getHeroLateItems } from '../data/deadlockData';
 import { makeTranslate } from '../i18n';
 import { entry, ids, SPIKE_BUILD } from '../test/queue';
 import {
@@ -46,6 +46,9 @@ interface Tally {
   laneBuySouls: number[];
   sells: number;
   sellsBreakingSpike: number;
+  soldSuggestedAgain: number; // an item sold this game (or one of its components) back among the 6 shown
+  emptyQueueSouls: number[]; // souls spent when the queue ran out (the game goes on to 45,000)
+  finalTier4: number[]; // Tier 4 items owned at the end of each game
 }
 
 /**
@@ -64,6 +67,9 @@ function simulate(lineupsPerHero: number): Tally {
     laneBuySouls: [],
     sells: 0,
     sellsBreakingSpike: 0,
+    soldSuggestedAgain: 0,
+    emptyQueueSouls: [],
+    finalTier4: [],
   };
   for (const fedMode of [false, true]) {
     for (const heroId of heroIds) {
@@ -78,9 +84,11 @@ function simulate(lineupsPerHero: number): Tally {
         const team = heroIds.filter((e) => e !== heroId).sort(() => random() - 0.5).slice(0, 6);
         const lane = team.slice(0, 2);
         const plan = generateTacticalPlan(heroId, build.id, 'yellow', 'duo', lane, team, null, 'en', fedMode ? [lane[0]] : []);
-        const counterIds = new Set(plan.priorityItems.map((r) => r.item.id));
+        const lateItems = getHeroLateItems(heroId);
+        const counterIds = new Set([...plan.priorityItems.map((r) => r.item.id), ...lateItems]);
         tally.games++;
         let owned: string[] = [];
+        const sold: string[] = [];
         let spent = 0;
         let laneOverLatched = false;
         const seenLane = new Set<string>();
@@ -104,8 +112,15 @@ function simulate(lineupsPerHero: number): Tally {
             investment,
             stat,
             laneOver,
+            soldItems: sold,
+            lateItems,
           });
-          if (queue.length === 0) break;
+          if (queue.length === 0) {
+            tally.emptyQueueSouls.push(spent);
+            break;
+          }
+          const soldAndComponents = new Set(sold.flatMap((o) => [o, ...getComponentIds(o)]));
+          if (queue.slice(0, 6).some((entry) => soldAndComponents.has(entry.item.id))) tally.soldSuggestedAgain++;
 
           const nowS = estimateClockS(spent);
           const firstSpikeDone = investment.categories.some((c) => c.done);
@@ -132,6 +147,7 @@ function simulate(lineupsPerHero: number): Tally {
             tally.sells++;
             const before = investedSouls(owned);
             next = next.filter((o) => o !== slotPlan.itemId);
+            sold.push(slotPlan.itemId);
             const after = investedSouls([...next, item.id]);
             if ((['weapon', 'spirit', 'vitality'] as const).some((c) => before[c] >= KEY_SPIKE && after[c] < KEY_SPIKE)) {
               tally.sellsBreakingSpike++;
@@ -145,6 +161,7 @@ function simulate(lineupsPerHero: number): Tally {
           spent += item.cost - refund;
           owned = [...next, item.id];
         }
+        tally.finalTier4.push(owned.filter((o) => ITEMS_DB[o].tier === 4).length);
       }
     }
   }
@@ -339,5 +356,16 @@ describe('the buy queue on simulated games', () => {
   it('never suggests a sale that drops a finished 4,800 spike', () => {
     expect(tally.sells).toBeGreaterThan(0);
     expect(tally.sellsBreakingSpike).toBe(0);
+  });
+
+  it('never suggests again an item sold this game, nor one of its components', () => {
+    // Before: a sold item came back among the 6 cards 1,003 times for 1,274 sales
+    expect(tally.soldSuggestedAgain).toBe(0);
+  });
+
+  it('goes on past the build: the queue never runs out before 45,000 souls', () => {
+    // Before: empty in 250 of the 264 games, at a median 40,000 souls spent with 2 Tier 4 items
+    expect(tally.emptyQueueSouls).toEqual([]);
+    expect(median(tally.finalTier4)).toBeGreaterThanOrEqual(3);
   });
 });

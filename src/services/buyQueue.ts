@@ -7,7 +7,8 @@
  * 3. a lane counter against a real lane threat, after the first two items and gone at 10 min,
  * 4. a spike item (up to 2 min early, only while the spike is worth it),
  * 5. the other build items, by usual buy time,
- * 6. a team counter, once the first spike is done.
+ * 6. a team counter, once the first spike is done,
+ * 7. once the build runs out: its situational items and the hero's usual late items (Tier 3-4), most picked first.
  */
 import type { DeadlockItem, HeroBuildArchetype, TacticalRecommendation } from '../data/deadlockData';
 import type { LaneOutlook } from '../data/matchupStats';
@@ -50,6 +51,10 @@ export interface BuyQueueInput extends InventoryView {
   clockS?: number;
   /** Laning is over (isLaneOver, latched for the match) */
   laneOver: boolean;
+  /** Items sold this match (MatchTracker): never suggested again, nor the components they were built from */
+  soldItems?: string[];
+  /** Late items beyond the build, best first (getHeroLateItems): the queue goes on with them once the build runs out */
+  lateItems?: string[];
 }
 
 export interface BuyQueue {
@@ -73,11 +78,17 @@ export function computeBuyQueue(input: BuyQueueInput): BuyQueue {
     laneOver: input.laneOver,
   };
   const counters = getPurchaseCounters(priorityItems, counterContext);
-  const order = buildPurchaseOrder(build, priorityItems, input.items, input.t, counterContext);
+  const order = [
+    ...buildPurchaseOrder(build, priorityItems, input.items, input.t, counterContext),
+    ...lateGameEntries(build, input.lateItems ?? [], input.items, input.t, stat),
+  ];
 
   const nowS = input.clockS ?? estimateClockS(totalInvested(ownedItems));
   const firstSpikeDone = investment.categories.some((c) => c.done);
-  const remaining = getNextPurchases(order, ownedItems, inventoryStatus, sellCandidates, (id) => stat(id)?.buyTimeS);
+  const sold = effectiveOwnedSet(input.soldItems ?? []);
+  const remaining = getNextPurchases(order, ownedItems, inventoryStatus, sellCandidates, (id) => stat(id)?.buyTimeS).filter(
+    (entry) => !sold.has(entry.item.id)
+  );
   const placed = placeCounters(remaining, {
     nowS,
     buyTimeS,
@@ -109,6 +120,33 @@ export function getSpikeSafeSlotPlans(shown: QueueEntry[], inventory: InventoryV
 }
 
 // ---- The steps of the pipeline above ----
+
+/**
+ * The late items beyond the build (`extra`): its situational items and the hero's usual late items, Tier 3-4, most
+ * picked first (a situational item no stat knows of last). The build itself stops at 18 items, one Tier 4 for most
+ * heroes: the queue was empty at a median 40,000 souls spent (264 simulated games).
+ */
+export function lateGameEntries(
+  build: HeroBuildArchetype,
+  lateItems: string[],
+  items: Record<string, DeadlockItem>,
+  t: Translate,
+  stat: BuyQueueInput['stat']
+): QueueEntry[] {
+  const inBuild = new Set(getBuildItemIds(build));
+  const ids = [...new Set([...build.phases.situational, ...lateItems])].filter(
+    (id) => !inBuild.has(id) && (items[id]?.tier ?? 0) >= 3
+  );
+  const pickRate = (id: string) => stat(id)?.pickRate ?? -1;
+  return ids
+    .sort((a, b) => pickRate(b) - pickRate(a))
+    .map((id) => ({
+      item: items[id],
+      reason: t('reason.lateExtra'),
+      phase: build.phases.situational.includes(id) ? ('situational' as const) : undefined,
+      extra: true,
+    }));
+}
 
 /** Laning ends at 10 min: the game clock when it is read, otherwise about what players have spent by then. */
 export const LANE_END_S = 600;

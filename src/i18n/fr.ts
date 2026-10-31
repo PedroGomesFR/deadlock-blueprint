@@ -57,6 +57,7 @@ export const MESSAGES_FR = {
   'enemies.myLane': (n: number, max: number) => `🎯 Ma Lane (${n}/${max})`,
   'enemies.otherLanes': (n: number, max: number) => `🌐 Autres Lanes (${n}/${max})`,
   'enemies.laneBadge': 'Lane',
+  'enemies.team': (n: number) => `l’équipe ennemie (${n})`,
   'enemies.teamBadge': 'Team',
   'autoscan.title': 'Activer/Désactiver la détection automatique silencieuse',
   'autoscan.label': 'Auto',
@@ -98,6 +99,7 @@ export const MESSAGES_FR = {
   'reason.teamfightCounter': 'Contre Teamfight',
   'reason.midCore': 'Core Mid Game',
   'reason.lateCore': 'Core Fin de Partie',
+  'reason.lateExtra': 'Fin de partie : après le build',
   'why.meta': (pick: string, rank: string, hero: string) =>
     `Acheté dans ${pick} des parties ${rank} ${/^[aeiou]/i.test(hero) ? 'd’' : 'de '}${hero}`,
   'why.winRate': (wr: string) => `${wr} de victoires quand il est acheté`,
@@ -184,6 +186,10 @@ export const MESSAGES_FR = {
   'now.soulsAhead': (diff: string) => `Ton équipe a ${diff}k âmes d'avance : force les gardiens et les objectifs`,
   'now.midBossUp': 'Mid Boss en vie',
   'now.midBossBack': (time: string) => `Mid Boss de retour dans ${time}`,
+  'now.phaseLane': '🛣 Phase de lane',
+  'now.phaseLaneTitle': 'Jusqu’à 10:00 : chacun dans sa lane, contres et consignes de lane',
+  'now.phaseTeam': '⚔ Teamfights',
+  'now.phaseTeamTitle': 'Après 10:00, plus de lanes : tous les ennemis sont jugés pareil, consignes d’équipe',
   'now.midBossTaken': 'Mid Boss pris',
   'now.midBossTakenTitle':
     "L'application ne voit pas le Mid Boss : clique quand une équipe le tue, elle compte sa réapparition (7, puis 6, puis 5 min)",

@@ -31,6 +31,7 @@ import {
   getAbilityIcon,
   getHeroImbueTarget,
   getHeroItemStat,
+  getHeroLateItems,
   getHeroMetaInfo,
   getHeroesDb,
   getItemsDb,
@@ -178,6 +179,7 @@ const NOW_STYLE: Record<NowAdvice['kind'], { icon: string; className: string }> 
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
 const HERO_LOCKED_KEY = 'dl_heroLocked';
 const FED_ENEMIES_KEY = 'dl_fedEnemies';
+const SOLD_ITEMS_KEY = 'dl_soldItems';
 // Who is dead in the top bar right now (services/matchTracker.ts), written by the main window only when it changes
 const BOARD_KEY = 'dl_board';
 // Mid Boss kills marked by hand this match (services/nowAdvice.ts), shared with the overlay
@@ -265,6 +267,18 @@ export function App() {
       return [];
     }
   });
+  // Items sold this match (services/matchTracker.ts): no longer suggested, cleared at a new match, shared with the overlay
+  const [soldItems, setSoldItems] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(SOLD_ITEMS_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const storeSoldItems = useCallback((ids: string[]) => {
+    setSoldItems(ids);
+    localStorage.setItem(SOLD_ITEMS_KEY, JSON.stringify(ids));
+  }, []);
   // Enemies marked fed by the player (their counters come first), cleared at a new match: shared with the overlay
   const [fedEnemyIds, setFedEnemyIds] = useState<string[]>(() => {
     try {
@@ -376,6 +390,7 @@ export function App() {
         setLaneEnemyIds(JSON.parse(localStorage.getItem('dl_laneEnemyIds') || '[]'));
         setTeamEnemyIds(JSON.parse(localStorage.getItem('dl_teamEnemyIds') || '[]'));
         setOwnedItems(JSON.parse(localStorage.getItem('dl_ownedItems') || '[]'));
+        setSoldItems(JSON.parse(localStorage.getItem(SOLD_ITEMS_KEY) || '[]'));
         setFedEnemyIds(JSON.parse(localStorage.getItem(FED_ENEMIES_KEY) || '[]'));
         setBoard(JSON.parse(localStorage.getItem(BOARD_KEY) || 'null'));
         setMidBoss(JSON.parse(localStorage.getItem(MID_BOSS_KEY) || 'null'));
@@ -460,38 +475,6 @@ export function App() {
   const toggleFed = (enemyId: string) =>
     storeFedEnemies(activeFedIds.includes(enemyId) ? activeFedIds.filter((id) => id !== enemyId) : [...activeFedIds, enemyId]);
 
-  const tacticalPlan = useMemo(
-    () =>
-      generateTacticalPlan(
-        myHeroId,
-        activeBuild.id,
-        laneColor,
-        laneMode,
-        laneEnemyIds,
-        teamEnemyIds,
-        laneMode === 'duo' ? allyPartnerId : null,
-        lang,
-        activeFedIds
-      ),
-    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId, lang, activeFedIds]
-  );
-  // Enemies by stance, lane opponents first, for the enemy strip and the overlay
-  const stanceAlerts = useMemo(
-    () => [...tacticalPlan.matchupAlerts].sort((a, b) => Number(b.isInMyLane) - Number(a.isInMyLane)),
-    [tacticalPlan.matchupAlerts]
-  );
-
-  const isFull = isInventoryFull(inventoryStatus);
-
-  const sellCandidates = useMemo(
-    () =>
-      getSellCandidates(inventoryStatus, activeBuild, new Set(tacticalPlan.priorityItems.map((r) => r.item.id))),
-    [inventoryStatus, activeBuild, tacticalPlan.priorityItems]
-  );
-
-  // Owned items plus the components they consumed (owning Greater Expansion means Mystic Expansion is done)
-  const effectiveOwned = useMemo(() => effectiveOwnedSet(ownedItems), [ownedItems]);
-
   // Match clock (extrapolated between two readings)
   const clockS = board?.clock ? Math.floor(clockAt(board.clock, nowMs)) : undefined;
 
@@ -503,6 +486,48 @@ export function App() {
   useEffect(() => {
     if (laneOver && !laneOverLatched) setLaneOverLatched(true);
   }, [laneOver, laneOverLatched]);
+
+  const tacticalPlan = useMemo(
+    () =>
+      generateTacticalPlan(
+        myHeroId,
+        activeBuild.id,
+        laneColor,
+        laneMode,
+        laneEnemyIds,
+        teamEnemyIds,
+        laneMode === 'duo' ? allyPartnerId : null,
+        lang,
+        activeFedIds,
+        laneOver
+      ),
+    [myHeroId, activeBuild.id, laneColor, laneMode, laneEnemyIds, teamEnemyIds, allyPartnerId, lang, activeFedIds, laneOver]
+  );
+  // Enemies for the enemy strip and the overlay: lane opponents first (none once laning is over), then the most
+  // dangerous: fed, to avoid, even, to focus
+  const stanceAlerts = useMemo(() => {
+    const danger = (a: MatchupAlert) => (a.isFed ? 0 : a.stance === 'avoid' ? 1 : a.stance === 'focus' ? 3 : 2);
+    return [...tacticalPlan.matchupAlerts].sort(
+      (a, b) => Number(b.isInMyLane) - Number(a.isInMyLane) || danger(a) - danger(b)
+    );
+  }, [tacticalPlan.matchupAlerts]);
+
+  const isFull = isInventoryFull(inventoryStatus);
+
+  // Late items beyond the build (the queue goes on with them once the build runs out)
+  const lateItems = useMemo(() => getHeroLateItems(myHeroId), [myHeroId]);
+  const sellCandidates = useMemo(
+    () =>
+      getSellCandidates(
+        inventoryStatus,
+        activeBuild,
+        new Set([...tacticalPlan.priorityItems.map((r) => r.item.id), ...lateItems])
+      ),
+    [inventoryStatus, activeBuild, tacticalPlan.priorityItems, lateItems]
+  );
+
+  // Owned items plus the components they consumed (owning Greater Expansion means Mystic Expansion is done)
+  const effectiveOwned = useMemo(() => effectiveOwnedSet(ownedItems), [ownedItems]);
 
   // The build takes one category to 4,800 souls, then the next, then the last, in the order players buy its items
   // (services/investments.ts); a category the player committed to replaces the build's next one
@@ -551,6 +576,8 @@ export function App() {
         stat: (itemId) => getHeroItemStat(myHeroId, itemId),
         clockS: clockMinuteS,
         laneOver,
+        soldItems,
+        lateItems,
       }),
     [
       activeBuild,
@@ -567,6 +594,8 @@ export function App() {
       myHeroId,
       clockMinuteS,
       laneOver,
+      soldItems,
+      lateItems,
     ]
   );
 
@@ -613,6 +642,7 @@ export function App() {
           board,
           clockS,
           midBossAlive,
+          laneOver,
           nextItem: nextToBuyQueue[0] && { id: nextToBuyQueue[0].item.id, cost: nextToBuyQueue[0].item.cost },
           souls: currentSouls,
           enemies: tacticalPlan.matchupAlerts.map((a) => ({
@@ -625,7 +655,7 @@ export function App() {
         },
         4
       ),
-    [board, clockS, midBossAlive, nextToBuyQueue, currentSouls, tacticalPlan.matchupAlerts]
+    [board, clockS, midBossAlive, laneOver, nextToBuyQueue, currentSouls, tacticalPlan.matchupAlerts]
   );
 
   // Static list of the active build's items: a tie-breaker for the inventory scanner that does not
@@ -719,6 +749,7 @@ export function App() {
     myHeroId,
     heroLocked: isHeroLocked,
     ownedItems,
+    soldItems,
     laneColor,
     laneMode,
     allyPartnerId,
@@ -740,8 +771,9 @@ export function App() {
     manuallyExcludedRef.current.clear();
     writeManualOwned(new Set());
     trackerRef.current.resetOwned();
-    snapshotRef.current = { ...snapshotRef.current, ownedItems: [], inventoryStatus: null };
+    snapshotRef.current = { ...snapshotRef.current, ownedItems: [], soldItems: [], inventoryStatus: null };
     setOwnedItems([]);
+    storeSoldItems([]);
     setInventoryStatus(null);
     storeFedEnemies([]);
     storeMidBoss(null);
@@ -749,7 +781,7 @@ export function App() {
     // A new match starts from the queue's head, not from the item locked at the end of the last one
     setLockedNext(null);
     localStorage.removeItem('dl_lockedNext');
-  }, [storeFedEnemies, storeMidBoss]);
+  }, [storeFedEnemies, storeMidBoss, storeSoldItems]);
 
   const boardJsonRef = useRef<string>(JSON.stringify(board));
 
@@ -776,6 +808,7 @@ export function App() {
         setOwnedItems(p.ownedItems);
         localStorage.setItem('dl_ownedItems', JSON.stringify(p.ownedItems));
       }
+      if (p.soldItems !== undefined) storeSoldItems(p.soldItems);
       setFormatIssue((prev) =>
         update.formatIssue
           ? prev && prev.width === update.formatIssue.width && prev.height === update.formatIssue.height
@@ -791,7 +824,7 @@ export function App() {
         localStorage.setItem(BOARD_KEY, boardJson);
       }
     },
-    [clearOwnedItems, lockHero]
+    [clearOwnedItems, lockHero, storeSoldItems]
   );
 
 
@@ -844,6 +877,8 @@ export function App() {
       } else {
         manuallyExcludedRef.current.delete(itemId);
         manualOwned.add(itemId);
+        const sold = snapshotRef.current.soldItems;
+        if (sold.includes(itemId)) storeSoldItems(sold.filter((id) => id !== itemId));
       }
       writeManualOwned(manualOwned);
       const next = isCurrentlyOwned ? prev.filter((id) => id !== itemId) : [...prev, itemId];
@@ -1257,6 +1292,9 @@ export function App() {
     return (
       <div className="flex items-center gap-2 flex-wrap text-small text-slate-400">
         {clockS !== undefined && <span className="tabular-nums">⏱ {formatClock(clockS)}</span>}
+        <span title={t(laneOver ? 'now.phaseTeamTitle' : 'now.phaseLaneTitle')}>
+          {t(laneOver ? 'now.phaseTeam' : 'now.phaseLane')}
+        </span>
         <span className={midBossAlive ? 'text-fuchsia-300' : ''}>
           🐉{' '}
           {midBossAlive
@@ -1330,7 +1368,10 @@ export function App() {
                     )}
                   </div>
                   <span className="text-small text-slate-400 block leading-none">
-                    VS {laneEnemyIds.map(heroName).join(' + ') || t('enemies.laneBadge')}
+                    VS{' '}
+                    {laneOver
+                      ? t('enemies.team', laneEnemyIds.length + teamEnemyIds.length)
+                      : laneEnemyIds.map(heroName).join(' + ') || t('enemies.laneBadge')}
                   </span>
                 </div>
               </div>
@@ -2139,7 +2180,9 @@ export function App() {
                   <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
                     <span className="text-body font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
                       <Flame className="w-3.5 h-3.5 text-orange-400" />{' '}
-                      {t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
+                      {laneOver
+                        ? t('counters.title', t('enemies.team', laneEnemyIds.length + teamEnemyIds.length), 0)
+                        : t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                       {tacticalPlan.priorityItems
