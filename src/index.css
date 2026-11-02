@@ -1,20 +1,20 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  /* Type scale: the only four text sizes of the interface (Tailwind text-small / text-body / text-title / text-heading).
-     src/typeScale.test.ts rejects any other font size in the components. */
-  :root {
-    --text-small: 11px; /* badges, captions, secondary lines */
-    --text-body: 12px; /* default text, buttons */
-    --text-title: 14px; /* item and card names, section titles */
-    --text-heading: 16px; /* dialog titles */
-  }
-
   body {
     user-select: none;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body);
+    font-kerning: normal;
+  }
+
+  /* Valve Pulp and Valve Occult come in one weight each: no faked bold or italic */
+  .font-display,
+  .font-label {
+    font-synthesis: none;
   }
 }
 
@@ -26,21 +26,21 @@
   -webkit-app-region: no-drag;
 }
 
-/* Custom sleek occult scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 14, 19, 0.6);
+  background: rgb(var(--surface-base) / 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(245, 158, 11, 0.35);
+  background: rgb(var(--accent-500) / 0.35);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(245, 158, 11, 0.65);
+  background: rgb(var(--accent-500) / 0.65);
 }

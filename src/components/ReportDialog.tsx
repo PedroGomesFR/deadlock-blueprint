@@ -54,44 +54,44 @@ export const ReportDialog: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-shade/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-2xl bg-[#181520] border border-amber-500/50 shadow-2xl p-4 space-y-3"
+        className="w-full max-w-md rounded-2xl bg-surface-raised border border-accent-500/50 shadow-overlay p-4 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-title font-extrabold text-amber-300 flex items-center gap-1.5">
+          <h2 className="text-title font-extrabold text-accent-300 flex items-center gap-1.5">
             <LifeBuoy className="w-4 h-4" /> {t('report.title')}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
+          <button onClick={onClose} className="text-ink-muted hover:text-ink-strong">
             <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-body text-slate-300 leading-relaxed">{t('report.body')}</p>
+        <p className="text-body text-ink-soft leading-relaxed">{t('report.body')}</p>
         {hasLog ? (
-          <label className="flex items-start gap-2 text-body text-slate-200 cursor-pointer">
+          <label className="flex items-start gap-2 text-body text-ink cursor-pointer">
             <input type="checkbox" checked={includeLog} onChange={(e) => setIncludeLog(e.target.checked)} className="mt-0.5" />
             {t('report.includeLog')}
           </label>
         ) : (
-          <p className="text-small text-slate-400">{logsEnabled ? '' : t('report.noLog')}</p>
+          <p className="text-small text-ink-muted">{logsEnabled ? '' : t('report.noLog')}</p>
         )}
         <div className="flex items-center gap-2">
           <button
             onClick={create}
             disabled={busy || !api}
-            className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-body font-bold disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-accent-500 hover:bg-accent-400 text-on-accent text-body font-bold disabled:opacity-50"
           >
             {busy ? t('report.creating') : t('report.create')}
           </button>
           <button
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-body text-slate-200"
+            className="px-3 py-1.5 rounded-lg bg-bone/5 hover:bg-bone/10 border border-bone/10 text-body text-ink"
           >
             {t('report.cancel')}
           </button>
         </div>
-        {message && <p className="text-small text-emerald-300 leading-relaxed">{message}</p>}
+        {message && <p className="text-small text-good-300 leading-relaxed">{message}</p>}
       </div>
     </div>
   );

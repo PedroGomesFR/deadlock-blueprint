@@ -5,9 +5,9 @@ import { useI18n } from '../i18n';
 
 /** Each shop tab's icon and text colour */
 export const SHOP_TABS = {
-  weapon: { Icon: Crosshair, className: 'text-orange-300' },
-  vitality: { Icon: HeartPulse, className: 'text-emerald-300' },
-  spirit: { Icon: Sparkles, className: 'text-purple-300' },
+  weapon: { Icon: Crosshair, className: 'text-weapon-300' },
+  vitality: { Icon: HeartPulse, className: 'text-vitality-300' },
+  spirit: { Icon: Sparkles, className: 'text-spirit-300' },
 } as const;
 
 const ROMAN: Record<ItemTier, string> = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' };
@@ -24,7 +24,7 @@ export const ShopTabMarker: React.FC<{ category: ItemCategory; tier?: ItemTier }
     <span className={`inline-flex items-center gap-1 text-small font-bold ${className}`} title={t('shop.tabTitle', tab)}>
       <Icon className="w-3 h-3 shrink-0" aria-hidden />
       <span>{tab}</span>
-      {tier && <span className="text-slate-400 font-semibold">· {t('shop.tier', ROMAN[tier])}</span>}
+      {tier && <span className="text-ink-muted font-semibold">· {t('shop.tier', ROMAN[tier])}</span>}
     </span>
   );
 };
@@ -60,9 +60,9 @@ export const CopyNameButton: React.FC<{ name: string }> = ({ name }) => {
       }}
       title={copied ? t('copy.done') : t('copy.title', name)}
       aria-label={t('copy.title', name)}
-      className="p-1 -m-0.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 shrink-0 transition"
+      className="p-1 -m-0.5 rounded-md text-ink-muted hover:text-ink-strong hover:bg-bone/10 shrink-0 transition"
     >
-      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? <Check className="w-3.5 h-3.5 text-good-400" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
   );
 };

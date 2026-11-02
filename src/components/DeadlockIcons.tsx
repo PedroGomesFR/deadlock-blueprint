@@ -90,7 +90,7 @@ export const HeroPortraitIcon: React.FC<{ heroId: string; color: string; size?: 
   return (
     <div
       style={{ width: size, height: size, borderColor: `${color}88` }}
-      className="rounded-xl bg-black/80 border-2 flex items-center justify-center shrink-0 shadow-md relative overflow-hidden"
+      className="rounded-xl bg-shade/80 border-2 flex items-center justify-center shrink-0 shadow-raised relative overflow-hidden"
     >
       {iconSrc ? (
         <img
@@ -100,7 +100,7 @@ export const HeroPortraitIcon: React.FC<{ heroId: string; color: string; size?: 
           draggable={false}
         />
       ) : (
-        <span className="text-body font-bold text-white">{heroName.slice(0, 2)}</span>
+        <span className="text-body font-bold text-ink-strong">{heroName.slice(0, 2)}</span>
       )}
     </div>
   );
@@ -127,19 +127,19 @@ export const PowerIcon: React.FC<{
   return (
     <div
       style={{ width: size, height: size }}
-      className="relative rounded-xl bg-gradient-to-br from-[#231d30] to-[#0f0c14] border border-purple-400/50 flex items-center justify-center shrink-0 shadow-md p-1.5"
+      className="relative rounded-xl bg-gradient-to-br from-surface-raised to-surface-base border border-spirit-400/50 flex items-center justify-center shrink-0 shadow-raised p-1.5"
     >
       {iconSrc ? (
         <img
           src={iconSrc}
           alt={abilityName}
-          className="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] brightness-110"
+          className="w-full h-full object-contain drop-shadow-text brightness-110"
           draggable={false}
         />
       ) : (
-        <span className="text-body font-bold text-purple-300">{abilityKey}</span>
+        <span className="text-body font-bold text-spirit-300">{abilityKey}</span>
       )}
-      <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-amber-500 text-black font-extrabold text-small flex items-center justify-center border border-black shadow">
+      <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-md bg-accent-500 text-on-accent font-extrabold text-small flex items-center justify-center border border-shade shadow-raised">
         {abilityKey}
       </span>
     </div>
@@ -159,33 +159,33 @@ export const ItemArtworkIcon: React.FC<{
 
   const palette = {
     weapon: {
-      bg: 'from-[#ea580c] to-[#7c2d12]',
-      border: 'border-orange-400/80',
+      bg: 'from-weapon-600 to-weapon-900',
+      border: 'border-weapon-400/80',
     },
     vitality: {
-      bg: 'from-[#16a34a] to-[#14532d]',
-      border: 'border-emerald-400/80',
+      bg: 'from-vitality-600 to-vitality-900',
+      border: 'border-vitality-400/80',
     },
     spirit: {
-      bg: 'from-[#9333ea] to-[#4c1d95]',
-      border: 'border-purple-400/80',
+      bg: 'from-spirit-600 to-spirit-900',
+      border: 'border-spirit-400/80',
     },
   }[category];
 
   return (
     <div
       style={{ width: size, height: size }}
-      className={`rounded-xl bg-gradient-to-b ${palette.bg} border ${palette.border} flex items-center justify-center shrink-0 shadow-md p-1.5 relative overflow-hidden`}
+      className={`rounded-xl bg-gradient-to-b ${palette.bg} border ${palette.border} flex items-center justify-center shrink-0 shadow-raised p-1.5 relative overflow-hidden`}
     >
       {iconSrc ? (
         <img
           src={iconSrc}
           alt={iconKey || itemId}
-          className="w-full h-full object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]"
+          className="w-full h-full object-contain drop-shadow-text"
           draggable={false}
         />
       ) : (
-        <span className="text-small font-bold text-white">{itemId.slice(0, 2).toUpperCase()}</span>
+        <span className="text-small font-bold text-ink-strong">{itemId.slice(0, 2).toUpperCase()}</span>
       )}
     </div>
   );

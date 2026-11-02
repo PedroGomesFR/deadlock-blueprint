@@ -243,36 +243,36 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
   } else verdict = text.verdictTake(name(advice.ranked[0].itemId));
 
   return (
-    <div className="rounded-2xl bg-[#12100d] border border-white/10 p-4 space-y-4">
+    <div className="rounded-2xl bg-surface-panel border border-bone/10 p-4 space-y-4">
       {/* The pick: where the game is, the verdict, the three cards as the game lays them out */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap text-small">
-          <span className={`font-extrabold uppercase tracking-[0.12em] ${MAGENTA}`}>
+          <span className={`font-extrabold uppercase tracking-caps ${MAGENTA}`}>
             {[round.round !== null ? text.round(round.round) : null, pick ? text.status(pick.choice, pick.rerolls) : null]
               .filter(Boolean)
               .join(' · ') || text.title}
           </span>
-          <span className="flex items-center gap-1 text-stone-400">
+          <span className="flex items-center gap-1 text-ink-muted">
             <Shuffle className="w-3.5 h-3.5" aria-hidden />
             {heroName}
           </span>
         </div>
 
-        {notWide && <p className="text-body text-red-300">{text.notWide}</p>}
-        {!stats && <p className="text-body text-red-300">{text.noHeroData}</p>}
+        {notWide && <p className="text-body text-bad-300">{text.notWide}</p>}
+        {!stats && <p className="text-body text-bad-300">{text.noHeroData}</p>}
 
         <div aria-live="polite">
           {!isOpen && advice && !gameOver && (
-            <p className="text-small uppercase tracking-[0.12em] text-stone-500">{text.lastPick}</p>
+            <p className="text-small uppercase tracking-caps text-ink-faint">{text.lastPick}</p>
           )}
           <h2
-            className={`font-display text-heading font-extrabold ${
-              advice && !gameOver ? BONE : 'text-stone-400'
+            className={`font-display text-heading tracking-display ${
+              advice && !gameOver ? BONE : 'text-ink-muted'
             } ${!isOpen && advice ? 'opacity-60' : ''}`}
           >
             {verdict}
           </h2>
-          {verdictWhy && <p className="text-small text-stone-400 mt-0.5">{verdictWhy}</p>}
+          {verdictWhy && <p className="text-small text-ink-muted mt-0.5">{verdictWhy}</p>}
         </div>
 
         {advice && stats && !gameOver && (
@@ -283,10 +283,10 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
                 return (
                   <div
                     key={position}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-white/15 px-2 py-2 text-small text-stone-500 opacity-70"
+                    className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-bone/15 px-2 py-2 text-small text-ink-faint opacity-70"
                   >
-                    <span className="uppercase tracking-[0.14em]">{text.position[position]}</span>
-                    <span className="w-14 h-14 rounded-full border-2 border-dashed border-white/20" />
+                    <span className="uppercase tracking-caps">{text.position[position]}</span>
+                    <span className="w-14 h-14 rounded-full border-2 border-dashed border-bone/20" />
                     <span>{text.unreadable}</span>
                   </div>
                 );
@@ -315,7 +315,7 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
       {/* What the player has: the items read in the HUD, as its slots show them */}
       {owned.length > 0 && (
         <section className="flex items-center gap-2 flex-wrap">
-          <span className="text-small uppercase tracking-[0.12em] text-stone-500">{text.yourItems}</span>
+          <span className="text-small uppercase tracking-caps text-ink-faint">{text.yourItems}</span>
           {owned.map((id) => (
             <span key={id} title={name(id)}>
               <Medallion itemId={id} size={28} />
@@ -335,8 +335,8 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
       )}
 
       {/* How the tab works, where its data comes from, what the last scan read */}
-      <details className="group text-small text-stone-500">
-        <summary className="cursor-pointer select-none flex items-center gap-1 hover:text-stone-300">
+      <details className="group text-small text-ink-faint">
+        <summary className="cursor-pointer select-none flex items-center gap-1 hover:text-ink-soft">
           <ChevronRight className="w-3 h-3 transition-transform group-open:rotate-90" aria-hidden />
           {text.details}
         </summary>
@@ -347,7 +347,7 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
             <Info className="w-3 h-3 shrink-0 mt-px" aria-hidden />
             <span>{text.dataInfo(info.windowDays, info.generatedAt.slice(0, 10))}</span>
           </p>
-          <p className="font-mono break-all select-text text-stone-600">{debug}</p>
+          <p className="font-mono break-all select-text text-ink-ghost">{debug}</p>
         </div>
       </details>
     </div>
@@ -373,12 +373,12 @@ class TabBoundary extends React.Component<{ lang: Lang; children: React.ReactNod
     if (!this.state.error) return this.props.children;
     const text = streetBrawlText(this.props.lang);
     return (
-      <div className="rounded-2xl bg-[#12100d] border border-red-500/40 p-4 space-y-2 text-small">
-        <p className="text-body font-bold text-red-300">{text.crashed}</p>
-        <p className="font-mono break-all select-text text-stone-400">{this.state.error.message}</p>
+      <div className="rounded-2xl bg-surface-panel border border-bad-500/40 p-4 space-y-2 text-small">
+        <p className="text-body font-bold text-bad-300">{text.crashed}</p>
+        <p className="font-mono break-all select-text text-ink-muted">{this.state.error.message}</p>
         <button
           onClick={() => this.setState({ error: null })}
-          className="px-2 py-1 rounded border border-white/15 text-stone-200 hover:bg-white/10"
+          className="px-2 py-1 rounded border border-bone/15 text-ink hover:bg-bone/10"
         >
           {text.retry}
         </button>

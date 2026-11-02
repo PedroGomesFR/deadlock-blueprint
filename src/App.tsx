@@ -152,28 +152,28 @@ const DANGER_KEYS = {
 // Enemy stance (real matchup of my hero, or fed): label and colours of the enemy strip and the matchup cards
 const STANCE_KEYS = { avoid: 'stance.avoid', even: 'stance.even', focus: 'stance.focus' } as const;
 const STANCE_STYLE = {
-  avoid: 'bg-red-500/20 border-red-400/60 text-red-200',
-  even: 'bg-white/5 border-white/15 text-slate-300',
-  focus: 'bg-emerald-500/20 border-emerald-400/60 text-emerald-200',
-  fed: 'bg-orange-500/30 border-orange-400 text-orange-100',
+  avoid: 'bg-bad-500/20 border-bad-400/60 text-bad-200',
+  even: 'bg-bone/5 border-bone/15 text-ink-soft',
+  focus: 'bg-good-500/20 border-good-400/60 text-good-200',
+  fed: 'bg-weapon-500/30 border-weapon-400 text-weapon-100',
 } as const;
 type MatchupAlert = TacticalRecommendation['matchupAlerts'][number];
 
 // "Now" orders: red = back off, green = go, amber = who to hit
 const NOW_STYLE: Record<NowAdvice['kind'], { icon: string; className: string }> = {
-  dead: { icon: '💀', className: 'text-slate-200' },
-  buy: { icon: '🛒', className: 'text-emerald-300' },
-  farm: { icon: '🌾', className: 'text-teal-200' },
-  safe: { icon: '🛡', className: 'text-red-300' },
-  push: { icon: '⚔', className: 'text-emerald-300' },
-  midBoss: { icon: '🐉', className: 'text-fuchsia-300' },
-  soulsBehind: { icon: '📉', className: 'text-red-300' },
-  soulsAhead: { icon: '📈', className: 'text-emerald-300' },
-  partnerDead: { icon: '⚠', className: 'text-red-300' },
-  pushLane: { icon: '➡', className: 'text-emerald-300' },
-  help: { icon: '🤝', className: 'text-sky-300' },
-  focus: { icon: '🎯', className: 'text-amber-300' },
-  avoid: { icon: '🚫', className: 'text-red-300' },
+  dead: { icon: '💀', className: 'text-ink' },
+  buy: { icon: '🛒', className: 'text-good-300' },
+  farm: { icon: '🌾', className: 'text-info-200' },
+  safe: { icon: '🛡', className: 'text-bad-300' },
+  push: { icon: '⚔', className: 'text-good-300' },
+  midBoss: { icon: '🐉', className: 'text-choice-300' },
+  soulsBehind: { icon: '📉', className: 'text-bad-300' },
+  soulsAhead: { icon: '📈', className: 'text-good-300' },
+  partnerDead: { icon: '⚠', className: 'text-bad-300' },
+  pushLane: { icon: '➡', className: 'text-good-300' },
+  help: { icon: '🤝', className: 'text-enhanced-300' },
+  focus: { icon: '🎯', className: 'text-accent-300' },
+  avoid: { icon: '🚫', className: 'text-bad-300' },
 };
 
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
@@ -1069,7 +1069,7 @@ export function App() {
     const sizeClass = compact ? 'px-1.5 py-0.5 text-small' : 'px-2 py-1 text-small';
     if (plan.kind === 'full') {
       return (
-        <div className={`rounded-lg border font-bold bg-red-500/15 border-red-400/50 text-red-200 ${sizeClass}`}>
+        <div className={`rounded-lg border font-bold bg-bad-500/15 border-bad-400/50 text-bad-200 ${sizeClass}`}>
           {t('slot.fullSellFirst')}
         </div>
       );
@@ -1081,8 +1081,8 @@ export function App() {
       <div
         className={`flex items-center gap-1.5 rounded-lg border font-bold ${sizeClass} ${
           isUpgrade
-            ? 'bg-sky-500/15 border-sky-400/40 text-sky-200'
-            : 'bg-red-500/15 border-red-400/50 text-red-200'
+            ? 'bg-enhanced-500/15 border-enhanced-400/40 text-enhanced-200'
+            : 'bg-bad-500/15 border-bad-400/50 text-bad-200'
         }`}
         title={isUpgrade ? t('slot.upgradeTitle') : t('slot.sellTitle')}
       >
@@ -1117,7 +1117,7 @@ export function App() {
     const size = compact ? 16 : 20;
     return (
       <div
-        className={`flex items-center gap-1.5 rounded-lg border font-bold bg-violet-500/15 border-violet-400/40 text-violet-200 ${
+        className={`flex items-center gap-1.5 rounded-lg border font-bold bg-spirit-500/15 border-spirit-400/40 text-spirit-200 ${
           compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
         } text-small`}
         title={t('imbue.title', share, imbue.builds)}
@@ -1126,10 +1126,10 @@ export function App() {
         {icon ? (
           <img src={icon} alt="" style={{ width: size, height: size }} className="shrink-0 object-contain" draggable={false} />
         ) : (
-          <span className="shrink-0 rounded bg-amber-500 px-1 text-black">{imbue.ability}</span>
+          <span className="shrink-0 rounded bg-accent-500 px-1 text-on-accent">{imbue.ability}</span>
         )}
         <span className={compact ? 'min-w-0' : 'truncate'}>{imbue.abilityName}</span>
-        <span className="shrink-0 font-semibold text-violet-300/80">{share}</span>
+        <span className="shrink-0 font-semibold text-spirit-300/80">{share}</span>
       </div>
     );
   };
@@ -1255,7 +1255,7 @@ export function App() {
       <div className="space-y-1.5">
         <ul className="space-y-1">
           {nowAdvice.length === 0 ? (
-            <li className="text-body text-slate-400">{t('now.empty')}</li>
+            <li className="text-body text-ink-muted">{t('now.empty')}</li>
           ) : (
             nowAdvice.slice(0, max).map((a) => {
               const { heroIds, itemId } = nowVisual(a);
@@ -1290,12 +1290,12 @@ export function App() {
   const renderMidBoss = (compact: boolean) => {
     const canClick = !(compact && isClickThrough);
     return (
-      <div className="flex items-center gap-2 flex-wrap text-small text-slate-400">
+      <div className="flex items-center gap-2 flex-wrap text-small text-ink-muted">
         {clockS !== undefined && <span className="tabular-nums">⏱ {formatClock(clockS)}</span>}
         <span title={t(laneOver ? 'now.phaseTeamTitle' : 'now.phaseLaneTitle')}>
           {t(laneOver ? 'now.phaseTeam' : 'now.phaseLane')}
         </span>
-        <span className={midBossAlive ? 'text-fuchsia-300' : ''}>
+        <span className={midBossAlive ? 'text-choice-300' : ''}>
           🐉{' '}
           {midBossAlive
             ? t('now.midBossUp')
@@ -1308,7 +1308,7 @@ export function App() {
                 storeMidBoss({ kills: (midBoss?.kills ?? 0) + 1, lastKillAt: Date.now(), previous: midBoss ?? undefined })
               }
               title={t('now.midBossTakenTitle')}
-              className="px-2 py-0.5 rounded-md border border-fuchsia-400/40 bg-fuchsia-500/15 hover:bg-fuchsia-500/30 font-bold text-fuchsia-200"
+              className="px-2 py-0.5 rounded-md border border-choice-400/40 bg-choice-500/15 hover:bg-choice-500/30 font-bold text-choice-200"
             >
               {t('now.midBossTaken')}
             </button>
@@ -1316,7 +1316,7 @@ export function App() {
               <button
                 onClick={() => storeMidBoss(midBoss.previous ?? null)}
                 title={t('now.midBossUndoTitle')}
-                className="px-1.5 py-0.5 rounded-md border border-white/15 bg-white/5 hover:bg-white/15 font-bold text-slate-300"
+                className="px-1.5 py-0.5 rounded-md border border-bone/15 bg-bone/5 hover:bg-bone/15 font-bold text-ink-soft"
               >
                 ↶
               </button>
@@ -1334,7 +1334,7 @@ export function App() {
         <div className="h-screen w-screen p-2 flex flex-col select-none bg-transparent overflow-hidden">
           <div
             style={{ opacity: overlayOpacity }}
-            className="relative flex-1 flex flex-col rounded-2xl bg-[#0c0b0e]/85 backdrop-blur-xl border border-amber-500/45 shadow-2xl overflow-hidden"
+            className="relative flex-1 flex flex-col rounded-2xl bg-surface-base/85 backdrop-blur-xl border border-accent-500/45 shadow-overlay overflow-hidden"
           >
             {isOverlayArranging && !isClickThrough && (
               <div
@@ -1350,24 +1350,24 @@ export function App() {
                 onLostPointerCapture={() => window.electronAPI?.overlayResize('end')}
                 className="no-drag absolute bottom-0 left-0 z-10 w-6 h-6 cursor-nesw-resize flex items-end justify-start p-1"
               >
-                <div className="w-3 h-3 border-l-2 border-b-2 border-amber-400 rounded-bl" />
+                <div className="w-3 h-3 border-l-2 border-b-2 border-accent-400 rounded-bl" />
               </div>
             )}
-            <div className="drag-region px-3 py-2 bg-gradient-to-r from-amber-950/80 via-[#15131c] to-[#15131c] border-b border-white/10 flex items-center justify-between">
+            <div className="drag-region px-3 py-2 bg-gradient-to-r from-accent-950/80 via-surface-panel to-surface-panel border-b border-bone/10 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={28} />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-display text-body font-extrabold text-amber-300 truncate">
-                      {myHero.name.toUpperCase()}
+                    <span className="font-display tracking-display text-body text-accent-300 truncate">
+                      {myHero.name}
                     </span>
                     {currentSouls !== null && (
-                      <span className="text-small font-bold text-teal-300 bg-teal-950/70 px-1.5 py-0.2 rounded border border-teal-500/40">
+                      <span className="text-small font-bold text-info-300 bg-info-950/70 px-1.5 py-0.2 rounded border border-info-500/40">
                         {t('souls', formatNumber(currentSouls))}
                       </span>
                     )}
                   </div>
-                  <span className="text-small text-slate-400 block leading-none">
+                  <span className="text-small text-ink-muted block leading-none">
                     VS{' '}
                     {laneOver
                       ? t('enemies.team', laneEnemyIds.length + teamEnemyIds.length)
@@ -1383,8 +1383,8 @@ export function App() {
                     title={t('overlay.settingsTitle')}
                     className={`p-1.5 rounded-lg border transition ${
                       isOverlayArranging
-                        ? 'bg-amber-500 border-amber-300 text-black'
-                        : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
+                        ? 'bg-accent-500 border-accent-300 text-on-accent'
+                        : 'bg-bone/10 border-bone/15 text-ink hover:bg-bone/20'
                     }`}
                   >
                     <Settings className="w-3 h-3" />
@@ -1395,8 +1395,8 @@ export function App() {
                   title={t('overlay.clickThroughTitle')}
                   className={`px-2 py-1 rounded-lg text-small font-bold border flex items-center gap-1 transition ${
                     isClickThrough
-                      ? 'bg-red-500/35 border-red-400 text-red-100'
-                      : 'bg-white/10 border-white/15 text-slate-200 hover:bg-white/20'
+                      ? 'bg-bad-500/35 border-bad-400 text-bad-100'
+                      : 'bg-bone/10 border-bone/15 text-ink hover:bg-bone/20'
                   }`}
                 >
                   {isClickThrough ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
@@ -1405,28 +1405,28 @@ export function App() {
                 <button
                   onClick={() => window.electronAPI?.setOverlayMode(false)}
                   title={t('overlay.hideTitle')}
-                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-red-500/30 text-small font-bold text-slate-200"
+                  className="px-2 py-1 rounded-lg bg-bone/10 hover:bg-bad-500/30 text-small font-bold text-ink"
                 >
                   ✕
                 </button>
               </div>
             </div>
 
-            <div className="no-drag px-3 py-1.5 bg-black/50 border-b border-white/10 space-y-1">
-              <span className="text-small font-extrabold uppercase tracking-wider text-amber-300">{t('now.title')}</span>
+            <div className="no-drag px-3 py-1.5 bg-shade/50 border-b border-bone/10 space-y-1">
+              <span className="text-small font-extrabold uppercase tracking-caps text-accent-300">{t('now.title')}</span>
               {renderNow(3, true)}
             </div>
 
             {isClickThrough && (
-              <div className="bg-red-950/90 border-b border-red-500/40 px-3 py-1 text-small text-center text-red-200 font-semibold">
-                {t('overlay.ghostActive')} <kbd className="px-1 bg-black/50 rounded">Alt+L</kbd> {t('overlay.ghostUnlock')}
+              <div className="bg-bad-950/90 border-b border-bad-500/40 px-3 py-1 text-small text-center text-bad-200 font-semibold">
+                {t('overlay.ghostActive')} <kbd className="px-1 bg-shade/50 rounded">Alt+L</kbd> {t('overlay.ghostUnlock')}
               </div>
             )}
 
             {isOverlayArranging && !isClickThrough && (
-              <div className="no-drag px-3 py-2 bg-black/60 border-b border-white/10 space-y-2 text-small font-bold text-slate-300">
-                <p className="font-semibold text-amber-200">
-                  {t('overlay.arrangeHint')} <kbd className="px-1 bg-black/50 rounded">Alt+K</kbd>
+              <div className="no-drag px-3 py-2 bg-shade/60 border-b border-bone/10 space-y-2 text-small font-bold text-ink-soft">
+                <p className="font-semibold text-accent-200">
+                  {t('overlay.arrangeHint')} <kbd className="px-1 bg-shade/50 rounded">Alt+K</kbd>
                 </p>
                 <label className="flex items-center gap-2">
                   <span className="w-14 shrink-0">{t('overlay.opacity')}</span>
@@ -1437,19 +1437,19 @@ export function App() {
                     step={5}
                     value={Math.round(overlayOpacity * 100)}
                     onChange={(e) => changeOverlayOpacity(Number(e.target.value) / 100)}
-                    className="flex-1 accent-amber-500"
+                    className="flex-1 accent-accent-500"
                   />
                   <span className="w-10 text-right tabular-nums">{t('overlay.percent', Math.round(overlayOpacity * 100))}</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="w-14 shrink-0">{t('overlay.size')}</span>
-                  <div className="flex items-center bg-black/50 p-0.5 rounded-lg border border-white/10">
+                  <div className="flex items-center bg-shade/50 p-0.5 rounded-lg border border-bone/10">
                     {OVERLAY_SCALES.map((scale) => (
                       <button
                         key={scale}
                         onClick={() => changeOverlayScale(scale)}
                         className={`px-2 py-0.5 rounded-md transition ${
-                          overlayScale === scale ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'
+                          overlayScale === scale ? 'bg-accent-500 text-on-accent' : 'text-ink-muted hover:text-ink-strong'
                         }`}
                       >
                         {t('overlay.percent', Math.round(scale * 100))}
@@ -1460,15 +1460,15 @@ export function App() {
               </div>
             )}
 
-            <div className="no-drag px-2.5 py-2 bg-black/50 border-b border-white/10 flex items-center justify-between">
-              <span className="text-small font-bold uppercase text-purple-300">{t('overlay.abilities')}</span>
+            <div className="no-drag px-2.5 py-2 bg-shade/50 border-b border-bone/10 flex items-center justify-between">
+              <span className="text-small font-bold uppercase text-spirit-300">{t('overlay.abilities')}</span>
               <div className="flex items-center gap-1">
                 {activeBuild.abilitiesOrder.map((key, idx) => {
                   const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
                   return (
                     <React.Fragment key={key}>
                       <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={32} />
-                      {idx < 3 && <span className="text-slate-500 text-body font-bold">›</span>}
+                      {idx < 3 && <span className="text-ink-faint text-body font-bold">›</span>}
                     </React.Fragment>
                   );
                 })}
@@ -1477,8 +1477,8 @@ export function App() {
 
             <div className="no-drag flex-1 overflow-y-auto p-2.5 space-y-2.5">
               <div className="space-y-1.5">
-                <span className="text-small font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1">
-                  <ShoppingCart className="w-3 h-3 text-emerald-400" /> {t('overlay.buyNow')}
+                <span className="text-small font-extrabold uppercase tracking-caps text-good-300 flex items-center gap-1">
+                  <ShoppingCart className="w-3 h-3 text-good-400" /> {t('overlay.buyNow')}
                 </span>
                 <InvestmentLine investment={investment} clockS={clockS} compact />
                 {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
@@ -1491,18 +1491,18 @@ export function App() {
                       title={[entry.reason, whyText(entry)].filter(Boolean).join('\n')}
                       className={`p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
                         canAfford
-                          ? 'bg-emerald-950/50 border-emerald-400 shadow-lg'
-                          : 'bg-[#171520] border-white/15 hover:border-amber-400/50'
+                          ? 'bg-good-950/50 border-good-400 shadow-raised'
+                          : 'bg-surface-panel border-bone/15 hover:border-accent-400/50'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-6 h-6 rounded-full bg-amber-500 text-black font-extrabold text-small flex items-center justify-center shrink-0">
+                        <span className="w-6 h-6 rounded-full bg-accent-500 text-on-accent font-extrabold text-small flex items-center justify-center shrink-0">
                           #{idx + 1}
                         </span>
                         <ItemArtworkIcon itemId={entry.item.id} category={entry.item.category} size={46} />
                         <div className="min-w-0 space-y-0.5">
                           <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-title font-extrabold text-white truncate">{shortName}</span>
+                            <span className="text-title font-extrabold text-ink-strong truncate">{shortName}</span>
                             {!isClickThrough && <CopyNameButton name={shortName} />}
                           </div>
                           <ShopTabMarker category={entry.item.category} />
@@ -1512,9 +1512,9 @@ export function App() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-title font-extrabold text-teal-300 block">{formatNumber(entry.item.cost)}</span>
+                        <span className="text-title font-extrabold text-info-300 block">{formatNumber(entry.item.cost)}</span>
                         {canAfford && (
-                          <span className="text-small font-extrabold text-emerald-300">{t('overlay.buy')}</span>
+                          <span className="text-small font-extrabold text-good-300">{t('overlay.buy')}</span>
                         )}
                       </div>
                     </div>
@@ -1541,48 +1541,48 @@ export function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      <div className="h-screen w-screen flex flex-col bg-deadlock-bg text-slate-100 overflow-hidden">
+      <div className="h-screen w-screen flex flex-col bg-surface-base text-ink overflow-hidden">
         {/* 1. COMPACT TOP BAR (Hero + Partner + Lane + Enemies + Silent Controls) */}
-        <div className="px-3 py-2 bg-[#14121b] border-b border-white/10 flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-30">
+        <div className="px-3 py-2 bg-surface-panel border-b border-bone/10 flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-30">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setOpenPopover(openPopover === 'myHero' ? null : 'myHero')}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-black/60 hover:bg-black/80 border border-amber-500/40 transition"
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-shade/60 hover:bg-shade/80 border border-accent-500/40 transition"
             >
               <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={32} />
-              <span className="font-display text-body sm:text-title font-extrabold text-white">{myHero.name}</span>
+              <span className="font-label text-body sm:text-title text-ink-strong">{myHero.name}</span>
               {isHeroLocked && (
                 <span title={t('hero.lockedTitle')}>
-                  <Lock className="w-3 h-3 text-amber-400" />
+                  <Lock className="w-3 h-3 text-accent-400" />
                 </span>
               )}
-              <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-accent-400" />
             </button>
 
             {laneMode === 'duo' && (
               <button
                 onClick={() => setOpenPopover(openPopover === 'ally' ? null : 'ally')}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/50 border border-emerald-500/40 transition text-body font-bold text-emerald-200"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-good-950/30 hover:bg-good-950/50 border border-good-500/40 transition text-body font-bold text-good-200"
                 title={t('ally.title')}
               >
                 {allyHeroObj ? (
                   <HeroPortraitIcon heroId={allyHeroObj.id} color={allyHeroObj.accentColor} size={28} />
                 ) : (
-                  <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                  <UserPlus className="w-3.5 h-3.5 text-good-400" />
                 )}
                 <span>{allyHeroObj ? allyHeroObj.name : t('ally.add')}</span>
               </button>
             )}
 
             {myHero.builds.length > 1 && (
-              <div className="flex items-center bg-black/50 p-0.5 rounded-lg border border-white/10">
+              <div className="flex items-center bg-shade/50 p-0.5 rounded-lg border border-bone/10">
                 {myHero.builds.map((b, idx) => (
                   <button
                     key={b.id}
                     title={`${b.name}\n${b.subtitle}`}
                     onClick={() => setSelectedBuildId(b.id)}
                     className={`px-2 py-1 rounded-md text-small font-bold transition ${
-                      activeBuild.id === b.id ? 'bg-amber-500 text-black' : 'text-slate-400 hover:text-white'
+                      activeBuild.id === b.id ? 'bg-accent-500 text-on-accent' : 'text-ink-muted hover:text-ink-strong'
                     }`}
                   >
                     {t('build.n', idx + 1)}
@@ -1596,7 +1596,7 @@ export function App() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setOpenPopover(openPopover === 'enemies' ? null : 'enemies')}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-red-950/35 hover:bg-red-950/55 border border-red-500/40 transition"
+              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-bad-950/35 hover:bg-bad-950/55 border border-bad-500/40 transition"
             >
               <div className="flex -space-x-1.5">
                 {laneEnemyIds.length > 0 ? (
@@ -1605,13 +1605,13 @@ export function App() {
                     return eh ? <HeroPortraitIcon key={eid} heroId={eh.id} color={eh.accentColor} size={28} /> : null;
                   })
                 ) : (
-                  <Swords className="w-4 h-4 text-red-400" />
+                  <Swords className="w-4 h-4 text-bad-400" />
                 )}
               </div>
-              <span className="text-body font-bold text-white">
+              <span className="text-body font-bold text-ink-strong">
                 {t('enemies.button', laneEnemyIds.length, teamEnemyIds.length)}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-red-300" />
+              <ChevronDown className="w-3.5 h-3.5 text-bad-300" />
             </button>
 
             {/* Silent Auto-Scan Toggle (No blinking/spinning animations!) */}
@@ -1620,18 +1620,18 @@ export function App() {
               title={t('autoscan.title')}
               className={`px-2 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
                 autoScanEnabled
-                  ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
-                  : 'bg-white/5 border-white/10 text-slate-400'
+                  ? 'bg-good-500/20 border-good-500/60 text-good-300'
+                  : 'bg-bone/5 border-bone/10 text-ink-muted'
               }`}
             >
-              <Radio className="w-3.5 h-3.5 text-emerald-400" />
+              <Radio className="w-3.5 h-3.5 text-good-400" />
               <span className="hidden md:inline">{t('autoscan.label')}</span>
             </button>
 
             <button
               onClick={() => performScreenScan()}
               title={t('scan.title')}
-              className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-small flex items-center gap-1 transition"
+              className="px-2.5 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-400 text-on-accent font-bold text-small flex items-center gap-1 transition"
             >
               <Camera className="w-3.5 h-3.5" />
               <span>{t('scan.label')}</span>
@@ -1642,8 +1642,8 @@ export function App() {
               title={t('overlay.toggleTitle')}
               className={`px-2.5 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
                 isOverlayMode
-                  ? 'bg-purple-500 text-white border-purple-300 shadow-glow-spirit'
-                  : 'bg-purple-600/20 hover:bg-purple-600/35 border-purple-400/50 text-purple-200'
+                  ? 'bg-spirit-500 text-ink-strong border-spirit-300 shadow-raised'
+                  : 'bg-spirit-600/20 hover:bg-spirit-600/35 border-spirit-400/50 text-spirit-200'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -1653,7 +1653,7 @@ export function App() {
             <button
               onClick={() => setIsSettingsOpen(true)}
               title={t('settings.open')}
-              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300"
+              className="p-1.5 rounded-xl bg-bone/5 hover:bg-bone/10 border border-bone/10 text-ink-soft"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -1661,10 +1661,10 @@ export function App() {
 
           {/* POPOVER MODALS */}
           {openPopover === 'myHero' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-amber-500/60 shadow-2xl z-50 space-y-2">
-              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-amber-300">{t('hero.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-accent-500/60 shadow-overlay z-50 space-y-2">
+              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
+                <span className="text-body font-bold uppercase text-accent-300">{t('hero.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
                   ✕
                 </button>
               </div>
@@ -1684,8 +1684,8 @@ export function App() {
                     }}
                     className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
                       h.id === myHeroId
-                        ? 'bg-amber-500/25 border-amber-400 text-white font-bold'
-                        : 'bg-black/40 border-white/5 text-slate-300'
+                        ? 'bg-accent-500/25 border-accent-400 text-ink-strong font-bold'
+                        : 'bg-shade/40 border-bone/5 text-ink-soft'
                     }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
@@ -1697,10 +1697,10 @@ export function App() {
           )}
 
           {openPopover === 'ally' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-emerald-500/60 shadow-2xl z-50 space-y-2">
-              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-emerald-300">{t('ally.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-good-500/60 shadow-overlay z-50 space-y-2">
+              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
+                <span className="text-body font-bold uppercase text-good-300">{t('ally.pick')}</span>
+                <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
                   ✕
                 </button>
               </div>
@@ -1716,8 +1716,8 @@ export function App() {
                     }}
                     className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
                       h.id === allyPartnerId
-                        ? 'bg-emerald-500/25 border-emerald-400 text-white font-bold'
-                        : 'bg-black/40 border-white/5 text-slate-300'
+                        ? 'bg-good-500/25 border-good-400 text-ink-strong font-bold'
+                        : 'bg-shade/40 border-bone/5 text-ink-soft'
                     }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
@@ -1729,9 +1729,9 @@ export function App() {
           )}
 
           {openPopover === 'enemies' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-[#181520] border border-red-500/60 shadow-2xl space-y-2.5 z-50">
-              <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-red-300">{t('enemies.title', totalSelectedEnemies)}</span>
+            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-bad-500/60 shadow-overlay space-y-2.5 z-50">
+              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
+                <span className="text-body font-bold uppercase text-bad-300">{t('enemies.title', totalSelectedEnemies)}</span>
                 <div className="flex items-center gap-3">
                   {totalSelectedEnemies > 0 && (
                     <button
@@ -1739,22 +1739,22 @@ export function App() {
                         setLaneEnemyIds([]);
                         setTeamEnemyIds([]);
                       }}
-                      className="text-small text-red-400 hover:underline"
+                      className="text-small text-bad-400 hover:underline"
                     >
                       {t('enemies.clear')}
                     </button>
                   )}
-                  <button onClick={() => setOpenPopover(null)} className="text-body text-slate-400">
+                  <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
                     ✕
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/10">
+              <div className="flex items-center gap-1.5 bg-shade/50 p-1 rounded-xl border border-bone/10">
                 <button
                   onClick={() => setEnemyPopoverMode('lane')}
                   className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
-                    enemyPopoverMode === 'lane' ? 'bg-red-500 text-white' : 'text-slate-400'
+                    enemyPopoverMode === 'lane' ? 'bg-bad-500 text-ink-strong' : 'text-ink-muted'
                   }`}
                 >
                   {t('enemies.myLane', laneEnemyIds.length, laneMode === 'solo' ? 1 : 2)}
@@ -1762,7 +1762,7 @@ export function App() {
                 <button
                   onClick={() => setEnemyPopoverMode('team')}
                   className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
-                    enemyPopoverMode === 'team' ? 'bg-orange-500 text-black' : 'text-slate-400'
+                    enemyPopoverMode === 'team' ? 'bg-weapon-500 text-on-accent' : 'text-ink-muted'
                   }`}
                 >
                   {t('enemies.otherLanes', teamEnemyIds.length, 6 - laneEnemyIds.length)}
@@ -1779,17 +1779,17 @@ export function App() {
                       onClick={() => handleSelectEnemyHero(eh.id)}
                       className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
                         isInLane
-                          ? 'bg-red-500/30 border-red-400 text-white font-bold'
+                          ? 'bg-bad-500/30 border-bad-400 text-ink-strong font-bold'
                           : isInTeam
-                          ? 'bg-orange-500/25 border-orange-400 text-orange-100 font-bold'
-                          : 'bg-black/40 border-white/5 text-slate-300'
+                          ? 'bg-weapon-500/25 border-weapon-400 text-weapon-100 font-bold'
+                          : 'bg-shade/40 border-bone/5 text-ink-soft'
                       }`}
                     >
                       <HeroPortraitIcon heroId={eh.id} color={eh.accentColor} size={26} />
                       <div className="min-w-0">
                         <span className="text-body block truncate">{eh.name}</span>
-                        {isInLane && <span className="text-small text-red-300 block">{t('enemies.laneBadge')}</span>}
-                        {isInTeam && <span className="text-small text-orange-300 block">{t('enemies.teamBadge')}</span>}
+                        {isInLane && <span className="text-small text-bad-300 block">{t('enemies.laneBadge')}</span>}
+                        {isInTeam && <span className="text-small text-weapon-300 block">{t('enemies.teamBadge')}</span>}
                       </div>
                     </button>
                   );
@@ -1800,7 +1800,7 @@ export function App() {
         </div>
 
         {/* 2. NAVIGATION TABS */}
-        <div className="px-3 bg-[#100e15] border-b border-white/10 flex items-center justify-between shrink-0">
+        <div className="px-3 bg-surface-header border-b border-bone/10 flex items-center justify-between shrink-0">
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
             {(
               [
@@ -1820,8 +1820,8 @@ export function App() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 py-2 text-body font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
                     active
-                      ? 'border-amber-400 text-amber-300 bg-amber-500/10'
-                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                      ? 'border-accent-400 text-accent-300 bg-accent-500/10'
+                      : 'border-transparent text-ink-muted hover:text-ink'
                   }`}
                 >
                   <TabIcon className="w-3.5 h-3.5 shrink-0" />
@@ -1833,14 +1833,14 @@ export function App() {
 
           <div className="flex items-center gap-2 py-1">
             {currentSouls !== null && (
-              <span className="px-2 py-0.5 rounded-lg bg-teal-950/60 border border-teal-500/40 text-small text-teal-300 font-extrabold">
+              <span className="px-2 py-0.5 rounded-lg bg-info-950/60 border border-info-500/40 text-small text-info-300 font-extrabold">
                 {t('souls.inPocket', formatNumber(currentSouls))}
               </span>
             )}
             {ownedItems.length > 0 && (
               <button
                 onClick={clearOwnedItems}
-                className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-small text-slate-400 hover:text-white flex items-center gap-1"
+                className="px-2 py-0.5 rounded bg-bone/5 hover:bg-bone/10 text-small text-ink-muted hover:text-ink-strong flex items-center gap-1"
                 title={t('owned.resetTitle')}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -1854,8 +1854,8 @@ export function App() {
         {(showUpdateBanner || formatIssue || showHudMissing) && (
           <div className="px-3 pt-2 space-y-2 shrink-0">
             {showUpdateBanner && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
-                <span className="font-bold text-emerald-200">
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-good-950/60 border border-good-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
+                <span className="font-bold text-good-200">
                   {updateStatus.state === 'ready'
                     ? t('update.ready', updateStatus.version)
                     : updateStatus.state === 'available'
@@ -1866,7 +1866,7 @@ export function App() {
                   {updateStatus.state === 'available' && (
                     <button
                       onClick={() => window.electronAPI?.openExternal(updateStatus.url)}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold"
+                      className="px-2.5 py-1 rounded-lg bg-good-500 hover:bg-good-400 text-on-accent font-bold"
                     >
                       {t('update.download')}
                     </button>
@@ -1874,38 +1874,38 @@ export function App() {
                   {updateStatus.state === 'ready' && (
                     <button
                       onClick={() => window.electronAPI?.updates.install()}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-bold"
+                      className="px-2.5 py-1 rounded-lg bg-good-500 hover:bg-good-400 text-on-accent font-bold"
                     >
                       {t('update.restart')}
                     </button>
                   )}
-                  <button onClick={() => setUpdateDismissed(true)} className="text-slate-400 hover:text-white" title={t('update.dismiss')}>
+                  <button onClick={() => setUpdateDismissed(true)} className="text-ink-muted hover:text-ink-strong" title={t('update.dismiss')}>
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             )}
             {formatIssue && (
-              <div className="max-w-5xl mx-auto px-3 py-2.5 rounded-xl bg-red-950/70 border-2 border-red-500/70 flex items-start gap-2.5">
-                <MonitorX className="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
+              <div className="max-w-5xl mx-auto px-3 py-2.5 rounded-xl bg-bad-950/70 border-2 border-bad-500/70 flex items-start gap-2.5">
+                <MonitorX className="w-5 h-5 text-bad-300 shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="text-body font-extrabold uppercase text-red-200">{t('resolution.title')}</p>
-                  <p className="text-body text-red-100">
+                  <p className="text-body font-extrabold uppercase text-bad-200">{t('resolution.title')}</p>
+                  <p className="text-body text-bad-100">
                     {t('resolution.body', formatIssue.width, formatIssue.height, aspectLabel(formatIssue.width, formatIssue.height))}
                   </p>
-                  <p className="text-small text-red-200/90">{t('resolution.help')}</p>
+                  <p className="text-small text-bad-200/90">{t('resolution.help')}</p>
                 </div>
                 <button
                   onClick={() => setIsReportOpen(true)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-small font-bold text-red-100 shrink-0"
+                  className="px-2.5 py-1 rounded-lg bg-bone/10 hover:bg-bone/20 text-small font-bold text-bad-100 shrink-0"
                 >
                   {t('resolution.report')}
                 </button>
               </div>
             )}
             {!formatIssue && showHudMissing && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-500/40 flex items-start gap-2 text-small text-amber-100">
-                <Info className="w-4 h-4 text-amber-300 shrink-0" />
+              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-accent-950/50 border border-accent-500/40 flex items-start gap-2 text-small text-accent-100">
+                <Info className="w-4 h-4 text-accent-300 shrink-0" />
                 <span>
                   <strong>{t('hud.notFoundTitle')}.</strong> {t('hud.notFoundBody')}
                 </span>
@@ -1919,40 +1919,40 @@ export function App() {
           onClick={() => {
             if (openPopover) setOpenPopover(null);
           }}
-          className="flex-1 overflow-y-auto p-3 space-y-3 bg-deadlock-bg"
+          className="flex-1 overflow-y-auto p-3 space-y-3 bg-surface-base"
         >
           <div className="max-w-5xl mx-auto space-y-3">
             {/* ================= TAB 1: ACTIVE BUILD ================= */}
             {activeTab === 'essential' && (
               <div className="space-y-3">
                 {/* What to do now: who is dead in the top bar, my souls, my matchups */}
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-950/40 via-[#15131d] to-[#15131d] border-2 border-amber-500/60 shadow-xl space-y-2">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-accent-950/40 via-surface-panel to-surface-panel border-2 border-accent-500/60 shadow-overlay space-y-2">
                   <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
-                    <h2 className="font-display text-title font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                    <h2 className="font-display text-title tracking-display text-accent-300 flex items-center gap-1.5">
                       <Radio className="w-4 h-4" /> {t('now.title')}
                     </h2>
-                    <span className="text-small text-slate-400">{t('now.hint')}</span>
+                    <span className="text-small text-ink-muted">{t('now.hint')}</span>
                   </div>
                   {renderNow(4, false)}
                 </div>
 
                 {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-[#15131d] to-[#15131d] border-2 border-emerald-500/60 shadow-xl space-y-3">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-good-950/40 via-surface-panel to-surface-panel border-2 border-good-500/60 shadow-overlay space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-xl bg-emerald-500 text-black">
+                      <span className="p-1.5 rounded-xl bg-good-500 text-on-accent">
                         <ShoppingCart className="w-4 h-4" />
                       </span>
                       <div>
-                        <h2 className="font-display text-title font-extrabold uppercase tracking-wider text-emerald-300">
+                        <h2 className="font-display text-title tracking-display text-good-300">
                           {t('buy.title', inventoryLabel)}
                         </h2>
-                        <p className="text-small text-slate-300">{t('buy.help')}</p>
+                        <p className="text-small text-ink-soft">{t('buy.help')}</p>
                         {inventoryStatus && inventoryStatus.unmatched > 0 && (
-                          <p className="text-small text-orange-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
+                          <p className="text-small text-weapon-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
                         )}
-                        <p className="text-small text-amber-300 font-semibold">
-                          {activeBuild.name} — <span className="text-slate-400 font-normal">{activeBuild.subtitle}</span>
+                        <p className="text-small text-accent-300 font-semibold">
+                          {activeBuild.name} — <span className="text-ink-muted font-normal">{activeBuild.subtitle}</span>
                         </p>
                       </div>
                     </div>
@@ -1962,7 +1962,7 @@ export function App() {
                     </div>
 
                     {currentSouls !== null && (
-                      <div className="px-3 py-1 rounded-xl bg-teal-950/80 border border-teal-400/50 text-body font-extrabold text-teal-200">
+                      <div className="px-3 py-1 rounded-xl bg-info-950/80 border border-info-400/50 text-body font-extrabold text-info-200">
                         {t('souls.detected', formatNumber(currentSouls))}
                       </div>
                     )}
@@ -1986,11 +1986,11 @@ export function App() {
                           className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between gap-2.5 relative ${
                             idx === 0
                               ? canAfford
-                                ? 'bg-emerald-950/60 border-emerald-400 ring-2 ring-emerald-400/30'
-                                : 'bg-amber-950/35 border-amber-400'
+                                ? 'bg-good-950/60 border-good-400 ring-2 ring-good-400/30'
+                                : 'bg-accent-950/35 border-accent-400'
                               : canAfford
-                              ? 'bg-emerald-950/35 border-emerald-500/60'
-                              : 'bg-black/50 border-white/15 hover:border-white/35'
+                              ? 'bg-good-950/35 border-good-500/60'
+                              : 'bg-shade/50 border-bone/15 hover:border-bone/35'
                           }`}
                         >
                           <div className="space-y-2">
@@ -1998,7 +1998,7 @@ export function App() {
                             <div className="flex items-center justify-between gap-1">
                               <span
                                 className={`px-2 py-0.5 rounded-md text-small font-extrabold uppercase ${
-                                  idx === 0 ? 'bg-amber-400 text-black' : 'bg-white/15 text-slate-200'
+                                  idx === 0 ? 'bg-accent-400 text-on-accent' : 'bg-bone/15 text-ink'
                                 }`}
                               >
                                 {idx === 0 ? (
@@ -2011,11 +2011,11 @@ export function App() {
                               </span>
 
                               {canAfford ? (
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-black font-extrabold text-small uppercase">
+                                <span className="px-2 py-0.5 rounded-md bg-good-500 text-on-accent font-extrabold text-small uppercase">
                                   {t('buy.affordable')}
                                 </span>
                               ) : missingSouls !== null ? (
-                                <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/10 text-amber-300 font-bold text-small">
+                                <span className="px-2 py-0.5 rounded-md bg-shade/60 border border-bone/10 text-accent-300 font-bold text-small">
                                   {t('buy.missing', formatNumber(missingSouls))}
                                 </span>
                               ) : null}
@@ -2026,11 +2026,11 @@ export function App() {
                               <ItemArtworkIcon itemId={item.id} category={item.category} size={56} />
                               <div className="min-w-0 flex-1 space-y-1">
                                 <div className="flex items-start gap-1">
-                                  <span className="font-bold text-title text-white leading-tight flex-1 min-w-0">{shortName}</span>
+                                  <span className="font-bold text-title text-ink-strong leading-tight flex-1 min-w-0">{shortName}</span>
                                   <CopyNameButton name={shortName} />
                                 </div>
                                 <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
-                                  <span className="text-small font-extrabold text-teal-300">
+                                  <span className="text-small font-extrabold text-info-300">
                                     {t('souls', formatNumber(item.cost))}
                                   </span>
                                   <ShopTabMarker category={item.category} tier={item.tier} />
@@ -2044,22 +2044,22 @@ export function App() {
 
                             {/* Why this item: meta statistics of this hero */}
                             {why && (
-                              <p className="text-small text-slate-400 leading-snug flex gap-1" title={t('buy.whyTitle')}>
-                                <Info className="w-3 h-3 shrink-0 mt-px text-slate-500" />
+                              <p className="text-small text-ink-muted leading-snug flex gap-1" title={t('buy.whyTitle')}>
+                                <Info className="w-3 h-3 shrink-0 mt-px text-ink-faint" />
                                 <span>{why}</span>
                               </p>
                             )}
                           </div>
 
                           {/* Reason + Click to Skip / Advance */}
-                          <div className="pt-1 border-t border-white/10 flex items-center justify-between text-small">
+                          <div className="pt-1 border-t border-bone/10 flex items-center justify-between text-small">
                             <span
-                              className={`truncate font-semibold ${isCounter ? 'text-orange-300' : 'text-slate-300'}`}
+                              className={`truncate font-semibold ${isCounter ? 'text-weapon-300' : 'text-ink-soft'}`}
                               title={entry.reason}
                             >
                               {entry.reason}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-white/10 hover:bg-emerald-500/30 text-slate-200 font-bold flex items-center gap-1 shrink-0">
+                            <span className="px-2 py-0.5 rounded bg-bone/10 hover:bg-good-500/30 text-ink font-bold flex items-center gap-1 shrink-0">
                               {t('buy.skip')}
                             </span>
                           </div>
@@ -2070,9 +2070,9 @@ export function App() {
                 </div>
 
                 {/* Compact Power Order Strip */}
-                <div className="p-2.5 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-small font-bold uppercase text-purple-300 flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-purple-400" /> {t('abilities.order')}
+                <div className="p-2.5 rounded-xl bg-surface-panel border border-spirit-500/30 flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-small font-bold uppercase text-spirit-300 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-spirit-400" /> {t('abilities.order')}
                   </span>
                   <div className="flex items-center gap-2 flex-wrap">
                     {activeBuild.abilitiesOrder.map((key, idx) => {
@@ -2080,11 +2080,11 @@ export function App() {
                       const spellName = ab?.name.split('(')[0].trim() || key;
                       return (
                         <React.Fragment key={key}>
-                          <div className="flex items-center gap-1.5 bg-black/50 px-2 py-1 rounded-lg border border-white/5">
+                          <div className="flex items-center gap-1.5 bg-shade/50 px-2 py-1 rounded-lg border border-bone/5">
                             <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={30} />
-                            <span className="text-body font-bold text-white">{spellName}</span>
+                            <span className="text-body font-bold text-ink-strong">{spellName}</span>
                           </div>
-                          {idx < 3 && <span className="text-slate-500 font-bold text-body">→</span>}
+                          {idx < 3 && <span className="text-ink-faint font-bold text-body">→</span>}
                         </React.Fragment>
                       );
                     })}
@@ -2094,33 +2094,33 @@ export function App() {
                 {/* Counter the enemies: one card each (lane opponents first) with its stance (real matchup of my hero),
                     its ultimate and the best items against it; click the header = fed */}
                 {stanceAlerts.length > 0 && (
-                  <div className="p-3 rounded-xl bg-deadlock-panel border border-white/10 space-y-2">
+                  <div className="p-3 rounded-xl bg-surface-panel border border-bone/10 space-y-2">
                     <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
-                      <span className="text-body font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                        <Swords className="w-3.5 h-3.5 text-red-400" /> {t('enemies.countersTitle')}
+                      <span className="text-body font-bold uppercase tracking-caps text-ink-soft flex items-center gap-1.5">
+                        <Swords className="w-3.5 h-3.5 text-bad-400" /> {t('enemies.countersTitle')}
                       </span>
-                      <span className="text-small text-slate-400">{t('enemies.countersHint')}</span>
+                      <span className="text-small text-ink-muted">{t('enemies.countersHint')}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {stanceAlerts.map((alert) => (
                         <div
                           key={alert.enemyId}
-                          className={`rounded-lg border bg-black/30 p-2 space-y-1.5 ${
-                            alert.isFed ? 'border-orange-400' : alert.isInMyLane ? 'border-red-500/50' : 'border-white/10'
+                          className={`rounded-lg border bg-shade/30 p-2 space-y-1.5 ${
+                            alert.isFed ? 'border-weapon-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-bone/10'
                           }`}
                         >
                           <button
                             onClick={() => toggleFed(alert.enemyId)}
                             title={[matchupStatText(alert), t('enemies.stripHint')].filter(Boolean).join('\n')}
-                            className="w-full flex items-center gap-2 text-left rounded-md hover:bg-white/5 transition"
+                            className="w-full flex items-center gap-2 text-left rounded-md hover:bg-bone/5 transition"
                           >
                             <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={36} />
                             <span className="min-w-0 flex-1">
-                              <span className="flex items-center gap-1 text-title font-extrabold text-white">
+                              <span className="flex items-center gap-1 text-title font-extrabold text-ink-strong">
                                 <span className="truncate">{alert.enemyName}</span>
                                 {alert.isInMyLane && <span className="text-small">🎯</span>}
                                 {board?.enemies.some((s) => s.heroId === alert.enemyId && s.dead) && (
-                                  <span className="text-small font-bold text-slate-400 shrink-0">💀 {t('enemies.dead')}</span>
+                                  <span className="text-small font-bold text-ink-muted shrink-0">💀 {t('enemies.dead')}</span>
                                 )}
                               </span>
                               {stanceLabel(alert) && (
@@ -2131,16 +2131,16 @@ export function App() {
                             </span>
                           </button>
                           {alert.ult && (
-                            <div className="flex items-center gap-1.5 text-small text-slate-300" title={t('enemies.ultTitle')}>
+                            <div className="flex items-center gap-1.5 text-small text-ink-soft" title={t('enemies.ultTitle')}>
                               {getAbilityIcon(alert.enemyId, '4') && (
                                 <img
                                   src={getAbilityIcon(alert.enemyId, '4')}
                                   alt=""
-                                  className="w-6 h-6 shrink-0 rounded-md bg-[#1a1524] border border-purple-400/50 object-contain p-0.5"
+                                  className="w-6 h-6 shrink-0 rounded-md bg-surface-raised border border-spirit-400/50 object-contain p-0.5"
                                   draggable={false}
                                 />
                               )}
-                              <span className="font-semibold text-purple-300 shrink-0">{t('enemies.ult')}</span>
+                              <span className="font-semibold text-spirit-300 shrink-0">{t('enemies.ult')}</span>
                               <span className="truncate">{alert.ult.name.split('(')[0].trim()}</span>
                             </div>
                           )}
@@ -2156,18 +2156,18 @@ export function App() {
                                   >
                                     <ItemArtworkIcon itemId={item.id} category={item.category} size={26} />
                                     <span className="min-w-0">
-                                      <span className="block text-body font-bold text-white truncate">
+                                      <span className="block text-body font-bold text-ink-strong truncate">
                                         {owned && '✓ '}
                                         {item.name.split('(')[0].trim()}
                                       </span>
-                                      <span className="block text-small text-slate-400 truncate">{reason}</span>
+                                      <span className="block text-small text-ink-muted truncate">{reason}</span>
                                     </span>
                                   </li>
                                 );
                               })}
                             </ul>
                           ) : (
-                            <p className="text-small text-slate-500">{t('enemies.noCounters')}</p>
+                            <p className="text-small text-ink-faint">{t('enemies.noCounters')}</p>
                           )}
                         </div>
                       ))}
@@ -2177,9 +2177,9 @@ export function App() {
 
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
                 {tacticalPlan.priorityItems.filter((rec) => !effectiveOwned.has(rec.item.id)).length > 0 && (
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-orange-950/30 to-deadlock-panel border border-orange-500/40 space-y-2">
-                    <span className="text-body font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5 text-orange-400" />{' '}
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-weapon-950/30 to-surface-panel border border-weapon-500/40 space-y-2">
+                    <span className="text-body font-bold uppercase tracking-caps text-weapon-300 flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-weapon-400" />{' '}
                       {laneOver
                         ? t('counters.title', t('enemies.team', laneEnemyIds.length + teamEnemyIds.length), 0)
                         : t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
@@ -2206,17 +2206,17 @@ export function App() {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                   {(
                     [
-                      { key: 'early', title: t('phases.early'), accent: 'text-amber-300 border-amber-500/30' },
-                      { key: 'mid', title: t('phases.mid'), accent: 'text-purple-300 border-purple-500/30' },
-                      { key: 'late', title: t('phases.late'), accent: 'text-teal-300 border-teal-500/30' },
+                      { key: 'early', title: t('phases.early'), accent: 'text-accent-300 border-accent-500/30' },
+                      { key: 'mid', title: t('phases.mid'), accent: 'text-spirit-300 border-spirit-500/30' },
+                      { key: 'late', title: t('phases.late'), accent: 'text-info-300 border-info-500/30' },
                     ] as const
                   ).map((col) => {
                     const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !effectiveOwned.has(id));
                     return (
-                      <div key={col.key} className={`p-3 rounded-xl bg-deadlock-panel border ${col.accent} space-y-2`}>
-                        <h3 className="font-display text-body font-extrabold uppercase tracking-wider">{col.title}</h3>
+                      <div key={col.key} className={`p-3 rounded-xl bg-surface-panel border ${col.accent} space-y-2`}>
+                        <h3 className="font-display text-body tracking-display">{col.title}</h3>
                         {unownedPhaseIds.length === 0 ? (
-                          <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-body text-emerald-300 font-bold">
+                          <div className="p-2.5 rounded-lg bg-good-950/30 border border-good-500/30 text-body text-good-300 font-bold">
                             {t('phases.done')}
                           </div>
                         ) : (
@@ -2242,8 +2242,8 @@ export function App() {
 
                 {/* Owned Items Archive at the bottom of the page */}
                 {ownedItems.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center gap-2 flex-wrap">
-                    <span className="text-small font-bold uppercase text-slate-400">{t('owned.title', ownedItems.length)}</span>
+                  <div className="p-2.5 rounded-xl bg-shade/40 border border-bone/10 flex items-center gap-2 flex-wrap">
+                    <span className="text-small font-bold uppercase text-ink-muted">{t('owned.title', ownedItems.length)}</span>
                     {ownedItems.map((id) => {
                       const it = ITEMS[id];
                       if (!it) return null;
@@ -2252,11 +2252,11 @@ export function App() {
                           key={id}
                           onClick={() => handleToggleOwnedItem(id)}
                           title={t('owned.removeTitle')}
-                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-950/50 border border-white/10 text-small font-semibold text-slate-300 transition"
+                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-bone/5 hover:bg-bad-950/50 border border-bone/10 text-small font-semibold text-ink-soft transition"
                         >
                           <ItemArtworkIcon itemId={it.id} category={it.category} size={18} />
                           <span>{it.name.split('(')[0].trim()}</span>
-                          <span className="text-small text-slate-500">✕</span>
+                          <span className="text-small text-ink-faint">✕</span>
                         </button>
                       );
                     })}
@@ -2272,13 +2272,13 @@ export function App() {
                   const detail = activeBuild.abilitiesDetails.find((a) => a.key === key);
                   if (!detail) return null;
                   return (
-                    <div key={key} className="p-4 rounded-xl bg-deadlock-panel border border-purple-500/30 flex items-start gap-3">
+                    <div key={key} className="p-4 rounded-xl bg-surface-panel border border-spirit-500/30 flex items-start gap-3">
                       <PowerIcon heroId={myHero.id} abilityKey={detail.key} abilityName={detail.name} size={52} />
                       <div className="space-y-1 flex-1">
-                        <span className="text-small font-bold uppercase text-purple-300">{t('powers.max', index + 1, detail.key)}</span>
-                        <h3 className="font-bold text-title text-white">{detail.name.split('(')[0].trim()}</h3>
-                        <p className="text-body text-amber-200/90">{detail.priorityTip}</p>
-                        {detail.description && <p className="text-small text-slate-400">{detail.description}</p>}
+                        <span className="text-small font-bold uppercase text-spirit-300">{t('powers.max', index + 1, detail.key)}</span>
+                        <h3 className="font-bold text-title text-ink-strong">{detail.name.split('(')[0].trim()}</h3>
+                        <p className="text-body text-accent-200/90">{detail.priorityTip}</p>
+                        {detail.description && <p className="text-small text-ink-muted">{detail.description}</p>}
                       </div>
                     </div>
                   );
@@ -2289,9 +2289,9 @@ export function App() {
             {/* ================= TAB 3: ITEM DETAILS ================= */}
             {activeTab === 'builds' && (
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-deadlock-panel border border-amber-500/30">
-                  <h3 className="text-title font-extrabold text-amber-300">{activeBuild.name}</h3>
-                  <p className="text-small text-slate-300">{activeBuild.subtitle}</p>
+                <div className="p-3 rounded-xl bg-surface-panel border border-accent-500/30">
+                  <h3 className="text-title font-extrabold text-accent-300">{activeBuild.name}</h3>
+                  <p className="text-small text-ink-soft">{activeBuild.subtitle}</p>
                 </div>
                 {(
                   [
@@ -2302,7 +2302,7 @@ export function App() {
                   ] as const
                 ).map((phase) => (
                   <div key={phase.key} className="space-y-2">
-                    <h3 className="text-body font-bold uppercase text-amber-300">{phase.title}</h3>
+                    <h3 className="font-display text-body tracking-display text-accent-300">{phase.title}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeBuild.phases[phase.key].map((itemId) => {
                         const item = ITEMS[itemId];
@@ -2324,41 +2324,41 @@ export function App() {
             {/* ================= TAB 4: LANE ADVICE & MATCHUPS ================= */}
             {activeTab === 'matchups' && (
               <div className="space-y-3">
-                <div className="p-3.5 rounded-xl bg-deadlock-panel border border-amber-500/30 space-y-1.5">
-                  <h3 className="text-body font-bold uppercase text-amber-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
-                  <p className="text-body text-slate-200">{tacticalPlan.laneStrategy.economyTip}</p>
+                <div className="p-3.5 rounded-xl bg-surface-panel border border-accent-500/30 space-y-1.5">
+                  <h3 className="font-display text-body tracking-display text-accent-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
+                  <p className="text-body text-ink">{tacticalPlan.laneStrategy.economyTip}</p>
                   {laneOutlookText && (
                     <p
                       className={`text-body font-semibold ${
                         outlook?.outlook === 'hard'
-                          ? 'text-red-300'
+                          ? 'text-bad-300'
                           : outlook?.outlook === 'favourable'
-                          ? 'text-emerald-300'
-                          : 'text-slate-300'
+                          ? 'text-good-300'
+                          : 'text-ink-soft'
                       }`}
                     >
                       ⚔ {laneOutlookText}
                     </p>
                   )}
                   {tacticalPlan.laneStrategy.allySynergyTip && (
-                    <p className="text-body text-emerald-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
+                    <p className="text-body text-good-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
                   )}
-                  {laneDuoText && <p className="text-small text-slate-400">{laneDuoText}</p>}
+                  {laneDuoText && <p className="text-small text-ink-muted">{laneDuoText}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tacticalPlan.matchupAlerts.map((alert) => (
                     <div
                       key={alert.enemyId}
-                      className={`p-3.5 rounded-xl bg-deadlock-panel border space-y-1.5 ${
-                        alert.isFed ? 'border-orange-400' : alert.isInMyLane ? 'border-red-500/50' : 'border-orange-500/30'
+                      className={`p-3.5 rounded-xl bg-surface-panel border space-y-1.5 ${
+                        alert.isFed ? 'border-weapon-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-weapon-500/30'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-body font-bold text-white">
+                        <span className="text-body font-bold text-ink-strong">
                           {alert.isInMyLane ? t('matchups.lane') : t('matchups.team')} VS {alert.enemyName}
                         </span>
-                        <span className="text-small font-bold text-red-300 shrink-0">{t(DANGER_KEYS[alert.dangerLevel])}</span>
+                        <span className="text-small font-bold text-bad-300 shrink-0">{t(DANGER_KEYS[alert.dangerLevel])}</span>
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         {stanceLabel(alert) ? (
@@ -2370,14 +2370,14 @@ export function App() {
                         )}
                         <button
                           onClick={() => toggleFed(alert.enemyId)}
-                          className="px-2 py-0.5 rounded-md border border-white/15 bg-white/5 hover:bg-orange-500/25 text-small font-bold text-slate-200"
+                          className="px-2 py-0.5 rounded-md border border-bone/15 bg-bone/5 hover:bg-weapon-500/25 text-small font-bold text-ink"
                         >
                           {alert.isFed ? t('matchups.fedUnmark') : `🔥 ${t('matchups.fedMark')}`}
                         </button>
                       </div>
-                      {matchupStatText(alert) && <p className="text-small text-slate-400">{matchupStatText(alert)}</p>}
-                      {alert.isFed && <p className="text-body text-orange-200">{t('matchups.fedRule')}</p>}
-                      <p className="text-body text-emerald-300">{alert.keyRule}</p>
+                      {matchupStatText(alert) && <p className="text-small text-ink-muted">{matchupStatText(alert)}</p>}
+                      {alert.isFed && <p className="text-body text-weapon-200">{t('matchups.fedRule')}</p>}
+                      <p className="text-body text-good-300">{alert.keyRule}</p>
                     </div>
                   ))}
                 </div>

@@ -8,6 +8,10 @@ Deadlock Blueprint is a fan project. It is **not affiliated with, endorsed, spon
 
 Deadlock, its name, logo, hero portraits, ability and item icons, and every other game asset are trademarks and/or copyright of Valve Corporation. The project includes some of these images (`public/icons/heroes`, `public/icons/items`, `public/icons/abilities`) and crops of game screenshots used as test data (`tests/vision/frames`). The scanner compares them with the game screen, and the interface uses them to show heroes and items. This is common practice for fan tools, as with community wikis and stat sites. If you are a rights holder and want something removed, open an issue.
 
+### Fonts: Valve Pulp and Valve Occult
+
+`src/assets/fonts/ValvePulp-Bold.woff2` and `src/assets/fonts/ValveOccult-SemiBold.woff2` are Deadlock's own typefaces, © 2025 Valve Corporation, downloaded from [deadlock.wiki/Help:Font](https://deadlock.wiki/Help:Font). Their licence metadata reads: "All Rights Reserved. Like other Valve game content, you may use this font to create Fan Art, as described in the Steam Subscriber Agreement." They are used here, unchanged, for the titles and labels of this fan tool. They are not covered by the MIT licence and must not be reused outside fan works.
+
 ## Game data and statistics — deadlock-api.com
 
 Item catalogue, hero abilities, official names and descriptions (French and English), meta builds, pick and win rates come from [deadlock-api.com](https://deadlock-api.com), a community API. `scripts/update-builds.mjs` downloads them, and the results are in `src/data/generated/` and `public/icons/items/api/`. Thanks to its maintainers.
@@ -23,4 +27,4 @@ Item catalogue, hero abilities, official names and descriptions (French and Engl
 | [electron-updater](https://www.electron.build/auto-update) | MIT | Updates of the installed version |
 | [Lucide](https://lucide.dev) | ISC | Interface icons |
 | [Tailwind CSS](https://tailwindcss.com) | MIT | Styles |
-| Cinzel, Inter (Google Fonts) | SIL Open Font License 1.1 | Fonts |
+| [Inter](https://rsms.me/inter/) (`src/assets/fonts/Inter-*.woff2`) | SIL Open Font License 1.1 | Body text font |

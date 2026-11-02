@@ -14,9 +14,9 @@ import { SHOP_TABS } from './ShopHelpers';
 
 /** The bars in the shop tab colours */
 const BAR_COLOR: Record<ItemCategory, string> = {
-  weapon: 'bg-orange-400',
-  vitality: 'bg-emerald-400',
-  spirit: 'bg-purple-400',
+  weapon: 'bg-weapon-400',
+  vitality: 'bg-vitality-400',
+  spirit: 'bg-spirit-400',
 };
 
 /**
@@ -28,7 +28,7 @@ export const SpikeChip: React.FC<{ badge: SpikeBadge; compact?: boolean }> = ({ 
   const category = t(`category.${badge.category}`);
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-lg border font-bold bg-white/5 border-white/20 text-slate-100 ${
+      className={`flex items-center gap-1.5 rounded-lg border font-bold bg-bone/5 border-bone/20 text-ink ${
         compact ? 'px-1.5 py-0.5' : 'px-2 py-1'
       } text-small`}
       title={t('invest.spikeTitle')}
@@ -56,17 +56,17 @@ const PaceLine: React.FC<{ investment: InvestmentProgress; clockS?: number; comp
   const slowerMinute = String(Math.round(pace.lowRank));
   switch (paceStatus(investment, clockS)) {
     case 'past':
-      return <span className="text-slate-400">{t(compact ? 'invest.offShort' : 'invest.off', spikeNumber)}</span>;
+      return <span className="text-ink-muted">{t(compact ? 'invest.offShort' : 'invest.off', spikeNumber)}</span>;
     case 'topUp':
-      return <span className="text-slate-400">{t(compact ? 'invest.coreDoneShort' : 'invest.coreDone', formatNumber(CHEAP_TOP_UP))}</span>;
+      return <span className="text-ink-muted">{t(compact ? 'invest.coreDoneShort' : 'invest.coreDone', formatNumber(CHEAP_TOP_UP))}</span>;
     case 'behind':
       return (
-        <span className="font-bold text-amber-300">
+        <span className="font-bold text-accent-300">
           {t(compact ? 'invest.behindShort' : 'invest.behind', spikeNumber, slowerMinute)}
         </span>
       );
     case 'onPace':
-      return <span className="text-slate-400">{t(compact ? 'invest.paceShort' : 'invest.pace', spikeNumber, range)}</span>;
+      return <span className="text-ink-muted">{t(compact ? 'invest.paceShort' : 'invest.pace', spikeNumber, range)}</span>;
   }
 };
 
@@ -82,17 +82,17 @@ const CategoryBar: React.FC<{ category: CategoryInvestment; isTarget: boolean; n
     <div className={`flex-1 min-w-0 space-y-1 ${isTarget || category.done ? '' : 'opacity-60'}`}>
       <div className="flex items-center justify-between gap-1 text-small">
         <span className={`flex items-center gap-1 font-bold ${className}`}>
-          {number !== undefined && <span className="text-slate-500">{number}</span>}
+          {number !== undefined && <span className="text-ink-faint">{number}</span>}
           <Icon className="w-3 h-3 shrink-0" aria-hidden />
           {t(`category.${category.category}`)}
         </span>
-        <span className={`tabular-nums ${category.done ? 'font-bold text-slate-200' : 'text-slate-300'}`}>
+        <span className={`tabular-nums ${category.done ? 'font-bold text-ink' : 'text-ink-soft'}`}>
           {category.done
             ? `✓ ${formatNumber(category.souls)}`
             : `${formatNumber(category.souls)} / ${formatNumber(KEY_SPIKE)}`}
         </span>
       </div>
-      <div className={`h-1.5 rounded-full bg-white/10 overflow-hidden ${isTarget ? 'ring-1 ring-white/30' : ''}`}>
+      <div className={`h-1.5 rounded-full bg-bone/10 overflow-hidden ${isTarget ? 'ring-1 ring-bone/30' : ''}`}>
         <div
           className={`h-full rounded-full ${BAR_COLOR[category.category]}`}
           style={{ width: `${Math.min(100, (category.souls / KEY_SPIKE) * 100)}%` }}
@@ -115,7 +115,7 @@ export const InvestmentLine: React.FC<{ investment: InvestmentProgress; clockS?:
   const { categories, target } = investment;
   if (!target) {
     return (
-      <p className="text-small text-slate-400" title={t('invest.title')}>
+      <p className="text-small text-ink-muted" title={t('invest.title')}>
         {t('invest.allDone', formatNumber(KEY_SPIKE))}
       </p>
     );
@@ -133,7 +133,7 @@ export const InvestmentLine: React.FC<{ investment: InvestmentProgress; clockS?:
   return (
     <div className="space-y-1.5" title={t('invest.title')}>
       <div className="flex items-baseline justify-between gap-2 flex-wrap text-small">
-        <span className="font-bold text-slate-200">{t('invest.label', formatNumber(KEY_SPIKE))}</span>
+        <span className="font-bold text-ink">{t('invest.label', formatNumber(KEY_SPIKE))}</span>
         <PaceLine investment={investment} clockS={clockS} compact={false} />
       </div>
       <div className="flex gap-3">

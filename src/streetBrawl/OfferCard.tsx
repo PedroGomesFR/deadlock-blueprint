@@ -24,7 +24,7 @@ export const OfferIcon: React.FC<{ itemId: string; lang: Lang; size: number }> =
       src={legendary.icon}
       alt=""
       style={{ width: size, height: size }}
-      className="rounded-lg border border-amber-300/70 shrink-0 object-cover"
+      className="rounded-lg border border-accent-300/70 shrink-0 object-cover"
       draggable={false}
     />
   );
@@ -42,20 +42,20 @@ export const Medallion: React.FC<{ itemId: string; size: number; rare?: boolean;
 }) => {
   const info = itemInfo(itemId);
   const legendary = Boolean(LEGENDARY_ITEMS[itemId]);
-  const ring = legendary ? LEGENDARY_GOLD : info ? CATEGORY_RING[info.category as keyof typeof CATEGORY_RING] : '#57534e';
+  const ring = legendary ? LEGENDARY_GOLD : info ? CATEGORY_RING[info.category as keyof typeof CATEGORY_RING] : 'rgb(var(--ink-ghost))';
   const icon = itemIcon(itemId);
   const badge = Math.max(14, Math.round(size * 0.32));
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <div
-        className="w-full h-full rounded-full overflow-hidden bg-[#1a1612] flex items-center justify-center"
+        className="w-full h-full rounded-full overflow-hidden bg-surface-raised flex items-center justify-center"
         style={{ border: `${size >= 48 ? 3 : 2}px solid ${ring}`, boxShadow: rare ? `0 0 0 2px ${RARE_TEAL}` : undefined }}
       >
         {icon && <img src={icon} alt="" className="w-[78%] h-[78%] object-contain" draggable={false} />}
       </div>
       {info && (
         <span
-          className="absolute -top-0.5 -right-0.5 rounded-full flex items-center justify-center text-small font-extrabold text-[#1a1612]"
+          className="absolute -top-0.5 -right-0.5 rounded-full flex items-center justify-center text-small font-extrabold text-on-accent"
           style={{ width: badge, height: badge, background: ring }}
         >
           {ROMAN[info.tier]}
@@ -65,7 +65,7 @@ export const Medallion: React.FC<{ itemId: string; size: number; rare?: boolean;
         <Zap
           className="absolute -bottom-0.5 -right-0.5"
           style={{ width: badge, height: badge, color: ENHANCED_CYAN }}
-          fill={ENHANCED_CYAN}
+          fill="currentColor"
           strokeWidth={1}
           aria-hidden
         />
@@ -90,11 +90,11 @@ const ImbueHint: React.FC<{ heroId: string; itemId: string; lang: Lang; compact?
   const text = streetBrawlText(lang);
   const icon = getAbilityIcon(heroId, imbue.ability);
   return (
-    <p className={`flex items-center justify-center flex-wrap gap-x-1 text-violet-200 ${compact ? "text-small" : ""}`}>
+    <p className={`flex items-center justify-center flex-wrap gap-x-1 text-spirit-200 ${compact ? "text-small" : ""}`}>
       <span>{text.imbueOn}</span>
       {icon && <img src={icon} alt="" className="w-3.5 h-3.5 object-contain" draggable={false} />}
       <span className="font-bold">{imbue.abilityName}</span>
-      {!compact && <span className="text-violet-300/70">· {text.imbueSource(`${Math.round(imbue.share * 100)}%`)}</span>}
+      {!compact && <span className="text-spirit-300/70">· {text.imbueSource(`${Math.round(imbue.share * 100)}%`)}</span>}
     </p>
   );
 };
@@ -150,30 +150,30 @@ export const OfferCard: React.FC<{
   }
   const reasonGood = !(reason.kind === 'owned' || reason.kind === 'noData' || (reason.kind === 'item' && reason.gain < 0));
   const frame = isPick
-    ? 'bg-emerald-950/40 border-2 border-emerald-400'
+    ? 'bg-good-950/40 border-2 border-good-400'
     : alsoFine
-      ? 'bg-emerald-950/20 border-2 border-emerald-400/60'
-      : 'bg-[#16130f] border border-white/10';
+      ? 'bg-good-950/20 border-2 border-good-400/60'
+      : 'bg-surface-panel border border-bone/10';
   const stepBack = muted || r.owned || (!isPick && !alsoFine && rank === 3);
 
   return (
     <div
       tabIndex={0}
-      className={`group relative h-full flex flex-col items-center text-center gap-1.5 rounded-xl px-2 pt-2 pb-2.5 outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-[#ede3cc]/60 ${frame} ${
+      className={`group relative h-full flex flex-col items-center text-center gap-1.5 rounded-xl px-2 pt-2 pb-2.5 outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-bone/60 ${frame} ${
         stepBack ? 'opacity-55 hover:opacity-100 focus:opacity-100' : ''
       }`}
     >
-      <span className="text-small uppercase tracking-[0.14em] text-stone-500">{text.position[r.card.position]}</span>
+      <span className="text-small uppercase tracking-caps text-ink-faint">{text.position[r.card.position]}</span>
 
       <div className="flex items-center gap-1">
         <Medallion itemId={r.itemId} size={56} rare={r.card.rare} enhanced={r.card.enhanced} />
         {r.card.hasBonus && (
           <>
-            <span className="text-title font-extrabold text-violet-300">+</span>
+            <span className="text-title font-extrabold text-spirit-300">+</span>
             {r.card.bonusItemId ? (
               <Medallion itemId={r.card.bonusItemId} size={40} />
             ) : (
-              <span className="w-10 h-10 rounded-full border-2 border-dashed border-violet-400/60 text-violet-300 font-extrabold flex items-center justify-center">
+              <span className="w-10 h-10 rounded-full border-2 border-dashed border-spirit-400/60 text-spirit-300 font-extrabold flex items-center justify-center">
                 ?
               </span>
             )}
@@ -184,17 +184,17 @@ export const OfferCard: React.FC<{
       <p className={`text-title font-extrabold leading-tight ${BONE} line-clamp-2 min-h-[2.5rem] flex items-center justify-center`}>
         <span>
           {name(r.itemId)}
-          {r.card.bonusItemId && <span className="text-violet-200"> + {name(r.card.bonusItemId)}</span>}
+          {r.card.bonusItemId && <span className="text-spirit-200"> + {name(r.card.bonusItemId)}</span>}
         </span>
       </p>
 
       <span
         className={`mt-auto px-2 py-0.5 rounded-full text-small font-extrabold ${
           isPick
-            ? 'bg-emerald-400 text-emerald-950'
+            ? 'bg-good-400 text-good-950'
             : alsoFine
-              ? 'border border-emerald-400 text-emerald-200'
-              : 'border border-white/15 text-stone-400'
+              ? 'border border-good-400 text-good-200'
+              : 'border border-bone/15 text-ink-muted'
         }`}
       >
         #{rank}
@@ -202,22 +202,22 @@ export const OfferCard: React.FC<{
         {alsoFine && ` · ${text.alsoFine}`}
       </span>
 
-      <span className={`text-small font-bold ${reasonGood ? 'text-amber-200' : 'text-stone-400'}`}>{reasonText}</span>
+      <span className={`text-small font-bold ${reasonGood ? 'text-accent-200' : 'text-ink-muted'}`}>{reasonText}</span>
       <ImbueHint heroId={heroId} itemId={r.itemId} lang={lang} compact />
 
       {/* The full breakdown: floats under the card on hover or keyboard focus, so the three cards keep one height */}
       <div className="pointer-events-none invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0 transition duration-150 ease-out motion-reduce:transition-none absolute left-0 right-0 top-full z-20 mt-1">
-        <div className="rounded-xl border border-white/15 bg-[#1a1612] p-2.5 text-small text-stone-300 space-y-1">
+        <div className="rounded-xl border border-bone/15 bg-surface-raised p-2.5 text-small text-ink-soft space-y-1">
           <p>{r.winRate !== null && r.itemGain !== null ? text.winRate(r.winRate, r.itemGain, lang) : text.noData}</p>
-          {r.card.enhanced && r.winRate !== null && <p className="text-cyan-200">{text.enhancedCopy}</p>}
-          {r.soulGain > 0 && <p className="text-amber-200/80">{text.tierWorth(r.soulGain, lang)}</p>}
+          {r.card.enhanced && r.winRate !== null && <p className="text-enhanced-200">{text.enhancedCopy}</p>}
+          {r.soulGain > 0 && <p className="text-accent-200/80">{text.tierWorth(r.soulGain, lang)}</p>}
           {r.pathTo && (
-            <p className="text-emerald-200/90">
+            <p className="text-good-200/90">
               {text.path(name(r.pathTo.upgrade), r.pathTo.gain, r.pathTo.extraChance, r.pathGain, heroName, lang)}
             </p>
           )}
           {r.card.bonusItemId && (
-            <p className="text-violet-200/80">
+            <p className="text-spirit-200/80">
               {name(r.card.bonusItemId)}: {bonusStat ? text.winRate(bonusStat.winRate, bonusStat.gain, lang) : text.noData}
             </p>
           )}

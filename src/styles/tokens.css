@@ -1,0 +1,113 @@
+/* Design tokens: every colour, font, text size, radius and shadow of the interface is defined here, once.
+   tailwind.config.js maps them to class names (bg-surface-panel, text-ink-muted, text-accent-300, font-display,
+   rounded-lg, shadow-overlay...), and src/designTokens.test.ts rejects raw Tailwind palette colours and hex values
+   in the components. Colours are RGB channels so Tailwind's opacity modifiers work (bg-accent-500/10). */
+
+/* Fonts, bundled with the app (it runs offline). Valve Pulp and Valve Occult are Deadlock's own typefaces (Valve
+   Corporation, fan-art use under the Steam Subscriber Agreement, see NOTICE.md); Inter is SIL OFL 1.1. */
+@font-face {
+  font-family: 'Valve Pulp';
+  src: url('../assets/fonts/ValvePulp-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Valve Occult';
+  src: url('../assets/fonts/ValveOccult-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-latin.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/Inter-latin-ext.woff2') format('woff2');
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+
+:root {
+  /* Type. Three families, each with one job:
+     display (Valve Pulp, a caps face): screen, dialog and section titles, tabs;
+     label (Valve Occult): buttons and the names of items, heroes and cards, as on the game's buttons and shop tiles;
+     body (Inter): sentences and numbers. */
+  --font-display: 'Valve Pulp', 'Inter', system-ui, sans-serif;
+  --font-label: 'Valve Occult', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Type scale (measured-type: scripts/type-scale.js --base 0.8125rem --ratio 1.2 --steps 3, all fixed, every step
+     at least 1.15x the one below, sizes in rem so they follow the zoom). Each size has its own line height. */
+  --text-small: 0.6875rem; /* 11px: badges, captions, secondary lines (13 / 1.2) */
+  --text-small-leading: 1rem;
+  --text-body: 0.8125rem; /* 13px: default text, buttons */
+  --text-body-leading: 1.125rem;
+  --text-title: 0.975rem; /* 15.6px: item and card names, section titles */
+  --text-title-leading: 1.25rem;
+  --text-heading: 1.17rem; /* 18.7px: dialog titles */
+  --text-heading-leading: 1.5rem;
+  --tracking-caps: 0.08em; /* uppercase labels (measured-type: caps +5% to +10%) */
+  --tracking-display: 0.03em; /* Valve Pulp titles */
+
+  /* Neutrals: one warm ramp, the game's smoky near-black and bone. */
+  --surface-base: 13 11 10; /* window background */
+  --surface-header: 17 14 12; /* header and tab bars */
+  --surface-panel: 22 18 16; /* panels and cards */
+  --surface-raised: 31 26 23; /* cards on panels, popovers */
+  --surface-line: 52 44 38; /* solid borders */
+  --ink-strong: 246 239 225; /* titles, values (was white) */
+  --ink: 230 220 203; /* main text */
+  --ink-soft: 201 190 169; /* secondary text */
+  --ink-muted: 163 151 132; /* hints, labels */
+  --ink-faint: 125 114 100; /* tertiary, disabled */
+  --ink-ghost: 92 82 72; /* separators drawn in text */
+  --on-accent: 22 15 8; /* text on bright fills (accent, good, choice) */
+  --bone: 237 227 204; /* translucent fills and lines: bg-bone/5, border-bone/10 */
+  --shade: 0 0 0; /* wells and scrims: bg-shade/50 */
+
+  /* Hues. Each family is a Tailwind palette under a name that says what it means. */
+  /* accent (Tailwind amber) */
+  --accent-100: 254 243 199; --accent-200: 253 230 138; --accent-300: 252 211 77; --accent-400: 251 191 36; --accent-500: 245 158 11; --accent-600: 217 119 6; --accent-700: 180 83 9; --accent-800: 146 64 14; --accent-900: 120 53 15; --accent-950: 69 26 3;
+  /* good (Tailwind emerald) */
+  --good-100: 209 250 229; --good-200: 167 243 208; --good-300: 110 231 183; --good-400: 52 211 153; --good-500: 16 185 129; --good-600: 5 150 105; --good-700: 4 120 87; --good-800: 6 95 70; --good-900: 6 78 59; --good-950: 2 44 34;
+  /* bad (Tailwind red) */
+  --bad-100: 254 226 226; --bad-200: 254 202 202; --bad-300: 252 165 165; --bad-400: 248 113 113; --bad-500: 239 68 68; --bad-600: 220 38 38; --bad-700: 185 28 28; --bad-800: 153 27 27; --bad-900: 127 29 29; --bad-950: 69 10 10;
+  /* weapon (Tailwind orange) */
+  --weapon-100: 255 237 213; --weapon-200: 254 215 170; --weapon-300: 253 186 116; --weapon-400: 251 146 60; --weapon-500: 249 115 22; --weapon-600: 234 88 12; --weapon-700: 194 65 12; --weapon-800: 154 52 18; --weapon-900: 124 45 18; --weapon-950: 67 20 7;
+  /* spirit (Tailwind purple) */
+  --spirit-100: 243 232 255; --spirit-200: 233 213 255; --spirit-300: 216 180 254; --spirit-400: 192 132 252; --spirit-500: 168 85 247; --spirit-600: 147 51 234; --spirit-700: 126 34 206; --spirit-800: 107 33 168; --spirit-900: 88 28 135; --spirit-950: 59 7 100;
+  /* vitality (Tailwind green) */
+  --vitality-100: 220 252 231; --vitality-200: 187 247 208; --vitality-300: 134 239 172; --vitality-400: 74 222 128; --vitality-500: 34 197 94; --vitality-600: 22 163 74; --vitality-700: 21 128 61; --vitality-800: 22 101 52; --vitality-900: 20 83 45; --vitality-950: 5 46 22;
+  /* choice (Tailwind fuchsia) */
+  --choice-100: 250 232 255; --choice-200: 245 208 254; --choice-300: 240 171 252; --choice-400: 232 121 249; --choice-500: 217 70 239; --choice-600: 192 38 211; --choice-700: 162 28 175; --choice-800: 134 25 143; --choice-900: 112 26 117; --choice-950: 74 4 78;
+  /* info (Tailwind teal) */
+  --info-100: 204 251 241; --info-200: 153 246 228; --info-300: 94 234 212; --info-400: 45 212 191; --info-500: 20 184 166; --info-600: 13 148 136; --info-700: 15 118 110; --info-800: 17 94 89; --info-900: 19 78 74; --info-950: 4 47 46;
+  /* enhanced (Tailwind cyan) */
+  --enhanced-100: 207 250 254; --enhanced-200: 165 243 252; --enhanced-300: 103 232 249; --enhanced-400: 34 211 238; --enhanced-500: 6 182 212; --enhanced-600: 8 145 178; --enhanced-700: 14 116 144; --enhanced-800: 21 94 117; --enhanced-900: 22 78 99; --enhanced-950: 8 51 68;
+  --legendary: 212 175 55; /* gold of legendary items */
+
+  /* Radius */
+  --radius-sm: 0.25rem; /* small marks */
+  --radius-md: 0.375rem; /* badges, segments */
+  --radius-lg: 0.5rem; /* controls, rows */
+  --radius-xl: 0.75rem; /* cards */
+  --radius-2xl: 1rem; /* panels, dialogs */
+
+  /* Elevation */
+  --shadow-raised: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+  --shadow-overlay: 0 25px 50px -12px rgb(0 0 0 / 0.6);
+  --shadow-pill: inset 0 0 0 1px rgb(var(--bone) / 0.28); /* the thin light ring inside the game's pill buttons */
+  --shadow-text: 0 2px 4px rgb(0 0 0 / 0.8); /* text and badges drawn on images */
+}
