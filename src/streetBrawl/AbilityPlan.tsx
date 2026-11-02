@@ -2,6 +2,7 @@
 // Only the round to play now is spelled out; the others are folded to their ability icons, in order.
 import React from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { IconButton } from '../ui';
 import { getHeroesDb } from '../data/deadlockData';
 import { PowerIcon } from '../components/DeadlockIcons';
 import type { Lang } from '../i18n/lang';
@@ -38,27 +39,13 @@ export const AbilityPlan: React.FC<{
   return (
     <section className="space-y-2 pt-3 border-t border-bone/10">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h3 className="text-small font-extrabold uppercase tracking-caps text-ink-muted" title={text.pointsIntro}>
+        <h3 className="font-display text-body tracking-display text-ink-soft" title={text.pointsIntro}>
           {text.pointsTitle}
         </h3>
         <div className="flex items-center gap-1 text-small text-ink-muted">
           <span>{currentRound === null ? text.roundUnknown : text.roundNow(currentRound)}</span>
-          <button
-            onClick={() => onCorrectRound(-1)}
-            title={text.roundEarlier}
-            aria-label={text.roundEarlier}
-            className="p-1 rounded text-ink-soft hover:bg-bone/10"
-          >
-            <Minus className="w-3 h-3" />
-          </button>
-          <button
-            onClick={() => onCorrectRound(1)}
-            title={text.roundLater}
-            aria-label={text.roundLater}
-            className="p-1 rounded text-ink-soft hover:bg-bone/10"
-          >
-            <Plus className="w-3 h-3" />
-          </button>
+          <IconButton label={text.roundEarlier} icon={<Minus className="w-3 h-3" />} onClick={() => onCorrectRound(-1)} />
+          <IconButton label={text.roundLater} icon={<Plus className="w-3 h-3" />} onClick={() => onCorrectRound(1)} />
         </div>
       </div>
       {nothingThisRound && <p className="text-small font-bold text-accent-200">{text.nothingThisRound}</p>}
@@ -70,7 +57,7 @@ export const AbilityPlan: React.FC<{
             const done = currentRound !== null && round < currentRound;
             return (
               <div key={round} className={`flex items-center gap-2 px-2 py-0.5 ${done ? 'opacity-40' : 'opacity-75'}`}>
-                <span className="w-16 shrink-0 text-small uppercase tracking-caps text-ink-faint">{text.round(round)}</span>
+                <span className="w-16 shrink-0 font-display text-small tracking-display text-ink-faint">{text.round(round)}</span>
                 {done && <span className="text-small text-ink-ghost">{text.done}</span>}
                 {steps.map(({ n, step }) => (
                   <PowerIcon key={n} heroId={heroId} abilityKey={step.ability} abilityName={name(step.ability)} size={20} />
@@ -79,16 +66,16 @@ export const AbilityPlan: React.FC<{
             );
           }
           return (
-            <div key={round} className="rounded-xl bg-bone/[0.05] border border-bone/25 p-2.5">
-              <p className={`mb-1.5 text-small font-extrabold uppercase tracking-caps ${BONE}`}>
-                {text.round(round)} <span className="font-normal normal-case tracking-normal text-ink-muted">· {text.upgrades(steps.length)}</span>
+            <div key={round} className="rounded-xl bg-bone/5 border border-bone/25 p-2.5">
+              <p className={`mb-1.5 font-display text-small tracking-display ${BONE}`}>
+                {text.round(round)} <span className="font-body text-ink-muted">· {text.upgrades(steps.length)}</span>
               </p>
               <ol className="space-y-1">
                 {steps.map(({ n, step }) => (
                   <li key={n} className="flex items-center gap-2 text-body">
                     <span className="w-5 shrink-0 text-small text-ink-faint">{n}.</span>
                     <PowerIcon heroId={heroId} abilityKey={step.ability} abilityName={name(step.ability)} size={28} />
-                    <span className={`font-bold ${BONE}`}>{name(step.ability)}</span>
+                    <span className={`font-label ${BONE}`}>{name(step.ability)}</span>
                     <span className="text-small text-ink-faint">
                       {step.mostCommon ? text.mostCommon : `${(step.winRate * 100).toFixed(1)}% · ${step.games.toLocaleString()}`}
                     </span>

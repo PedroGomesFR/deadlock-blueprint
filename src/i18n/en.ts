@@ -47,7 +47,7 @@ export const MESSAGES_EN: Messages = {
   'ally.add': '+ Ally',
   'ally.pick': 'Lane ally',
   'build.n': (n) => `Build #${n}`,
-  'enemies.button': (lane, team) => `VS Lane (${lane})${team > 0 ? ` +${team} Team` : ''}`,
+  'enemies.button': (lane, team) => `Enemies: ${lane} in lane${team > 0 ? ` · ${team} other` : ''}`,
   'enemies.title': (n) => `Enemies (${n}/6)`,
   'enemies.clear': 'Clear all',
   'enemies.myLane': (n, max) => `🎯 My lane (${n}/${max})`,
@@ -56,23 +56,24 @@ export const MESSAGES_EN: Messages = {
   'enemies.team': (n) => `the enemy team (${n})`,
   'enemies.teamBadge': 'Team',
   'autoscan.title': 'Turn silent automatic detection on / off',
-  'autoscan.label': 'Auto',
+  'autoscan.label': 'Auto-detect',
   'scan.title': 'Scan now (Alt+S)',
   'scan.label': 'Scan',
   'settings.open': 'Settings',
 
   'tabs.essential': 'Active build',
-  'tabs.powers': 'Abilities (1-4)',
+  'tabs.powers': 'Abilities',
   'tabs.builds': 'Item details',
   'tabs.matchups': (n) => `Matchups (${n})`,
   'tabs.logs': 'Diagnostics',
 
   'owned.resetTitle': 'Reset the purchased items',
-  'owned.reset': (n) => `Reset (${n})`,
+  'owned.reset': (n) => `New match (${n})`,
+  'owned.resetConfirm': 'Click again to clear all',
   'owned.title': (n) => `🎒 Items owned (${n}, left out of the recommendations):`,
   'owned.removeTitle': 'Click to put this item back into the recommendations',
 
-  'buy.title': (inventory) => `Buy right now — next items (${inventory})`,
+  'buy.title': (inventory) => `Buy next (${inventory})`,
   'buy.help':
     'Only your next purchases are shown here (items you already bought move the list on automatically). The #1 stays fixed until you buy it. Click an item to skip it manually.',
   'buy.unmatched': (n) =>
@@ -83,6 +84,9 @@ export const MESSAGES_EN: Messages = {
   'buy.missing': (n) => `${n} souls short`,
   'buy.skip': 'Skip →',
   'buy.whyTitle': 'Why this item?',
+  'buy.skipped': (name) => `${name}: marked as bought`,
+  'buy.undo': 'Undo',
+  'buy.then': 'Then',
 
   'reason.earlyPriority': 'Early lane priority',
   'reason.laneCounter': 'Priority lane counter',
@@ -115,7 +119,7 @@ export const MESSAGES_EN: Messages = {
   'why.published': 'In the published build with the best win rate',
   'why.handBuild': 'In the selected build',
 
-  'abilities.order': 'Ability order:',
+  'abilities.order': 'Ability order',
   'counters.title': (names, team) => `Next counters VS ${names}${team > 0 ? ` (+${team} Team)` : ''}`,
   'phases.early': '1. Early lane — still to buy',
   'phases.mid': '2. Mid game (1,600) — next',
@@ -238,6 +242,8 @@ export const MESSAGES_EN: Messages = {
   'settings.title': 'Settings',
   'settings.close': 'Close',
   'settings.language': 'Language',
+  'settings.uiSize': 'Interface size',
+  'settings.uiSizeAuto': 'Auto',
   'settings.gameLogs': 'Game logs',
   'settings.gameLogsDesc':
     'Saves, on your PC only, what the scanner sees during a match: a text file and HUD captures (inventory, top bar) every 2 s, about 30 MB per match, last 5 matches kept. Nothing is sent: these files only leave your PC if you attach them to a report yourself.',

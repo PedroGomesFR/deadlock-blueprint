@@ -172,18 +172,15 @@ export const ItemArtworkIcon: React.FC<{
     },
   }[category];
 
+  // The shop art fills the whole tile, cut by the rounded corners (the gradient only shows behind a missing image)
+  const radius = size <= 24 ? 'rounded-md' : size <= 40 ? 'rounded-lg' : 'rounded-xl';
   return (
     <div
       style={{ width: size, height: size }}
-      className={`rounded-xl bg-gradient-to-b ${palette.bg} border ${palette.border} flex items-center justify-center shrink-0 shadow-raised p-1.5 relative overflow-hidden`}
+      className={`${radius} bg-gradient-to-b ${palette.bg} border ${palette.border} flex items-center justify-center shrink-0 shadow-raised relative overflow-hidden`}
     >
       {iconSrc ? (
-        <img
-          src={iconSrc}
-          alt={iconKey || itemId}
-          className="w-full h-full object-contain drop-shadow-text"
-          draggable={false}
-        />
+        <img src={iconSrc} alt={iconKey || itemId} className="w-full h-full object-cover" draggable={false} />
       ) : (
         <span className="text-small font-bold text-ink-strong">{itemId.slice(0, 2).toUpperCase()}</span>
       )}

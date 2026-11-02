@@ -47,7 +47,7 @@ export const MESSAGES_IT: Messages = {
   'ally.add': '+ Alleato',
   'ally.pick': 'Alleato in corsia',
   'build.n': (n) => `Build #${n}`,
-  'enemies.button': (lane, team) => `VS Corsia (${lane})${team > 0 ? ` +${team} Squadra` : ''}`,
+  'enemies.button': (lane, team) => `Nemici: ${lane} in corsia${team > 0 ? ` · ${team} altri` : ''}`,
   'enemies.title': (n) => `Nemici (${n}/6)`,
   'enemies.clear': 'Svuota tutto',
   'enemies.myLane': (n, max) => `🎯 La mia corsia (${n}/${max})`,
@@ -56,23 +56,24 @@ export const MESSAGES_IT: Messages = {
   'enemies.team': (n) => `la squadra nemica (${n})`,
   'enemies.teamBadge': 'Squadra',
   'autoscan.title': 'Attiva / disattiva il rilevamento automatico silenzioso',
-  'autoscan.label': 'Auto',
+  'autoscan.label': 'Rilevamento auto',
   'scan.title': 'Scansiona ora (Alt+S)',
   'scan.label': 'Scan',
   'settings.open': 'Impostazioni',
 
   'tabs.essential': 'Build attiva',
-  'tabs.powers': 'Abilità (1-4)',
+  'tabs.powers': 'Abilità',
   'tabs.builds': 'Dettagli oggetti',
   'tabs.matchups': (n) => `Matchup (${n})`,
   'tabs.logs': 'Diagnostica',
 
   'owned.resetTitle': 'Azzera gli oggetti acquistati',
-  'owned.reset': (n) => `Reset (${n})`,
+  'owned.reset': (n) => `Nuova partita (${n})`,
+  'owned.resetConfirm': 'Clicca di nuovo per azzerare',
   'owned.title': (n) => `🎒 Oggetti posseduti (${n}, esclusi dai consigli):`,
   'owned.removeTitle': 'Clicca per rimettere questo oggetto nei consigli',
 
-  'buy.title': (inventory) => `Da comprare subito — prossimi oggetti (${inventory})`,
+  'buy.title': (inventory) => `Da comprare (${inventory})`,
   'buy.help':
     "Qui compaiono solo i tuoi prossimi acquisti (gli oggetti già comprati fanno avanzare la lista da soli). Il #1 resta fisso finché non lo compri. Clicca su un oggetto per saltarlo a mano.",
   'buy.unmatched': (n) =>
@@ -83,6 +84,9 @@ export const MESSAGES_IT: Messages = {
   'buy.missing': (n) => `Mancano ${n} anime`,
   'buy.skip': 'Salta →',
   'buy.whyTitle': 'Perché questo oggetto?',
+  'buy.skipped': (name) => `${name}: segnato come comprato`,
+  'buy.undo': 'Annulla',
+  'buy.then': 'Poi',
 
   'reason.earlyPriority': 'Priorità inizio corsia',
   'reason.laneCounter': 'Counter prioritario in corsia',
@@ -115,7 +119,7 @@ export const MESSAGES_IT: Messages = {
   'why.published': 'Nella build pubblicata con il miglior tasso di vittoria',
   'why.handBuild': 'Nella build scelta',
 
-  'abilities.order': 'Ordine abilità:',
+  'abilities.order': 'Ordine abilità',
   'counters.title': (names, team) => `Prossimi counter VS ${names}${team > 0 ? ` (+${team} Squadra)` : ''}`,
   'phases.early': '1. Inizio corsia — ancora da comprare',
   'phases.mid': '2. Metà partita (1.600) — poi',
@@ -239,6 +243,8 @@ export const MESSAGES_IT: Messages = {
   'settings.title': 'Impostazioni',
   'settings.close': 'Chiudi',
   'settings.language': 'Lingua',
+  'settings.uiSize': 'Dimensione interfaccia',
+  'settings.uiSizeAuto': 'Auto',
   'settings.gameLogs': 'Registri delle partite',
   'settings.gameLogsDesc':
     "Salva, solo sul tuo PC, quello che lo scanner vede durante una partita: un file di testo e catture dello HUD (inventario, barra in alto) ogni 2 s, circa 30 MB a partita, conservate le ultime 5 partite. Non viene inviato niente: questi file lasciano il tuo PC solo se li alleghi tu a una segnalazione.",

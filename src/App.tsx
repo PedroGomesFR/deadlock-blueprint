@@ -16,6 +16,7 @@ import {
   Shuffle,
   Swords,
   Terminal,
+  Undo2,
   Unlock,
   UserPlus,
   X,
@@ -85,6 +86,7 @@ import { Lang, detectLang, readStoredLang, storeLang } from './i18n/lang';
 // Street Brawl mode: everything lives in src/streetBrawl, the app only shows its tab
 import { StreetBrawlPanel } from './streetBrawl/StreetBrawlPanel';
 import { streetBrawlText } from './streetBrawl/i18n';
+import { Badge, Button, Card, IconButton, InfoTip, PickTile, PopoverPanel, SectionHeader, SegmentedControl, Tabs, Toast } from './ui';
 
 type MainTab = 'essential' | 'builds' | 'powers' | 'matchups' | 'logs' | 'streetBrawl';
 
@@ -148,33 +150,42 @@ const DANGER_KEYS = {
   High: 'danger.High',
   Extreme: 'danger.Extreme',
 } as const;
+// Only a real threat is red: a "Low" danger in red read as an alarm
+const DANGER_TONE = { Low: 'neutral', Medium: 'accent', High: 'bad', Extreme: 'bad' } as const;
 
 // Enemy stance (real matchup of my hero, or fed): label and colours of the enemy strip and the matchup cards
 const STANCE_KEYS = { avoid: 'stance.avoid', even: 'stance.even', focus: 'stance.focus' } as const;
 const STANCE_STYLE = {
   avoid: 'bg-bad-500/20 border-bad-400/60 text-bad-200',
   even: 'bg-bone/5 border-bone/15 text-ink-soft',
-  focus: 'bg-good-500/20 border-good-400/60 text-good-200',
-  fed: 'bg-weapon-500/30 border-weapon-400 text-weapon-100',
+  focus: 'bg-accent-500/20 border-accent-400/60 text-accent-200',
+  fed: 'bg-bad-500/35 border-bad-400 text-bad-100',
 } as const;
 type MatchupAlert = TacticalRecommendation['matchupAlerts'][number];
 
-// "Now" orders: red = back off, green = go, amber = who to hit
+// "Now" orders, three colours only (the icon tells the kind): red = back off, amber = who to hit, bone = do it
+const GO = 'text-ink-strong';
+const BACK_OFF = 'text-bad-300';
 const NOW_STYLE: Record<NowAdvice['kind'], { icon: string; className: string }> = {
-  dead: { icon: '💀', className: 'text-ink' },
-  buy: { icon: '🛒', className: 'text-good-300' },
-  farm: { icon: '🌾', className: 'text-info-200' },
-  safe: { icon: '🛡', className: 'text-bad-300' },
-  push: { icon: '⚔', className: 'text-good-300' },
-  midBoss: { icon: '🐉', className: 'text-choice-300' },
-  soulsBehind: { icon: '📉', className: 'text-bad-300' },
-  soulsAhead: { icon: '📈', className: 'text-good-300' },
-  partnerDead: { icon: '⚠', className: 'text-bad-300' },
-  pushLane: { icon: '➡', className: 'text-good-300' },
-  help: { icon: '🤝', className: 'text-enhanced-300' },
+  dead: { icon: '💀', className: 'text-ink-soft' },
+  buy: { icon: '🛒', className: GO },
+  farm: { icon: '🌾', className: GO },
+  safe: { icon: '🛡', className: BACK_OFF },
+  push: { icon: '⚔', className: GO },
+  midBoss: { icon: '🐉', className: GO },
+  soulsBehind: { icon: '📉', className: BACK_OFF },
+  soulsAhead: { icon: '📈', className: GO },
+  partnerDead: { icon: '⚠', className: BACK_OFF },
+  pushLane: { icon: '➡', className: GO },
+  help: { icon: '🤝', className: GO },
   focus: { icon: '🎯', className: 'text-accent-300' },
-  avoid: { icon: '🚫', className: 'text-bad-300' },
+  avoid: { icon: '🚫', className: BACK_OFF },
 };
+
+// Interface size of the main window (Settings)
+const UI_SCALE_KEY = 'dl_uiScale';
+const UI_SCALES = ['auto', '100', '115', '130'] as const;
+export type UiScale = (typeof UI_SCALES)[number];
 
 // My hero is auto-detected once per match, then locked (persisted so a restart mid-match keeps it)
 const HERO_LOCKED_KEY = 'dl_heroLocked';
@@ -407,6 +418,7 @@ export function App() {
   // Navigation Tabs & Popovers
   const [activeTab, setActiveTab] = useState<MainTab>('essential');
   const [openPopover, setOpenPopover] = useState<'myHero' | 'ally' | 'enemies' | null>(null);
+  const closePopover = useCallback(() => setOpenPopover(null), []);
   const [enemyPopoverMode, setEnemyPopoverMode] = useState<'lane' | 'team'>('lane');
 
   // Screen Vision & Overlay State (100% Silent, Zero Distraction)
@@ -888,6 +900,48 @@ export function App() {
     });
   };
 
+  // "Skip" in the buy list marks the item bought, with an Undo: a stray click on a second monitor is easy
+  const [skipped, setSkipped] = useState<{ itemId: string; name: string } | null>(null);
+  const skipItem = (itemId: string, name: string) => {
+    handleToggleOwnedItem(itemId);
+    setSkipped({ itemId, name });
+  };
+  const undoSkip = () => {
+    if (!skipped) return;
+    const { itemId } = skipped;
+    setOwnedItems((prev) => {
+      const manualOwned = readManualOwned();
+      manualOwned.delete(itemId);
+      writeManualOwned(manualOwned);
+      const next = prev.filter((id) => id !== itemId);
+      localStorage.setItem('dl_ownedItems', JSON.stringify(next));
+      snapshotRef.current = { ...snapshotRef.current, ownedItems: next };
+      return next;
+    });
+    setSkipped(null);
+  };
+  const dismissSkipped = useCallback(() => setSkipped(null), []);
+
+  // "New match" clears the whole match state: a second click within 4 s confirms it
+  const [resetArmed, setResetArmed] = useState(false);
+  useEffect(() => {
+    if (!resetArmed) return;
+    const timer = setTimeout(() => setResetArmed(false), 4000);
+    return () => clearTimeout(timer);
+  }, [resetArmed]);
+
+  // Interface size of the main window (CSS zoom; the overlay has its own size). Auto: larger on 1440p screens and up.
+  const [uiScale, setUiScale] = useState<UiScale>(() => {
+    const stored = localStorage.getItem(UI_SCALE_KEY);
+    return UI_SCALES.includes(stored as UiScale) ? (stored as UiScale) : 'auto';
+  });
+  useEffect(() => {
+    if (isDedicatedOverlayWindow) return;
+    const factor = uiScale === 'auto' ? (window.screen.width >= 2400 ? 1.15 : 1) : Number(uiScale) / 100;
+    document.documentElement.style.setProperty('zoom', String(factor));
+    localStorage.setItem(UI_SCALE_KEY, uiScale);
+  }, [uiScale, isDedicatedOverlayWindow]);
+
   const refreshSources = useCallback(async () => {
     if (!window.electronAPI) return;
     const list = await window.electronAPI.getSources();
@@ -1303,23 +1357,22 @@ export function App() {
         </span>
         {canClick && (
           <span className="flex items-center gap-1">
-            <button
+            <Button
+              size="sm"
               onClick={() =>
                 storeMidBoss({ kills: (midBoss?.kills ?? 0) + 1, lastKillAt: Date.now(), previous: midBoss ?? undefined })
               }
               title={t('now.midBossTakenTitle')}
-              className="px-2 py-0.5 rounded-md border border-choice-400/40 bg-choice-500/15 hover:bg-choice-500/30 font-bold text-choice-200"
+              className="text-choice-200"
             >
               {t('now.midBossTaken')}
-            </button>
+            </Button>
             {midBoss && (
-              <button
+              <IconButton
+                label={t('now.midBossUndoTitle')}
+                icon={<Undo2 className="w-3.5 h-3.5" />}
                 onClick={() => storeMidBoss(midBoss.previous ?? null)}
-                title={t('now.midBossUndoTitle')}
-                className="px-1.5 py-0.5 rounded-md border border-bone/15 bg-bone/5 hover:bg-bone/15 font-bold text-ink-soft"
-              >
-                ↶
-              </button>
+              />
             )}
           </span>
         )}
@@ -1378,42 +1431,37 @@ export function App() {
 
               <div className="no-drag flex items-center gap-1 shrink-0">
                 {!isClickThrough && (
-                  <button
+                  <Button
+                    size="sm"
+                    pressed={isOverlayArranging}
+                    pressedVariant="primary"
                     onClick={handleToggleArranging}
                     title={t('overlay.settingsTitle')}
-                    className={`p-1.5 rounded-lg border transition ${
-                      isOverlayArranging
-                        ? 'bg-accent-500 border-accent-300 text-on-accent'
-                        : 'bg-bone/10 border-bone/15 text-ink hover:bg-bone/20'
-                    }`}
-                  >
-                    <Settings className="w-3 h-3" />
-                  </button>
+                    aria-label={t('overlay.settingsTitle')}
+                    className="px-1.5 py-1"
+                    icon={<Settings className="w-3 h-3" />}
+                  />
                 )}
-                <button
+                <Button
+                  size="sm"
+                  pressed={isClickThrough}
+                  pressedVariant="danger"
                   onClick={handleToggleClickThrough}
                   title={t('overlay.clickThroughTitle')}
-                  className={`px-2 py-1 rounded-lg text-small font-bold border flex items-center gap-1 transition ${
-                    isClickThrough
-                      ? 'bg-bad-500/35 border-bad-400 text-bad-100'
-                      : 'bg-bone/10 border-bone/15 text-ink hover:bg-bone/20'
-                  }`}
+                  icon={isClickThrough ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                 >
-                  {isClickThrough ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                   Alt+L
-                </button>
-                <button
+                </Button>
+                <IconButton
+                  label={t('overlay.hideTitle')}
+                  icon={<X className="w-3.5 h-3.5" />}
                   onClick={() => window.electronAPI?.setOverlayMode(false)}
-                  title={t('overlay.hideTitle')}
-                  className="px-2 py-1 rounded-lg bg-bone/10 hover:bg-bad-500/30 text-small font-bold text-ink"
-                >
-                  ✕
-                </button>
+                />
               </div>
             </div>
 
             <div className="no-drag px-3 py-1.5 bg-shade/50 border-b border-bone/10 space-y-1">
-              <span className="text-small font-extrabold uppercase tracking-caps text-accent-300">{t('now.title')}</span>
+              <span className="font-display text-small tracking-display text-accent-300">{t('now.title')}</span>
               {renderNow(3, true)}
             </div>
 
@@ -1443,19 +1491,13 @@ export function App() {
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="w-14 shrink-0">{t('overlay.size')}</span>
-                  <div className="flex items-center bg-shade/50 p-0.5 rounded-lg border border-bone/10">
-                    {OVERLAY_SCALES.map((scale) => (
-                      <button
-                        key={scale}
-                        onClick={() => changeOverlayScale(scale)}
-                        className={`px-2 py-0.5 rounded-md transition ${
-                          overlayScale === scale ? 'bg-accent-500 text-on-accent' : 'text-ink-muted hover:text-ink-strong'
-                        }`}
-                      >
-                        {t('overlay.percent', Math.round(scale * 100))}
-                      </button>
-                    ))}
-                  </div>
+                  <SegmentedControl
+                    size="sm"
+                    tone="accent"
+                    value={overlayScale}
+                    onChange={changeOverlayScale}
+                    options={OVERLAY_SCALES.map((scale) => ({ value: scale, label: t('overlay.percent', Math.round(scale * 100)) }))}
+                  />
                 </div>
               </div>
             )}
@@ -1477,8 +1519,8 @@ export function App() {
 
             <div className="no-drag flex-1 overflow-y-auto p-2.5 space-y-2.5">
               <div className="space-y-1.5">
-                <span className="text-small font-extrabold uppercase tracking-caps text-good-300 flex items-center gap-1">
-                  <ShoppingCart className="w-3 h-3 text-good-400" /> {t('overlay.buyNow')}
+                <span className="font-display text-small tracking-display text-ink-strong flex items-center gap-1">
+                  <ShoppingCart className="w-3 h-3 text-accent-400" /> {t('overlay.buyNow')}
                 </span>
                 <InvestmentLine investment={investment} clockS={clockS} compact />
                 {nextToBuyQueue.slice(0, 3).map((entry, idx) => {
@@ -1491,7 +1533,7 @@ export function App() {
                       title={[entry.reason, whyText(entry)].filter(Boolean).join('\n')}
                       className={`p-2 rounded-xl border cursor-pointer transition flex items-center justify-between gap-2 ${
                         canAfford
-                          ? 'bg-good-950/50 border-good-400 shadow-raised'
+                          ? 'bg-accent-950/35 border-accent-400 shadow-raised'
                           : 'bg-surface-panel border-bone/15 hover:border-accent-400/50'
                       }`}
                     >
@@ -1502,7 +1544,7 @@ export function App() {
                         <ItemArtworkIcon itemId={entry.item.id} category={entry.item.category} size={46} />
                         <div className="min-w-0 space-y-0.5">
                           <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-title font-extrabold text-ink-strong truncate">{shortName}</span>
+                            <span className="font-label text-title text-ink-strong truncate">{shortName}</span>
                             {!isClickThrough && <CopyNameButton name={shortName} />}
                           </div>
                           <ShopTabMarker category={entry.item.category} />
@@ -1514,7 +1556,7 @@ export function App() {
                       <div className="text-right shrink-0">
                         <span className="text-title font-extrabold text-info-300 block">{formatNumber(entry.item.cost)}</span>
                         {canAfford && (
-                          <span className="text-small font-extrabold text-good-300">{t('overlay.buy')}</span>
+                          <Badge tone="good" solid className="uppercase">{t('overlay.buy')}</Badge>
                         )}
                       </div>
                     </div>
@@ -1539,15 +1581,97 @@ export function App() {
     trackerRef.current.resetHero();
   };
 
+  /** Price state of a queued item: affordable, or how many souls are missing. */
+  const affordBadge = (cost: number) =>
+    currentSouls === null ? null : currentSouls >= cost ? (
+      <Badge tone="good" solid className="uppercase">
+        {t('buy.affordable')}
+      </Badge>
+    ) : (
+      <Badge className="text-accent-300 tabular-nums">{t('buy.missing', formatNumber(cost - currentSouls))}</Badge>
+    );
+  const whyTip = (entry: QueueEntry) => [entry.reason, whyText(entry)].filter(Boolean).join('\n');
+
+  /** The next purchase, large: everything needed to buy it (sell plan, imbue, spike). */
+  const renderBuyHero = (entry: QueueEntry) => {
+    const { item } = entry;
+    const shortName = item.name.split('(')[0].trim();
+    const isCounter = purchaseCounters.some((counter) => counter.item.id === item.id);
+    return (
+      <div key={item.id} className="p-3.5 rounded-xl border-2 bg-accent-950/35 border-accent-400 flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <Badge tone="accent" solid className="uppercase">
+            {t('buy.next1')} <Lock className="w-2.5 h-2.5" />
+          </Badge>
+          {affordBadge(item.cost)}
+        </div>
+        <div className="flex items-center gap-3">
+          <ItemArtworkIcon itemId={item.id} category={item.category} size={72} />
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex items-start gap-1">
+              <span className="font-label text-heading text-ink-strong leading-tight flex-1 min-w-0">{shortName}</span>
+              <CopyNameButton name={shortName} />
+            </div>
+            <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+              <span className="text-body font-extrabold text-info-300 tabular-nums">{t('souls', formatNumber(item.cost))}</span>
+              <ShopTabMarker category={item.category} tier={item.tier} />
+            </div>
+          </div>
+        </div>
+        {renderSlotPlan(item.id)}
+        {renderImbueHint(item.id)}
+        {renderSpikeHint(item.id)}
+        <div className="mt-auto pt-2 border-t border-bone/10 flex items-center justify-between gap-2">
+          <span className={`flex items-center gap-1.5 min-w-0 text-small font-semibold ${isCounter ? 'text-bad-300' : 'text-ink-soft'}`}>
+            <span className="truncate">{entry.reason}</span>
+            <InfoTip text={whyTip(entry)} />
+          </span>
+          <Button className="px-4 py-1.5" onClick={() => skipItem(item.id, shortName)}>
+            {t('buy.skip')}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  /** The purchases after the next one: one line each, details on the ⓘ. */
+  const renderBuyRow = (entry: QueueEntry, rank: number) => {
+    const { item } = entry;
+    const shortName = item.name.split('(')[0].trim();
+    return (
+      <div key={item.id} className="p-2 rounded-xl border bg-shade/40 border-bone/10 flex items-center gap-2.5">
+        <span className="w-6 shrink-0 text-center font-display text-small tracking-display text-ink-faint">#{rank}</span>
+        <ItemArtworkIcon itemId={item.id} category={item.category} size={40} />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="font-label text-title text-ink-strong truncate">{shortName}</span>
+            <CopyNameButton name={shortName} />
+            <InfoTip text={whyTip(entry)} />
+          </div>
+          <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+            <span className="text-small font-extrabold text-info-300 tabular-nums">{t('souls', formatNumber(item.cost))}</span>
+            <ShopTabMarker category={item.category} tier={item.tier} />
+          </div>
+          <div className="flex">{renderSlotPlan(item.id, true)}</div>
+        </div>
+        <div className="shrink-0">{affordBadge(item.cost)}</div>
+        <Button size="sm" variant="ghost" onClick={() => skipItem(item.id, shortName)}>
+          {t('buy.skip')}
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <I18nContext.Provider value={i18n}>
-      <div className="h-screen w-screen flex flex-col bg-surface-base text-ink overflow-hidden">
+      <div className="h-full w-full flex flex-col bg-surface-base text-ink overflow-hidden">
         {/* 1. COMPACT TOP BAR (Hero + Partner + Lane + Enemies + Silent Controls) */}
         <div className="px-3 py-2 bg-surface-panel border-b border-bone/10 flex flex-wrap items-center justify-between gap-2 shrink-0 relative z-30">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setOpenPopover(openPopover === 'myHero' ? null : 'myHero')}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-shade/60 hover:bg-shade/80 border border-accent-500/40 transition"
+              aria-expanded={openPopover === 'myHero'}
+              className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-shade/60 hover:bg-shade/80 border border-accent-500/40 transition"
             >
               <HeroPortraitIcon heroId={myHero.id} color={myHero.accentColor} size={32} />
               <span className="font-label text-body sm:text-title text-ink-strong">{myHero.name}</span>
@@ -1562,7 +1686,8 @@ export function App() {
             {laneMode === 'duo' && (
               <button
                 onClick={() => setOpenPopover(openPopover === 'ally' ? null : 'ally')}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-good-950/30 hover:bg-good-950/50 border border-good-500/40 transition text-body font-bold text-good-200"
+                aria-expanded={openPopover === 'ally'}
+                className="flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full bg-good-950/30 hover:bg-good-950/50 border border-good-500/40 transition font-label text-body text-good-200"
                 title={t('ally.title')}
               >
                 {allyHeroObj ? (
@@ -1575,20 +1700,13 @@ export function App() {
             )}
 
             {myHero.builds.length > 1 && (
-              <div className="flex items-center bg-shade/50 p-0.5 rounded-lg border border-bone/10">
-                {myHero.builds.map((b, idx) => (
-                  <button
-                    key={b.id}
-                    title={`${b.name}\n${b.subtitle}`}
-                    onClick={() => setSelectedBuildId(b.id)}
-                    className={`px-2 py-1 rounded-md text-small font-bold transition ${
-                      activeBuild.id === b.id ? 'bg-accent-500 text-on-accent' : 'text-ink-muted hover:text-ink-strong'
-                    }`}
-                  >
-                    {t('build.n', idx + 1)}
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                size="sm"
+                tone="accent"
+                value={activeBuild.id}
+                onChange={setSelectedBuildId}
+                options={myHero.builds.map((b, idx) => ({ value: b.id, label: t('build.n', idx + 1), title: `${b.name}\n${b.subtitle}` }))}
+              />
             )}
           </div>
 
@@ -1596,7 +1714,8 @@ export function App() {
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setOpenPopover(openPopover === 'enemies' ? null : 'enemies')}
-              className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-bad-950/35 hover:bg-bad-950/55 border border-bad-500/40 transition"
+              aria-expanded={openPopover === 'enemies'}
+              className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-bad-950/35 hover:bg-bad-950/55 border border-bad-500/40 transition"
             >
               <div className="flex -space-x-1.5">
                 {laneEnemyIds.length > 0 ? (
@@ -1608,70 +1727,50 @@ export function App() {
                   <Swords className="w-4 h-4 text-bad-400" />
                 )}
               </div>
-              <span className="text-body font-bold text-ink-strong">
+              <span className="font-label text-body text-ink-strong">
                 {t('enemies.button', laneEnemyIds.length, teamEnemyIds.length)}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-bad-300" />
             </button>
 
             {/* Silent Auto-Scan Toggle (No blinking/spinning animations!) */}
-            <button
+            <Button
+              size="sm"
+              pressed={autoScanEnabled}
               onClick={() => setAutoScanEnabled((v) => !v)}
               title={t('autoscan.title')}
-              className={`px-2 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
-                autoScanEnabled
-                  ? 'bg-good-500/20 border-good-500/60 text-good-300'
-                  : 'bg-bone/5 border-bone/10 text-ink-muted'
-              }`}
+              icon={<Radio className={`w-3.5 h-3.5 ${autoScanEnabled ? '' : 'text-good-400'}`} />}
             >
-              <Radio className="w-3.5 h-3.5 text-good-400" />
               <span className="hidden md:inline">{t('autoscan.label')}</span>
-            </button>
+            </Button>
 
-            <button
-              onClick={() => performScreenScan()}
-              title={t('scan.title')}
-              className="px-2.5 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-400 text-on-accent font-bold text-small flex items-center gap-1 transition"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>{t('scan.label')}</span>
-            </button>
+            <Button size="sm" variant="primary" onClick={() => performScreenScan()} title={t('scan.title')} icon={<Camera className="w-3.5 h-3.5" />}>
+              {t('scan.label')}
+            </Button>
 
-            <button
+            <Button
+              size="sm"
+              pressed={isOverlayMode}
+              pressedVariant="spirit"
               onClick={handleToggleOverlay}
               title={t('overlay.toggleTitle')}
-              className={`px-2.5 py-1.5 rounded-xl border text-small font-bold flex items-center gap-1 transition ${
-                isOverlayMode
-                  ? 'bg-spirit-500 text-ink-strong border-spirit-300 shadow-raised'
-                  : 'bg-spirit-600/20 hover:bg-spirit-600/35 border-spirit-400/50 text-spirit-200'
-              }`}
+              icon={<Layers className={`w-3.5 h-3.5 ${isOverlayMode ? '' : 'text-spirit-400'}`} />}
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span>{t('overlay.label')}</span>
-            </button>
+              {t('overlay.label')}
+            </Button>
 
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              title={t('settings.open')}
-              className="p-1.5 rounded-xl bg-bone/5 hover:bg-bone/10 border border-bone/10 text-ink-soft"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+            <IconButton label={t('settings.open')} icon={<Settings className="w-4 h-4" />} onClick={() => setIsSettingsOpen(true)} />
           </div>
 
           {/* POPOVER MODALS */}
           {openPopover === 'myHero' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-accent-500/60 shadow-overlay z-50 space-y-2">
-              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-accent-300">{t('hero.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
-                  ✕
-                </button>
-              </div>
+            <PopoverPanel title={t('hero.pick')} onClose={closePopover} closeLabel={t('settings.close')}>
               <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
                 {HEROES.map((h) => (
-                  <button
+                  <PickTile
                     key={h.id}
+                    selected={h.id === myHeroId}
+                    selectedClassName="bg-accent-500/25 border-accent-400 text-ink-strong"
                     onClick={() => {
                       setMyHeroId(h.id);
                       snapshotRef.current = { ...snapshotRef.current, myHeroId: h.id };
@@ -1682,108 +1781,83 @@ export function App() {
                       if (allyPartnerId === h.id) setAllyPartnerId(null);
                       setOpenPopover(null);
                     }}
-                    className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                      h.id === myHeroId
-                        ? 'bg-accent-500/25 border-accent-400 text-ink-strong font-bold'
-                        : 'bg-shade/40 border-bone/5 text-ink-soft'
-                    }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
                     <span className="text-body truncate">{h.name}</span>
-                  </button>
+                  </PickTile>
                 ))}
               </div>
-            </div>
+            </PopoverPanel>
           )}
 
           {openPopover === 'ally' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-good-500/60 shadow-overlay z-50 space-y-2">
-              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-good-300">{t('ally.pick')}</span>
-                <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
-                  ✕
-                </button>
-              </div>
+            <PopoverPanel tone="good" title={t('ally.pick')} onClose={closePopover} closeLabel={t('settings.close')}>
               <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
                 {HEROES.filter((h) => h.id !== myHeroId).map((h) => (
-                  <button
+                  <PickTile
                     key={h.id}
+                    selected={h.id === allyPartnerId}
+                    selectedClassName="bg-good-500/25 border-good-400 text-ink-strong"
                     onClick={() => {
                       setAllyPartnerId(h.id);
                       setLaneEnemyIds((prev) => prev.filter((id) => id !== h.id));
                       setTeamEnemyIds((prev) => prev.filter((id) => id !== h.id));
                       setOpenPopover(null);
                     }}
-                    className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                      h.id === allyPartnerId
-                        ? 'bg-good-500/25 border-good-400 text-ink-strong font-bold'
-                        : 'bg-shade/40 border-bone/5 text-ink-soft'
-                    }`}
                   >
                     <HeroPortraitIcon heroId={h.id} color={h.accentColor} size={26} />
                     <span className="text-body truncate">{h.name}</span>
-                  </button>
+                  </PickTile>
                 ))}
               </div>
-            </div>
+            </PopoverPanel>
           )}
 
           {openPopover === 'enemies' && (
-            <div className="fixed inset-x-4 top-16 max-w-md mx-auto p-3.5 rounded-2xl bg-surface-raised border border-bad-500/60 shadow-overlay space-y-2.5 z-50">
-              <div className="flex items-center justify-between border-b border-bone/10 pb-1.5">
-                <span className="text-body font-bold uppercase text-bad-300">{t('enemies.title', totalSelectedEnemies)}</span>
-                <div className="flex items-center gap-3">
-                  {totalSelectedEnemies > 0 && (
-                    <button
-                      onClick={() => {
-                        setLaneEnemyIds([]);
-                        setTeamEnemyIds([]);
-                      }}
-                      className="text-small text-bad-400 hover:underline"
-                    >
-                      {t('enemies.clear')}
-                    </button>
-                  )}
-                  <button onClick={() => setOpenPopover(null)} className="text-body text-ink-muted">
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 bg-shade/50 p-1 rounded-xl border border-bone/10">
-                <button
-                  onClick={() => setEnemyPopoverMode('lane')}
-                  className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
-                    enemyPopoverMode === 'lane' ? 'bg-bad-500 text-ink-strong' : 'text-ink-muted'
-                  }`}
-                >
-                  {t('enemies.myLane', laneEnemyIds.length, laneMode === 'solo' ? 1 : 2)}
-                </button>
-                <button
-                  onClick={() => setEnemyPopoverMode('team')}
-                  className={`flex-1 py-1 px-2 rounded-lg text-body font-bold ${
-                    enemyPopoverMode === 'team' ? 'bg-weapon-500 text-on-accent' : 'text-ink-muted'
-                  }`}
-                >
-                  {t('enemies.otherLanes', teamEnemyIds.length, 6 - laneEnemyIds.length)}
-                </button>
-              </div>
+            <PopoverPanel
+              tone="bad"
+              className="space-y-2.5"
+              title={t('enemies.title', totalSelectedEnemies)}
+              onClose={closePopover}
+              closeLabel={t('settings.close')}
+              actions={
+                totalSelectedEnemies > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-bad-300"
+                    onClick={() => {
+                      setLaneEnemyIds([]);
+                      setTeamEnemyIds([]);
+                    }}
+                  >
+                    {t('enemies.clear')}
+                  </Button>
+                )
+              }
+            >
+              <SegmentedControl
+                stretch
+                value={enemyPopoverMode}
+                onChange={setEnemyPopoverMode}
+                options={[
+                  { value: 'lane', label: t('enemies.myLane', laneEnemyIds.length, laneMode === 'solo' ? 1 : 2), tone: 'bad' },
+                  { value: 'team', label: t('enemies.otherLanes', teamEnemyIds.length, 6 - laneEnemyIds.length), tone: 'weapon' },
+                ]}
+              />
 
               <div className="grid grid-cols-3 gap-1.5 max-h-80 overflow-y-auto">
                 {HEROES.filter((h) => h.id !== myHeroId && h.id !== allyPartnerId).map((eh) => {
                   const isInLane = laneEnemyIds.includes(eh.id);
                   const isInTeam = teamEnemyIds.includes(eh.id);
                   return (
-                    <button
+                    <PickTile
                       key={eh.id}
                       onClick={() => handleSelectEnemyHero(eh.id)}
-                      className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 ${
-                        isInLane
-                          ? 'bg-bad-500/30 border-bad-400 text-ink-strong font-bold'
-                          : isInTeam
-                          ? 'bg-weapon-500/25 border-weapon-400 text-weapon-100 font-bold'
-                          : 'bg-shade/40 border-bone/5 text-ink-soft'
-                      }`}
+                      selected={isInLane || isInTeam}
+                      selectedClassName={
+                        isInLane ? 'bg-bad-500/30 border-bad-400 text-ink-strong' : 'bg-weapon-500/25 border-weapon-400 text-weapon-100'
+                      }
                     >
                       <HeroPortraitIcon heroId={eh.id} color={eh.accentColor} size={26} />
                       <div className="min-w-0">
@@ -1791,61 +1865,45 @@ export function App() {
                         {isInLane && <span className="text-small text-bad-300 block">{t('enemies.laneBadge')}</span>}
                         {isInTeam && <span className="text-small text-weapon-300 block">{t('enemies.teamBadge')}</span>}
                       </div>
-                    </button>
+                    </PickTile>
                   );
                 })}
               </div>
-            </div>
+            </PopoverPanel>
           )}
         </div>
 
         {/* 2. NAVIGATION TABS */}
         <div className="px-3 bg-surface-header border-b border-bone/10 flex items-center justify-between shrink-0">
-          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-            {(
-              [
-                { id: 'essential', label: t('tabs.essential'), icon: LayoutGrid },
-                { id: 'powers', label: t('tabs.powers'), icon: Zap },
-                { id: 'builds', label: t('tabs.builds'), icon: Package },
-                { id: 'matchups', label: t('tabs.matchups', totalSelectedEnemies), icon: Swords },
-                { id: 'logs', label: t('tabs.logs'), icon: Terminal },
-                { id: 'streetBrawl', label: streetBrawlText(lang).tab, icon: Shuffle },
-              ] as const
-            ).map((tab) => {
-              const TabIcon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 text-body font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition ${
-                    active
-                      ? 'border-accent-400 text-accent-300 bg-accent-500/10'
-                      : 'border-transparent text-ink-muted hover:text-ink'
-                  }`}
-                >
-                  <TabIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          <Tabs
+            value={activeTab}
+            onChange={setActiveTab}
+            items={[
+              { id: 'essential', label: t('tabs.essential'), icon: LayoutGrid },
+              { id: 'powers', label: t('tabs.powers'), icon: Zap },
+              { id: 'builds', label: t('tabs.builds'), icon: Package },
+              { id: 'matchups', label: t('tabs.matchups', totalSelectedEnemies), icon: Swords },
+              { id: 'logs', label: t('tabs.logs'), icon: Terminal },
+              { id: 'streetBrawl', label: streetBrawlText(lang).tab, icon: Shuffle },
+            ]}
+          />
 
           <div className="flex items-center gap-2 py-1">
-            {currentSouls !== null && (
-              <span className="px-2 py-0.5 rounded-lg bg-info-950/60 border border-info-500/40 text-small text-info-300 font-extrabold">
-                {t('souls.inPocket', formatNumber(currentSouls))}
-              </span>
-            )}
+            {currentSouls !== null && <Badge tone="info">{t('souls.inPocket', formatNumber(currentSouls))}</Badge>}
             {ownedItems.length > 0 && (
-              <button
-                onClick={clearOwnedItems}
-                className="px-2 py-0.5 rounded bg-bone/5 hover:bg-bone/10 text-small text-ink-muted hover:text-ink-strong flex items-center gap-1"
+              <Button
+                size="sm"
+                variant={resetArmed ? 'danger' : 'ghost'}
+                onClick={() => {
+                  if (!resetArmed) return setResetArmed(true);
+                  clearOwnedItems();
+                  setResetArmed(false);
+                }}
                 title={t('owned.resetTitle')}
+                icon={<RotateCcw className="w-3 h-3" />}
               >
-                <RotateCcw className="w-3 h-3" />
-                <span>{t('owned.reset', ownedItems.length)}</span>
-              </button>
+                {resetArmed ? t('owned.resetConfirm') : t('owned.reset', ownedItems.length)}
+              </Button>
             )}
           </div>
         </div>
@@ -1854,7 +1912,7 @@ export function App() {
         {(showUpdateBanner || formatIssue || showHudMissing) && (
           <div className="px-3 pt-2 space-y-2 shrink-0">
             {showUpdateBanner && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-good-950/60 border border-good-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
+              <div className="max-w-screen-2xl mx-auto px-3 py-2 rounded-xl bg-good-950/60 border border-good-500/50 flex items-center justify-between gap-2 flex-wrap text-body">
                 <span className="font-bold text-good-200">
                   {updateStatus.state === 'ready'
                     ? t('update.ready', updateStatus.version)
@@ -1864,47 +1922,36 @@ export function App() {
                 </span>
                 <div className="flex items-center gap-2">
                   {updateStatus.state === 'available' && (
-                    <button
-                      onClick={() => window.electronAPI?.openExternal(updateStatus.url)}
-                      className="px-2.5 py-1 rounded-lg bg-good-500 hover:bg-good-400 text-on-accent font-bold"
-                    >
+                    <Button variant="success" onClick={() => window.electronAPI?.openExternal(updateStatus.url)}>
                       {t('update.download')}
-                    </button>
+                    </Button>
                   )}
                   {updateStatus.state === 'ready' && (
-                    <button
-                      onClick={() => window.electronAPI?.updates.install()}
-                      className="px-2.5 py-1 rounded-lg bg-good-500 hover:bg-good-400 text-on-accent font-bold"
-                    >
+                    <Button variant="success" onClick={() => window.electronAPI?.updates.install()}>
                       {t('update.restart')}
-                    </button>
+                    </Button>
                   )}
-                  <button onClick={() => setUpdateDismissed(true)} className="text-ink-muted hover:text-ink-strong" title={t('update.dismiss')}>
-                    <X className="w-4 h-4" />
-                  </button>
+                  <IconButton label={t('update.dismiss')} icon={<X className="w-4 h-4" />} onClick={() => setUpdateDismissed(true)} />
                 </div>
               </div>
             )}
             {formatIssue && (
-              <div className="max-w-5xl mx-auto px-3 py-2.5 rounded-xl bg-bad-950/70 border-2 border-bad-500/70 flex items-start gap-2.5">
+              <div className="max-w-screen-2xl mx-auto px-3 py-2.5 rounded-xl bg-bad-950/70 border-2 border-bad-500/70 flex items-start gap-2.5">
                 <MonitorX className="w-5 h-5 text-bad-300 shrink-0 mt-0.5" />
                 <div className="space-y-1 flex-1">
-                  <p className="text-body font-extrabold uppercase text-bad-200">{t('resolution.title')}</p>
+                  <p className="font-display text-body tracking-display text-bad-200">{t('resolution.title')}</p>
                   <p className="text-body text-bad-100">
                     {t('resolution.body', formatIssue.width, formatIssue.height, aspectLabel(formatIssue.width, formatIssue.height))}
                   </p>
                   <p className="text-small text-bad-200/90">{t('resolution.help')}</p>
                 </div>
-                <button
-                  onClick={() => setIsReportOpen(true)}
-                  className="px-2.5 py-1 rounded-lg bg-bone/10 hover:bg-bone/20 text-small font-bold text-bad-100 shrink-0"
-                >
+                <Button size="sm" className="shrink-0" onClick={() => setIsReportOpen(true)}>
                   {t('resolution.report')}
-                </button>
+                </Button>
               </div>
             )}
             {!formatIssue && showHudMissing && (
-              <div className="max-w-5xl mx-auto px-3 py-2 rounded-xl bg-accent-950/50 border border-accent-500/40 flex items-start gap-2 text-small text-accent-100">
+              <div className="max-w-screen-2xl mx-auto px-3 py-2 rounded-xl bg-accent-950/50 border border-accent-500/40 flex items-start gap-2 text-small text-accent-100">
                 <Info className="w-4 h-4 text-accent-300 shrink-0" />
                 <span>
                   <strong>{t('hud.notFoundTitle')}.</strong> {t('hud.notFoundBody')}
@@ -1921,159 +1968,55 @@ export function App() {
           }}
           className="flex-1 overflow-y-auto p-3 space-y-3 bg-surface-base"
         >
-          <div className="max-w-5xl mx-auto space-y-3">
+          <div className="max-w-screen-2xl mx-auto space-y-3">
             {/* ================= TAB 1: ACTIVE BUILD ================= */}
             {activeTab === 'essential' && (
               <div className="space-y-3">
                 {/* What to do now: who is dead in the top bar, my souls, my matchups */}
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-accent-950/40 via-surface-panel to-surface-panel border-2 border-accent-500/60 shadow-overlay space-y-2">
-                  <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
-                    <h2 className="font-display text-title tracking-display text-accent-300 flex items-center gap-1.5">
-                      <Radio className="w-4 h-4" /> {t('now.title')}
+                <div className="p-3 rounded-2xl bg-surface-panel border border-accent-500/50 shadow-raised space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-title tracking-display text-ink-strong flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-accent-400" /> {t('now.title')}
                     </h2>
-                    <span className="text-small text-ink-muted">{t('now.hint')}</span>
+                    <InfoTip text={t('now.hint')} />
                   </div>
                   {renderNow(4, false)}
                 </div>
 
                 {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-good-950/40 via-surface-panel to-surface-panel border-2 border-good-500/60 shadow-overlay space-y-3">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-xl bg-good-500 text-on-accent">
+                <div className="p-3.5 rounded-2xl bg-surface-panel border border-bone/10 shadow-raised space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="p-1.5 rounded-xl bg-accent-500 text-on-accent">
                         <ShoppingCart className="w-4 h-4" />
                       </span>
-                      <div>
-                        <h2 className="font-display text-title tracking-display text-good-300">
-                          {t('buy.title', inventoryLabel)}
-                        </h2>
-                        <p className="text-small text-ink-soft">{t('buy.help')}</p>
-                        {inventoryStatus && inventoryStatus.unmatched > 0 && (
-                          <p className="text-small text-weapon-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</p>
-                        )}
-                        <p className="text-small text-accent-300 font-semibold">
-                          {activeBuild.name} — <span className="text-ink-muted font-normal">{activeBuild.subtitle}</span>
-                        </p>
-                      </div>
+                      <h2 className="font-display text-title tracking-display text-ink-strong">{t('buy.title', inventoryLabel)}</h2>
+                      <InfoTip text={`${t('buy.help')}\n${activeBuild.name} — ${activeBuild.subtitle}`} />
+                      {inventoryStatus && inventoryStatus.unmatched > 0 && (
+                        <span className="text-small text-accent-300 font-semibold">{t('buy.unmatched', inventoryStatus.unmatched)}</span>
+                      )}
                     </div>
-
-                    <div className="basis-full">
-                      <InvestmentLine investment={investment} clockS={clockS} />
-                    </div>
-
-                    {currentSouls !== null && (
-                      <div className="px-3 py-1 rounded-xl bg-info-950/80 border border-info-400/50 text-body font-extrabold text-info-200">
-                        {t('souls.detected', formatNumber(currentSouls))}
-                      </div>
-                    )}
+                    <InvestmentLine investment={investment} clockS={clockS} />
                   </div>
 
-                  {/* Top 6 Immediate Next Buys */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                    {nextToBuyQueue.slice(0, 6).map((entry, idx) => {
-                      const { item } = entry;
-                      const isCounter = purchaseCounters.some((counter) => counter.item.id === item.id);
-                      const canAfford = currentSouls !== null && currentSouls >= item.cost;
-                      const missingSouls =
-                        currentSouls !== null && currentSouls < item.cost ? item.cost - currentSouls : null;
-                      const shortName = item.name.split('(')[0].trim();
-                      const why = whyText(entry);
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => handleToggleOwnedItem(item.id)}
-                          className={`p-3 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between gap-2.5 relative ${
-                            idx === 0
-                              ? canAfford
-                                ? 'bg-good-950/60 border-good-400 ring-2 ring-good-400/30'
-                                : 'bg-accent-950/35 border-accent-400'
-                              : canAfford
-                              ? 'bg-good-950/35 border-good-500/60'
-                              : 'bg-shade/50 border-bone/15 hover:border-bone/35'
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            {/* Header: Order Badge + Affordability Status */}
-                            <div className="flex items-center justify-between gap-1">
-                              <span
-                                className={`px-2 py-0.5 rounded-md text-small font-extrabold uppercase ${
-                                  idx === 0 ? 'bg-accent-400 text-on-accent' : 'bg-bone/15 text-ink'
-                                }`}
-                              >
-                                {idx === 0 ? (
-                                  <span className="flex items-center gap-1">
-                                    {t('buy.next1')} <Lock className="w-2.5 h-2.5" />
-                                  </span>
-                                ) : (
-                                  t('buy.nextN', idx + 1)
-                                )}
-                              </span>
-
-                              {canAfford ? (
-                                <span className="px-2 py-0.5 rounded-md bg-good-500 text-on-accent font-extrabold text-small uppercase">
-                                  {t('buy.affordable')}
-                                </span>
-                              ) : missingSouls !== null ? (
-                                <span className="px-2 py-0.5 rounded-md bg-shade/60 border border-bone/10 text-accent-300 font-bold text-small">
-                                  {t('buy.missing', formatNumber(missingSouls))}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Item icon, name, price and shop tab (icon colour = tab colour) */}
-                            <div className="flex items-center gap-3">
-                              <ItemArtworkIcon itemId={item.id} category={item.category} size={56} />
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-start gap-1">
-                                  <span className="font-bold text-title text-ink-strong leading-tight flex-1 min-w-0">{shortName}</span>
-                                  <CopyNameButton name={shortName} />
-                                </div>
-                                <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap">
-                                  <span className="text-small font-extrabold text-info-300">
-                                    {t('souls', formatNumber(item.cost))}
-                                  </span>
-                                  <ShopTabMarker category={item.category} tier={item.tier} />
-                                </div>
-                              </div>
-                            </div>
-
-                            {renderSlotPlan(item.id)}
-                            {renderImbueHint(item.id)}
-                            {renderSpikeHint(item.id)}
-
-                            {/* Why this item: meta statistics of this hero */}
-                            {why && (
-                              <p className="text-small text-ink-muted leading-snug flex gap-1" title={t('buy.whyTitle')}>
-                                <Info className="w-3 h-3 shrink-0 mt-px text-ink-faint" />
-                                <span>{why}</span>
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Reason + Click to Skip / Advance */}
-                          <div className="pt-1 border-t border-bone/10 flex items-center justify-between text-small">
-                            <span
-                              className={`truncate font-semibold ${isCounter ? 'text-weapon-300' : 'text-ink-soft'}`}
-                              title={entry.reason}
-                            >
-                              {entry.reason}
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-bone/10 hover:bg-good-500/30 text-ink font-bold flex items-center gap-1 shrink-0">
-                              {t('buy.skip')}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  {/* The next purchase large, the 5 after it as a list */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-3">
+                    {nextToBuyQueue.slice(0, 1).map(renderBuyHero)}
+                    {nextToBuyQueue.length > 1 && (
+                      <div className="space-y-1.5">
+                        <span className="block font-display text-small tracking-display text-ink-muted">{t('buy.then')}</span>
+                        {nextToBuyQueue.slice(1, 6).map((entry, i) => renderBuyRow(entry, i + 2))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Compact Power Order Strip */}
-                <div className="p-2.5 rounded-xl bg-surface-panel border border-spirit-500/30 flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-small font-bold uppercase text-spirit-300 flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-spirit-400" /> {t('abilities.order')}
-                  </span>
+                <div className="p-2.5 rounded-xl bg-surface-panel border border-bone/10 flex items-center justify-between gap-2 flex-wrap">
+                  <SectionHeader
+                    icon={<Zap className="w-3.5 h-3.5" />}
+                    title={t('abilities.order')}
+                  />
                   <div className="flex items-center gap-2 flex-wrap">
                     {activeBuild.abilitiesOrder.map((key, idx) => {
                       const ab = activeBuild.abilitiesDetails.find((a) => a.key === key);
@@ -2082,7 +2025,7 @@ export function App() {
                         <React.Fragment key={key}>
                           <div className="flex items-center gap-1.5 bg-shade/50 px-2 py-1 rounded-lg border border-bone/5">
                             <PowerIcon heroId={myHero.id} abilityKey={key} abilityName={ab?.name || key} size={30} />
-                            <span className="text-body font-bold text-ink-strong">{spellName}</span>
+                            <span className="font-label text-body text-ink-strong">{spellName}</span>
                           </div>
                           {idx < 3 && <span className="text-ink-faint font-bold text-body">→</span>}
                         </React.Fragment>
@@ -2095,18 +2038,19 @@ export function App() {
                     its ultimate and the best items against it; click the header = fed */}
                 {stanceAlerts.length > 0 && (
                   <div className="p-3 rounded-xl bg-surface-panel border border-bone/10 space-y-2">
-                    <div className="flex items-baseline justify-between gap-x-3 flex-wrap">
-                      <span className="text-body font-bold uppercase tracking-caps text-ink-soft flex items-center gap-1.5">
-                        <Swords className="w-3.5 h-3.5 text-bad-400" /> {t('enemies.countersTitle')}
-                      </span>
-                      <span className="text-small text-ink-muted">{t('enemies.countersHint')}</span>
-                    </div>
+                    <SectionHeader
+                      as="h2"
+                      className="flex-wrap"
+                      icon={<Swords className="w-3.5 h-3.5" />}
+                      title={t('enemies.countersTitle')}
+                      aside={<InfoTip text={t('enemies.countersHint')} />}
+                    />
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {stanceAlerts.map((alert) => (
                         <div
                           key={alert.enemyId}
                           className={`rounded-lg border bg-shade/30 p-2 space-y-1.5 ${
-                            alert.isFed ? 'border-weapon-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-bone/10'
+                            alert.isFed ? 'border-bad-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-bone/10'
                           }`}
                         >
                           <button
@@ -2116,7 +2060,7 @@ export function App() {
                           >
                             <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={36} />
                             <span className="min-w-0 flex-1">
-                              <span className="flex items-center gap-1 text-title font-extrabold text-ink-strong">
+                              <span className="flex items-center gap-1 font-label text-title text-ink-strong">
                                 <span className="truncate">{alert.enemyName}</span>
                                 {alert.isInMyLane && <span className="text-small">🎯</span>}
                                 {board?.enemies.some((s) => s.heroId === alert.enemyId && s.dead) && (
@@ -2156,7 +2100,7 @@ export function App() {
                                   >
                                     <ItemArtworkIcon itemId={item.id} category={item.category} size={26} />
                                     <span className="min-w-0">
-                                      <span className="block text-body font-bold text-ink-strong truncate">
+                                      <span className="block font-label text-body text-ink-strong truncate">
                                         {owned && '✓ '}
                                         {item.name.split('(')[0].trim()}
                                       </span>
@@ -2177,13 +2121,15 @@ export function App() {
 
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
                 {tacticalPlan.priorityItems.filter((rec) => !effectiveOwned.has(rec.item.id)).length > 0 && (
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-weapon-950/30 to-surface-panel border border-weapon-500/40 space-y-2">
-                    <span className="text-body font-bold uppercase tracking-caps text-weapon-300 flex items-center gap-1.5">
-                      <Flame className="w-3.5 h-3.5 text-weapon-400" />{' '}
-                      {laneOver
-                        ? t('counters.title', t('enemies.team', laneEnemyIds.length + teamEnemyIds.length), 0)
-                        : t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)}
-                    </span>
+                  <div className="p-3 rounded-xl bg-surface-panel border border-bone/10 space-y-2">
+                    <SectionHeader
+                      icon={<Flame className="w-3.5 h-3.5" />}
+                      title={
+                        laneOver
+                          ? t('counters.title', t('enemies.team', laneEnemyIds.length + teamEnemyIds.length), 0)
+                          : t('counters.title', laneEnemyIds.map(heroName).join(' + '), teamEnemyIds.length)
+                      }
+                    />
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                       {tacticalPlan.priorityItems
                         .filter((rec) => !effectiveOwned.has(rec.item.id))
@@ -2206,9 +2152,9 @@ export function App() {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
                   {(
                     [
-                      { key: 'early', title: t('phases.early'), accent: 'text-accent-300 border-accent-500/30' },
-                      { key: 'mid', title: t('phases.mid'), accent: 'text-spirit-300 border-spirit-500/30' },
-                      { key: 'late', title: t('phases.late'), accent: 'text-info-300 border-info-500/30' },
+                      { key: 'early', title: t('phases.early'), accent: 'text-ink-strong border-bone/10' },
+                      { key: 'mid', title: t('phases.mid'), accent: 'text-ink-strong border-bone/10' },
+                      { key: 'late', title: t('phases.late'), accent: 'text-ink-strong border-bone/10' },
                     ] as const
                   ).map((col) => {
                     const unownedPhaseIds = activeBuild.phases[col.key].filter((id) => !effectiveOwned.has(id));
@@ -2216,7 +2162,7 @@ export function App() {
                       <div key={col.key} className={`p-3 rounded-xl bg-surface-panel border ${col.accent} space-y-2`}>
                         <h3 className="font-display text-body tracking-display">{col.title}</h3>
                         {unownedPhaseIds.length === 0 ? (
-                          <div className="p-2.5 rounded-lg bg-good-950/30 border border-good-500/30 text-body text-good-300 font-bold">
+                          <div className="p-2.5 rounded-lg bg-bone/5 border border-bone/10 text-body text-ink-soft font-bold">
                             {t('phases.done')}
                           </div>
                         ) : (
@@ -2242,8 +2188,8 @@ export function App() {
 
                 {/* Owned Items Archive at the bottom of the page */}
                 {ownedItems.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-shade/40 border border-bone/10 flex items-center gap-2 flex-wrap">
-                    <span className="text-small font-bold uppercase text-ink-muted">{t('owned.title', ownedItems.length)}</span>
+                  <Card tone="well" className="p-2.5 flex items-center gap-2 flex-wrap">
+                    <span className="text-small font-bold uppercase tracking-caps text-ink-muted">{t('owned.title', ownedItems.length)}</span>
                     {ownedItems.map((id) => {
                       const it = ITEMS[id];
                       if (!it) return null;
@@ -2252,15 +2198,15 @@ export function App() {
                           key={id}
                           onClick={() => handleToggleOwnedItem(id)}
                           title={t('owned.removeTitle')}
-                          className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-bone/5 hover:bg-bad-950/50 border border-bone/10 text-small font-semibold text-ink-soft transition"
+                          className="group flex items-center gap-1.5 pl-0.5 pr-2 py-0.5 rounded-full bg-bone/5 hover:bg-bad-950/50 border border-bone/10 hover:border-bad-500/40 font-label text-small text-ink-soft transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-400"
                         >
                           <ItemArtworkIcon itemId={it.id} category={it.category} size={18} />
                           <span>{it.name.split('(')[0].trim()}</span>
-                          <span className="text-small text-ink-faint">✕</span>
+                          <X className="w-3 h-3 text-ink-faint group-hover:text-bad-300" />
                         </button>
                       );
                     })}
-                  </div>
+                  </Card>
                 )}
               </div>
             )}
@@ -2272,15 +2218,15 @@ export function App() {
                   const detail = activeBuild.abilitiesDetails.find((a) => a.key === key);
                   if (!detail) return null;
                   return (
-                    <div key={key} className="p-4 rounded-xl bg-surface-panel border border-spirit-500/30 flex items-start gap-3">
+                    <Card key={key} className="p-4 flex items-start gap-3">
                       <PowerIcon heroId={myHero.id} abilityKey={detail.key} abilityName={detail.name} size={52} />
                       <div className="space-y-1 flex-1">
-                        <span className="text-small font-bold uppercase text-spirit-300">{t('powers.max', index + 1, detail.key)}</span>
-                        <h3 className="font-bold text-title text-ink-strong">{detail.name.split('(')[0].trim()}</h3>
-                        <p className="text-body text-accent-200/90">{detail.priorityTip}</p>
+                        <span className="font-display text-small tracking-display text-ink-muted">{t('powers.max', index + 1, detail.key)}</span>
+                        <h3 className="font-label text-title text-ink-strong">{detail.name.split('(')[0].trim()}</h3>
+                        <p className="text-body text-ink">{detail.priorityTip}</p>
                         {detail.description && <p className="text-small text-ink-muted">{detail.description}</p>}
                       </div>
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -2289,10 +2235,10 @@ export function App() {
             {/* ================= TAB 3: ITEM DETAILS ================= */}
             {activeTab === 'builds' && (
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-surface-panel border border-accent-500/30">
-                  <h3 className="text-title font-extrabold text-accent-300">{activeBuild.name}</h3>
+                <Card className="p-3">
+                  <h3 className="font-display text-title tracking-display text-ink-strong">{activeBuild.name}</h3>
                   <p className="text-small text-ink-soft">{activeBuild.subtitle}</p>
-                </div>
+                </Card>
                 {(
                   [
                     { key: 'early', title: t('details.early') },
@@ -2302,7 +2248,7 @@ export function App() {
                   ] as const
                 ).map((phase) => (
                   <div key={phase.key} className="space-y-2">
-                    <h3 className="font-display text-body tracking-display text-accent-300">{phase.title}</h3>
+                    <SectionHeader title={phase.title} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeBuild.phases[phase.key].map((itemId) => {
                         const item = ITEMS[itemId];
@@ -2324,8 +2270,8 @@ export function App() {
             {/* ================= TAB 4: LANE ADVICE & MATCHUPS ================= */}
             {activeTab === 'matchups' && (
               <div className="space-y-3">
-                <div className="p-3.5 rounded-xl bg-surface-panel border border-accent-500/30 space-y-1.5">
-                  <h3 className="font-display text-body tracking-display text-accent-300">{tacticalPlan.laneStrategy.laneTitle}</h3>
+                <Card className="p-3.5 space-y-1.5">
+                  <SectionHeader title={tacticalPlan.laneStrategy.laneTitle} />
                   <p className="text-body text-ink">{tacticalPlan.laneStrategy.economyTip}</p>
                   {laneOutlookText && (
                     <p
@@ -2341,24 +2287,26 @@ export function App() {
                     </p>
                   )}
                   {tacticalPlan.laneStrategy.allySynergyTip && (
-                    <p className="text-body text-good-300 pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
+                    <p className="text-body text-ink pt-1">🤝 {tacticalPlan.laneStrategy.allySynergyTip}</p>
                   )}
                   {laneDuoText && <p className="text-small text-ink-muted">{laneDuoText}</p>}
-                </div>
+                </Card>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tacticalPlan.matchupAlerts.map((alert) => (
-                    <div
+                    <Card
                       key={alert.enemyId}
-                      className={`p-3.5 rounded-xl bg-surface-panel border space-y-1.5 ${
-                        alert.isFed ? 'border-weapon-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-weapon-500/30'
+                      className={`p-3.5 space-y-1.5 ${
+                        alert.isFed ? 'border-bad-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-bone/10'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-body font-bold text-ink-strong">
+                        <span className="font-label text-title text-ink-strong">
                           {alert.isInMyLane ? t('matchups.lane') : t('matchups.team')} VS {alert.enemyName}
                         </span>
-                        <span className="text-small font-bold text-bad-300 shrink-0">{t(DANGER_KEYS[alert.dangerLevel])}</span>
+                        <Badge tone={DANGER_TONE[alert.dangerLevel]} solid={alert.dangerLevel === 'Extreme'} className="shrink-0">
+                          {t(DANGER_KEYS[alert.dangerLevel])}
+                        </Badge>
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         {stanceLabel(alert) ? (
@@ -2368,17 +2316,14 @@ export function App() {
                         ) : (
                           <span />
                         )}
-                        <button
-                          onClick={() => toggleFed(alert.enemyId)}
-                          className="px-2 py-0.5 rounded-md border border-bone/15 bg-bone/5 hover:bg-weapon-500/25 text-small font-bold text-ink"
-                        >
+                        <Button size="sm" pressed={alert.isFed} pressedVariant="secondary" onClick={() => toggleFed(alert.enemyId)}>
                           {alert.isFed ? t('matchups.fedUnmark') : `🔥 ${t('matchups.fedMark')}`}
-                        </button>
+                        </Button>
                       </div>
                       {matchupStatText(alert) && <p className="text-small text-ink-muted">{matchupStatText(alert)}</p>}
-                      {alert.isFed && <p className="text-body text-weapon-200">{t('matchups.fedRule')}</p>}
-                      <p className="text-body text-good-300">{alert.keyRule}</p>
-                    </div>
+                      {alert.isFed && <p className="text-body text-bad-200">{t('matchups.fedRule')}</p>}
+                      <p className="text-body text-ink">{alert.keyRule}</p>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -2425,10 +2370,21 @@ export function App() {
             onLogsChange={handleLogsChange}
             appInfo={appInfo}
             updateStatus={updateStatus}
+            uiScale={uiScale}
+            onUiScaleChange={setUiScale}
             onReport={() => {
               setIsSettingsOpen(false);
               setIsReportOpen(true);
             }}
+          />
+        )}
+        {skipped && (
+          <Toast
+            message={t('buy.skipped', skipped.name)}
+            actionLabel={t('buy.undo')}
+            onAction={undoSkip}
+            onDismiss={dismissSkipped}
+            closeLabel={t('update.dismiss')}
           />
         )}
         {isReportOpen && (

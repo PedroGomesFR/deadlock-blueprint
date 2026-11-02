@@ -51,7 +51,7 @@ export const MESSAGES_FR = {
   'ally.add': '+ Allié',
   'ally.pick': 'Allié en Lane',
   'build.n': (n: number) => `Build #${n}`,
-  'enemies.button': (lane: number, team: number) => `VS Lane (${lane})${team > 0 ? ` +${team} Team` : ''}`,
+  'enemies.button': (lane: number, team: number) => `Ennemis : ${lane} en lane${team > 0 ? ` · ${team} autres` : ''}`,
   'enemies.title': (n: number) => `Ennemis (${n}/6)`,
   'enemies.clear': 'Tout vider',
   'enemies.myLane': (n: number, max: number) => `🎯 Ma Lane (${n}/${max})`,
@@ -60,26 +60,27 @@ export const MESSAGES_FR = {
   'enemies.team': (n: number) => `l’équipe ennemie (${n})`,
   'enemies.teamBadge': 'Team',
   'autoscan.title': 'Activer/Désactiver la détection automatique silencieuse',
-  'autoscan.label': 'Auto',
+  'autoscan.label': 'Détection auto',
   'scan.title': 'Scanner maintenant (Alt+S)',
   'scan.label': 'Scan',
   'settings.open': 'Réglages',
 
   // Onglets
   'tabs.essential': 'Build Actif',
-  'tabs.powers': 'Sorts (1-4)',
+  'tabs.powers': 'Sorts',
   'tabs.builds': 'Détails Objets',
   'tabs.matchups': (n: number) => `Conseils (${n})`,
   'tabs.logs': 'Diagnostic',
 
   // Objets possédés
   'owned.resetTitle': 'Réinitialiser les objets achetés',
-  'owned.reset': (n: number) => `Reset (${n})`,
+  'owned.reset': (n: number) => `Nouvelle partie (${n})`,
+  'owned.resetConfirm': 'Recliquer pour tout effacer',
   'owned.title': (n: number) => `🎒 Objets possédés (${n}, ignorés des recommandations) :`,
   'owned.removeTitle': 'Cliquer pour remettre cet objet dans les recommandations',
 
   // À acheter
-  'buy.title': (inventory: string) => `À Acheter Tout de Suite — Prochains Objets (${inventory})`,
+  'buy.title': (inventory: string) => `À acheter (${inventory})`,
   'buy.help':
     "Seuls vos prochains achats s'affichent ici (les objets déjà achetés passent automatiquement à la suite). Le #1 reste fixe jusqu'à son achat. Cliquez sur un objet si vous voulez le passer manuellement.",
   'buy.unmatched': (n: number) =>
@@ -90,6 +91,9 @@ export const MESSAGES_FR = {
   'buy.missing': (n: string) => `Manque ${n} Âmes`,
   'buy.skip': 'Passer →',
   'buy.whyTitle': 'Pourquoi cet objet ?',
+  'buy.skipped': (name: string) => `${name} : marqué comme acheté`,
+  'buy.undo': 'Annuler',
+  'buy.then': 'Ensuite',
 
   // Raisons des recommandations
   'reason.earlyPriority': 'Priorité Début de Lane',
@@ -125,7 +129,7 @@ export const MESSAGES_FR = {
   'why.handBuild': 'Dans le build choisi',
 
   // Sorts, contres, phases
-  'abilities.order': 'Ordre Sorts :',
+  'abilities.order': 'Ordre des sorts',
   'counters.title': (names: string, team: number) => `Prochains Contres VS ${names}${team > 0 ? ` (+${team} Team)` : ''}`,
   'phases.early': '1. Début de Lane — Restant à acheter',
   'phases.mid': '2. Milieu de Partie (1 600) — Suite',
@@ -257,6 +261,8 @@ export const MESSAGES_FR = {
   'settings.title': 'Réglages',
   'settings.close': 'Fermer',
   'settings.language': 'Langue',
+  'settings.uiSize': 'Taille de l’interface',
+  'settings.uiSizeAuto': 'Auto',
   'settings.gameLogs': 'Journaux de parties',
   'settings.gameLogsDesc':
     "Enregistre, sur ton PC uniquement, ce que le scanner voit pendant une partie : un fichier texte et des captures du HUD (inventaire, barre du haut) toutes les 2 s, environ 30 Mo par partie, les 5 dernières parties gardées. Rien n'est envoyé : ces fichiers ne quittent ton PC que si tu les joins toi-même à un signalement.",

@@ -28,6 +28,7 @@ import type { RoundState } from './roundTracker';
 import { noItemsOwned, observeSlots, ownedItems, readInventory } from './inventory';
 import type { OwnedState } from './inventory';
 import { streetBrawlText } from './i18n';
+import { Button, Card } from '../ui';
 
 const SCAN_INTERVAL_MS = 500;
 /** The cards as the game lays them out, left to right. */
@@ -243,11 +244,11 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
   } else verdict = text.verdictTake(name(advice.ranked[0].itemId));
 
   return (
-    <div className="rounded-2xl bg-surface-panel border border-bone/10 p-4 space-y-4">
+    <Card section className="p-4 space-y-4">
       {/* The pick: where the game is, the verdict, the three cards as the game lays them out */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap text-small">
-          <span className={`font-extrabold uppercase tracking-caps ${MAGENTA}`}>
+          <span className={`font-display tracking-display ${MAGENTA}`}>
             {[round.round !== null ? text.round(round.round) : null, pick ? text.status(pick.choice, pick.rerolls) : null]
               .filter(Boolean)
               .join(' · ') || text.title}
@@ -350,7 +351,7 @@ const Panel: React.FC<PanelProps> = ({ heroId, heroName, lang, sourceId, onHeroD
           <p className="font-mono break-all select-text text-ink-ghost">{debug}</p>
         </div>
       </details>
-    </div>
+    </Card>
   );
 };
 
@@ -376,12 +377,9 @@ class TabBoundary extends React.Component<{ lang: Lang; children: React.ReactNod
       <div className="rounded-2xl bg-surface-panel border border-bad-500/40 p-4 space-y-2 text-small">
         <p className="text-body font-bold text-bad-300">{text.crashed}</p>
         <p className="font-mono break-all select-text text-ink-muted">{this.state.error.message}</p>
-        <button
-          onClick={() => this.setState({ error: null })}
-          className="px-2 py-1 rounded border border-bone/15 text-ink hover:bg-bone/10"
-        >
+        <Button size="sm" onClick={() => this.setState({ error: null })}>
           {text.retry}
-        </button>
+        </Button>
       </div>
     );
   }

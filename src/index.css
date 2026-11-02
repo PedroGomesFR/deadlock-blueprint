@@ -5,6 +5,13 @@
 @tailwind utilities;
 
 @layer base {
+  /* The main window fills the window with h-full, not h-screen: viewport units ignore the interface size (CSS zoom) */
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
     user-select: none;
     font-family: var(--font-body);
