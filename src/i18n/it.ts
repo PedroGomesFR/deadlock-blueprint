@@ -87,6 +87,9 @@ export const MESSAGES_IT: Messages = {
   'buy.skipped': (name) => `${name}: segnato come comprato`,
   'buy.undo': 'Annulla',
   'buy.then': 'Poi',
+  'buy.more': (n) => `altri ${n}`,
+  'buy.less': 'Mostra meno',
+  'more.title': 'Ordine abilità, piano della build e oggetti comprati',
 
   'reason.earlyPriority': 'Priorità inizio corsia',
   'reason.laneCounter': 'Counter prioritario in corsia',

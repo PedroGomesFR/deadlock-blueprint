@@ -87,6 +87,9 @@ export const MESSAGES_EN: Messages = {
   'buy.skipped': (name) => `${name}: marked as bought`,
   'buy.undo': 'Undo',
   'buy.then': 'Then',
+  'buy.more': (n) => `${n} more`,
+  'buy.less': 'Show less',
+  'more.title': 'Ability order, build plan and owned items',
 
   'reason.earlyPriority': 'Early lane priority',
   'reason.laneCounter': 'Priority lane counter',

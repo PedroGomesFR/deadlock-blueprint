@@ -94,6 +94,9 @@ export const MESSAGES_FR = {
   'buy.skipped': (name: string) => `${name} : marqué comme acheté`,
   'buy.undo': 'Annuler',
   'buy.then': 'Ensuite',
+  'buy.more': (n: number) => `${n} de plus`,
+  'buy.less': 'Moins',
+  'more.title': 'Ordre des sorts, plan du build et objets achetés',
 
   // Raisons des recommandations
   'reason.earlyPriority': 'Priorité Début de Lane',

@@ -921,6 +921,9 @@ export function App() {
     setSkipped(null);
   };
   const dismissSkipped = useCallback(() => setSkipped(null), []);
+  // Active build: the enemy whose counters are open (default: the first to focus), and the queue past #4
+  const [openEnemyId, setOpenEnemyId] = useState<string | null>(null);
+  const [showFullQueue, setShowFullQueue] = useState(false);
 
   // "New match" clears the whole match state: a second click within 4 s confirms it
   const [resetArmed, setResetArmed] = useState(false);
@@ -1303,7 +1306,7 @@ export function App() {
   };
   const formatClock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   /** The "Now" orders, most urgent first, with the portraits of the heroes they name; then the Mid Boss timer. */
-  const renderNow = (max: number, compact: boolean) => {
+  const renderNow = (max: number, compact: boolean, withStatus = true) => {
     const size = compact ? 22 : 28;
     return (
       <div className="space-y-1.5">
@@ -1336,7 +1339,7 @@ export function App() {
             })
           )}
         </ul>
-        {renderMidBoss(compact)}
+        {withStatus && renderMidBoss(compact)}
       </div>
     );
   };
@@ -1889,7 +1892,7 @@ export function App() {
           />
 
           <div className="flex items-center gap-2 py-1">
-            {currentSouls !== null && <Badge tone="info">{t('souls.inPocket', formatNumber(currentSouls))}</Badge>}
+            {currentSouls !== null && activeTab !== 'essential' && <Badge tone="info">{t('souls.inPocket', formatNumber(currentSouls))}</Badge>}
             {ownedItems.length > 0 && (
               <Button
                 size="sm"
@@ -1972,19 +1975,19 @@ export function App() {
             {/* ================= TAB 1: ACTIVE BUILD ================= */}
             {activeTab === 'essential' && (
               <div className="space-y-3">
-                {/* What to do now: who is dead in the top bar, my souls, my matchups */}
-                <div className="p-3 rounded-2xl bg-surface-panel border border-accent-500/50 shadow-raised space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-display text-title tracking-display text-ink-strong flex items-center gap-1.5">
-                      <Radio className="w-4 h-4 text-accent-400" /> {t('now.title')}
-                    </h2>
-                    <InfoTip text={t('now.hint')} />
-                  </div>
-                  {renderNow(4, false)}
-                </div>
+                {/* Match strip: clock, phase, Mid Boss, souls (one line instead of four places) */}
+                <Card className="px-3 py-2 flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
+                  {renderMidBoss(false)}
+                  {currentSouls !== null && (
+                    <Badge tone="info" className="text-body px-2.5 py-1 tabular-nums">
+                      {t('souls.inPocket', formatNumber(currentSouls))}
+                    </Badge>
+                  )}
+                </Card>
 
+                <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start gap-3">
                 {/* ★ PRIORITY #1: BUY RIGHT NOW (NEXT ITEMS + WHERE TO FIND IN SHOP + AFFORDABILITY) ★ */}
-                <div className="p-3.5 rounded-2xl bg-surface-panel border border-bone/10 shadow-raised space-y-3">
+                <section className="p-3.5 rounded-2xl bg-surface-panel border border-bone/10 shadow-raised space-y-3">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="p-1.5 rounded-xl bg-accent-500 text-on-accent">
@@ -1999,18 +2002,147 @@ export function App() {
                     <InvestmentLine investment={investment} clockS={clockS} />
                   </div>
 
-                  {/* The next purchase large, the 5 after it as a list */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-start gap-3">
-                    {nextToBuyQueue.slice(0, 1).map(renderBuyHero)}
-                    {nextToBuyQueue.length > 1 && (
-                      <div className="space-y-1.5">
-                        <span className="block font-display text-small tracking-display text-ink-muted">{t('buy.then')}</span>
-                        {nextToBuyQueue.slice(1, 6).map((entry, i) => renderBuyRow(entry, i + 2))}
-                      </div>
-                    )}
+                  {/* The next purchase large, then #2–#4 (up to #6 on demand) */}
+                  {nextToBuyQueue.slice(0, 1).map(renderBuyHero)}
+                  {nextToBuyQueue.length > 1 && (
+                    <div className="space-y-1.5">
+                      <span className="block font-display text-small tracking-display text-ink-muted">{t('buy.then')}</span>
+                      {nextToBuyQueue.slice(1, showFullQueue ? 6 : 4).map((entry, i) => renderBuyRow(entry, i + 2))}
+                      {nextToBuyQueue.length > 4 && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-expanded={showFullQueue}
+                          onClick={() => setShowFullQueue((v) => !v)}
+                          icon={<ChevronDown className={`w-3.5 h-3.5 transition ${showFullQueue ? 'rotate-180' : ''}`} />}
+                        >
+                          {showFullQueue ? t('buy.less') : t('buy.more', Math.min(6, nextToBuyQueue.length) - 4)}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                  <div className="space-y-3">
+                {/* What to do now: who is dead in the top bar, my souls, my matchups */}
+                <section className="p-3 rounded-2xl bg-surface-panel border border-accent-500/50 shadow-raised space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-title tracking-display text-ink-strong flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-accent-400" /> {t('now.title')}
+                    </h2>
+                    <InfoTip text={t('now.hint')} />
+                  </div>
+                  {renderNow(3, false, false)}
+                </section>
+
+                {/* Enemies: one chip each (lane opponents first, then the most dangerous), one open with its ultimate,
+                    its best counters and the fed toggle */}
+                {stanceAlerts.length > 0 &&
+                  (() => {
+                    const isDead = (id: string) => board?.enemies.some((s) => s.heroId === id && s.dead) ?? false;
+                    const open =
+                      stanceAlerts.find((a) => a.enemyId === openEnemyId) ??
+                      stanceAlerts.find((a) => a.stance === 'focus' && !isDead(a.enemyId)) ??
+                      stanceAlerts[0];
+                    return (
+                      <section className="p-3 rounded-2xl bg-surface-panel border border-bone/10 shadow-raised space-y-2.5">
+                        <SectionHeader
+                          as="h2"
+                          icon={<Swords className="w-3.5 h-3.5" />}
+                          title={t('enemies.countersTitle')}
+                          aside={<InfoTip text={t('enemies.countersHint')} />}
+                        />
+                        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={t('enemies.countersTitle')}>
+                          {stanceAlerts.map((alert) => {
+                            const selected = alert.enemyId === open.enemyId;
+                            const dead = isDead(alert.enemyId);
+                            return (
+                              <button
+                                key={alert.enemyId}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                onClick={() => setOpenEnemyId(alert.enemyId)}
+                                title={[stanceLabel(alert), matchupStatText(alert)].filter(Boolean).join('\n')}
+                                className={`flex items-center gap-1.5 pl-0.5 pr-2.5 py-0.5 rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-400 ${stanceStyle(
+                                  alert
+                                )} ${selected ? 'ring-2 ring-accent-400' : 'hover:brightness-125'} ${dead ? 'opacity-50' : ''}`}
+                              >
+                                <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={26} />
+                                <span className="font-label text-body">{alert.enemyName}</span>
+                                {alert.isInMyLane && <span className="text-small">🎯</span>}
+                                {dead && <span className="text-small">💀</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="pt-2.5 border-t border-bone/10 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <HeroPortraitIcon heroId={open.enemyId} color={open.enemyColor} size={36} />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-label text-title text-ink-strong">{open.enemyName}</span>
+                                {stanceLabel(open) && (
+                                  <span className={`px-1.5 rounded-md border text-small font-bold ${stanceStyle(open)}`}>{stanceLabel(open)}</span>
+                                )}
+                                {isDead(open.enemyId) && <span className="text-small text-ink-muted">💀 {t('enemies.dead')}</span>}
+                              </div>
+                              {matchupStatText(open) && <p className="text-small text-ink-muted truncate">{matchupStatText(open)}</p>}
+                            </div>
+                            <Button size="sm" pressed={open.isFed} pressedVariant="danger" onClick={() => toggleFed(open.enemyId)}>
+                              {open.isFed ? t('matchups.fedUnmark') : `🔥 ${t('matchups.fedMark')}`}
+                            </Button>
+                          </div>
+                          {open.ult && (
+                            <div className="flex items-center gap-1.5 text-small text-ink-soft" title={t('enemies.ultTitle')}>
+                              {getAbilityIcon(open.enemyId, '4') && (
+                                <img
+                                  src={getAbilityIcon(open.enemyId, '4')}
+                                  alt=""
+                                  className="w-6 h-6 shrink-0 rounded-md bg-surface-raised border border-bone/15 object-contain p-0.5"
+                                  draggable={false}
+                                />
+                              )}
+                              <span className="font-semibold text-ink-muted shrink-0">{t('enemies.ult')}</span>
+                              <span className="truncate">{open.ult.name.split('(')[0].trim()}</span>
+                            </div>
+                          )}
+                          {open.counters.length > 0 ? (
+                            <ul className="space-y-1.5">
+                              {open.counters.map(({ item, reason }) => {
+                                const owned = effectiveOwned.has(item.id);
+                                return (
+                                  <li key={item.id} title={reason} className={`flex items-center gap-2 ${owned ? 'opacity-50' : ''}`}>
+                                    <ItemArtworkIcon itemId={item.id} category={item.category} size={32} />
+                                    <span className="min-w-0">
+                                      <span className="block font-label text-body text-ink-strong truncate">
+                                        {owned && '✓ '}
+                                        {item.name.split('(')[0].trim()}
+                                      </span>
+                                      <span className="block text-small text-ink-muted truncate">{reason}</span>
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="text-small text-ink-faint">{t('enemies.noCounters')}</p>
+                          )}
+                        </div>
+                      </section>
+                    );
+                  })()}
                   </div>
                 </div>
 
+                {/* Planning, on demand: ability order, counter items, the build's phases, owned items */}
+                <details className="group rounded-2xl bg-surface-panel border border-bone/10">
+                  <summary className="px-3.5 py-2.5 cursor-pointer list-none flex items-center gap-2 font-display text-body tracking-display text-ink-soft hover:text-ink-strong rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-400 [&::-webkit-details-marker]:hidden">
+                    <ChevronDown className="w-4 h-4 transition group-open:rotate-180" aria-hidden />
+                    {t('more.title')}
+                  </summary>
+                  <div className="px-3.5 pb-3.5 space-y-3">
                 {/* Compact Power Order Strip */}
                 <div className="p-2.5 rounded-xl bg-surface-panel border border-bone/10 flex items-center justify-between gap-2 flex-wrap">
                   <SectionHeader
@@ -2033,91 +2165,6 @@ export function App() {
                     })}
                   </div>
                 </div>
-
-                {/* Counter the enemies: one card each (lane opponents first) with its stance (real matchup of my hero),
-                    its ultimate and the best items against it; click the header = fed */}
-                {stanceAlerts.length > 0 && (
-                  <div className="p-3 rounded-xl bg-surface-panel border border-bone/10 space-y-2">
-                    <SectionHeader
-                      as="h2"
-                      className="flex-wrap"
-                      icon={<Swords className="w-3.5 h-3.5" />}
-                      title={t('enemies.countersTitle')}
-                      aside={<InfoTip text={t('enemies.countersHint')} />}
-                    />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {stanceAlerts.map((alert) => (
-                        <div
-                          key={alert.enemyId}
-                          className={`rounded-lg border bg-shade/30 p-2 space-y-1.5 ${
-                            alert.isFed ? 'border-bad-400' : alert.isInMyLane ? 'border-bad-500/50' : 'border-bone/10'
-                          }`}
-                        >
-                          <button
-                            onClick={() => toggleFed(alert.enemyId)}
-                            title={[matchupStatText(alert), t('enemies.stripHint')].filter(Boolean).join('\n')}
-                            className="w-full flex items-center gap-2 text-left rounded-md hover:bg-bone/5 transition"
-                          >
-                            <HeroPortraitIcon heroId={alert.enemyId} color={alert.enemyColor} size={36} />
-                            <span className="min-w-0 flex-1">
-                              <span className="flex items-center gap-1 font-label text-title text-ink-strong">
-                                <span className="truncate">{alert.enemyName}</span>
-                                {alert.isInMyLane && <span className="text-small">🎯</span>}
-                                {board?.enemies.some((s) => s.heroId === alert.enemyId && s.dead) && (
-                                  <span className="text-small font-bold text-ink-muted shrink-0">💀 {t('enemies.dead')}</span>
-                                )}
-                              </span>
-                              {stanceLabel(alert) && (
-                                <span className={`inline-block px-1.5 rounded border text-small font-bold ${stanceStyle(alert)}`}>
-                                  {stanceLabel(alert)}
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                          {alert.ult && (
-                            <div className="flex items-center gap-1.5 text-small text-ink-soft" title={t('enemies.ultTitle')}>
-                              {getAbilityIcon(alert.enemyId, '4') && (
-                                <img
-                                  src={getAbilityIcon(alert.enemyId, '4')}
-                                  alt=""
-                                  className="w-6 h-6 shrink-0 rounded-md bg-surface-raised border border-spirit-400/50 object-contain p-0.5"
-                                  draggable={false}
-                                />
-                              )}
-                              <span className="font-semibold text-spirit-300 shrink-0">{t('enemies.ult')}</span>
-                              <span className="truncate">{alert.ult.name.split('(')[0].trim()}</span>
-                            </div>
-                          )}
-                          {alert.counters.length > 0 ? (
-                            <ul className="space-y-1">
-                              {alert.counters.map(({ item, reason }) => {
-                                const owned = effectiveOwned.has(item.id);
-                                return (
-                                  <li
-                                    key={item.id}
-                                    title={reason}
-                                    className={`flex items-center gap-1.5 ${owned ? 'opacity-50' : ''}`}
-                                  >
-                                    <ItemArtworkIcon itemId={item.id} category={item.category} size={26} />
-                                    <span className="min-w-0">
-                                      <span className="block font-label text-body text-ink-strong truncate">
-                                        {owned && '✓ '}
-                                        {item.name.split('(')[0].trim()}
-                                      </span>
-                                      <span className="block text-small text-ink-muted truncate">{reason}</span>
-                                    </span>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          ) : (
-                            <p className="text-small text-ink-faint">{t('enemies.noCounters')}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Urgent Counter Items Against Selected Enemies (UNOWNED ONLY) */}
                 {tacticalPlan.priorityItems.filter((rec) => !effectiveOwned.has(rec.item.id)).length > 0 && (
@@ -2208,6 +2255,8 @@ export function App() {
                     })}
                   </Card>
                 )}
+                  </div>
+                </details>
               </div>
             )}
 
