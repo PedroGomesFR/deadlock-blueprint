@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.1.0] — 2026-11-03
+
+A new look for the whole app, and an Active build page that fits on one screen. Thanks to [@roroos](https://github.com/roroos) ([#14](https://github.com/PedroGomesFR/deadlock-blueprint/pull/14), [#15](https://github.com/PedroGomesFR/deadlock-blueprint/pull/15), [#16](https://github.com/PedroGomesFR/deadlock-blueprint/pull/16)).
+
+### New
+- **Active build as a command center**: the page now fits on one screen at 1080p and 1440p, in the order you look at it during a match.
+  - One line at the top with the clock, the laning or teamfight phase, the Mid Boss (and its "taken" button) and your souls.
+  - From 1280 px wide, two columns: **Buy next** on the left (spike bars, purchase #1 large, #2–#4 as rows, up to #6 on demand), **Now** and **Counter the enemies** on the right.
+  - Enemies are small chips coloured by whether to avoid or focus them. One is open at a time, with their ultimate, their best counters and the fed button; by default, the first live enemy to focus.
+  - Ability order, counter items, the build's phases and your owned items are in a folded section.
+- **Interface size** in Settings: Auto, 100, 115 or 130 %. Auto picks 115 % on screens 2,400 px wide or more.
+- **Deadlock's own fonts** for titles and names, bundled with the app (it no longer loads fonts from the internet).
+
+### Changed
+- **One meaning per colour**: amber is what to act on (purchase #1, the open tab, the enemy to focus), red is danger, teal is souls, green only marks small "affordable" or "done" signals, and the Weapon / Vitality / Spirit colours only mark item categories. Matchup danger is now neutral when low, amber when medium, red when high or extreme (before, always red).
+- **Safer buying**: "Skip" is now a real button (clicking a card no longer marks it bought) and shows a notice with **Undo**. "Reset" is now **New match** and needs a second click within 4 seconds, since it clears your owned and sold items, the fed enemies and the Mid Boss.
+- Less small text: help paragraphs and purchase statistics are behind an ⓘ. Clearer labels ("Enemies: 2 in lane · 4 other", "Auto-detect", "Buy next", "New match") in English, French and Italian.
+- Keyboard and screen readers: Escape closes dialogs and pickers, focus is visible, toggles say whether they are on, icon buttons have labels.
+- New screenshots in the README.
+
 ## [2.0.3] — 2026-10-31
 
 ### Changed
