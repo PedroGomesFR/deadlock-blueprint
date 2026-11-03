@@ -901,14 +901,19 @@ export function App() {
   };
 
   // "Skip" in the buy list marks the item bought, with an Undo: a stray click on a second monitor is easy
-  const [skipped, setSkipped] = useState<{ itemId: string; name: string } | null>(null);
+  // Skipping the locked #1 moves the lock to the next item: Undo gives it back, or the item came back as #2
+  const [skipped, setSkipped] = useState<{ itemId: string; name: string; lock: LockedNextPurchase | null } | null>(null);
   const skipItem = (itemId: string, name: string) => {
     handleToggleOwnedItem(itemId);
-    setSkipped({ itemId, name });
+    setSkipped({ itemId, name, lock: lockedItemId === itemId ? lockedNext : null });
   };
   const undoSkip = () => {
     if (!skipped) return;
-    const { itemId } = skipped;
+    const { itemId, lock } = skipped;
+    if (lock) {
+      setLockedNext(lock);
+      localStorage.setItem('dl_lockedNext', JSON.stringify(lock));
+    }
     setOwnedItems((prev) => {
       const manualOwned = readManualOwned();
       manualOwned.delete(itemId);
