@@ -13,6 +13,11 @@ export interface SimulatedLayout {
   borderX?: number;
   borderTop?: number;
   borderBottom?: number;
+  /**
+   * The game runs at width x height but the screen shows it at another size (16:10 or 4:3 on a 16:9 monitor,
+   * issue #17: 2304x1440 on 2560x1440): stretched to the whole screen, or centred between black bars.
+   */
+  display?: { width: number; height: number; fit: 'stretch' | 'pillarbox' };
 }
 
 export interface ReplayJob {
@@ -22,6 +27,8 @@ export interface ReplayJob {
   heroId?: string;
   buildItemIds?: string[];
   simulateLayout?: SimulatedLayout;
+  /** Keep what the scanner remembers from the previous job (the layout proven by a frame with the top bar) */
+  keepState?: boolean;
 }
 
 export interface ReplaySummary {
@@ -148,7 +155,23 @@ async function composeFrame(job: ReplayJob): Promise<ImageBitmap> {
     ctx.fillRect(0, 0, width, bt);
     ctx.drawImage(baseCanvas, 0, 0, 1920, 1080, bx, bt, width - 2 * bx, height - bt - bb);
   }
-  return createImageBitmap(out);
+  const display = job.simulateLayout.display;
+  if (!display) return createImageBitmap(out);
+  const shown = document.createElement('canvas');
+  shown.width = display.width;
+  shown.height = display.height;
+  const shownCtx = shown.getContext('2d')!;
+  shownCtx.imageSmoothingEnabled = true;
+  shownCtx.imageSmoothingQuality = 'high';
+  shownCtx.fillStyle = '#000';
+  shownCtx.fillRect(0, 0, display.width, display.height);
+  if (display.fit === 'stretch') {
+    shownCtx.drawImage(out, 0, 0, display.width, display.height);
+  } else {
+    const w = Math.round((width * display.height) / height);
+    shownCtx.drawImage(out, Math.round((display.width - w) / 2), 0, w, display.height);
+  }
+  return createImageBitmap(shown);
 }
 
 async function main() {
@@ -157,7 +180,7 @@ async function main() {
   const { jobs, sequential, ocr } = await api.getJobs();
   for (const job of jobs) {
     try {
-      if (!sequential) scanner.resetScannerState();
+      if (!sequential && !job.keepState) scanner.resetScannerState();
       const frame = await composeFrame(job);
       const scan = () =>
         scanner.analyzeDeadlockScreen(frame, job.name, true, job.heroId ?? 'infernus', job.buildItemIds ?? [], false);

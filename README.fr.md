@@ -101,7 +101,7 @@ Les anti-triche visent les programmes qui lisent ou modifient la mémoire d'un j
 | ✅ **16:9** : 1920×1080, 2560×1440, 3840×2160… | Calibré sur 1920×1080, les autres résolutions 16:9 y sont ramenées. |
 | ✅ Plein écran ou fenêtré sans bordure | |
 | ⚠️ HDR Windows | Pas encore pris en charge : avec le HDR activé, les couleurs de la capture sont fausses et rien n'est détecté. Désactive le HDR pour jouer (Paramètres › Affichage › Utiliser le HDR). |
-| 🧪 16:10, ultra-large (21:9, 32:9), 4:3, fenêtré avec bordures | Expérimental : le HUD est ramené à la disposition 16:9, pas encore vérifié sur de vraies captures de ces formats. Si la détection échoue, [signale un problème](#-signaler-un-problème) avec un journal de partie. |
+| 🧪 16:10, ultra-large (21:9, 32:9), 4:3, fenêtré avec bordures, jeu en 16:10 ou 4:3 sur un écran 16:9 (étiré ou bandes noires) | Expérimental : le HUD est ramené à la disposition 16:9, pas encore vérifié sur de vraies captures de ces formats. Si la détection échoue, [signale un problème](#-signaler-un-problème) avec un journal de partie. |
 | ⛔ Écran vertical, toute petite fenêtre | L'application le signale et **met la détection en pause** au lieu d'afficher de mauvaises recommandations. |
 | ⚠️ Échelle du HUD modifiée, filtres de couleur | Le HUD n'est pas là où le scanner le cherche : l'application l'indique si elle ne trouve aucun HUD pendant plusieurs minutes. |
 

@@ -105,7 +105,7 @@ Anti-cheat systems go after programs that read or modify a game's memory or auto
 | ✅ **16:9**: 1920×1080, 2560×1440, 3840×2160… | Calibrated on 1920×1080; other 16:9 resolutions are scaled to it. |
 | ✅ Fullscreen or borderless windowed | |
 | ⚠️ Windows HDR | Not supported yet: with HDR on, the capture's colours are wrong and nothing is detected. Turn HDR off while playing (Settings › Display › Use HDR). |
-| 🧪 16:10, ultrawide (21:9, 32:9), 4:3, windowed with borders | Experimental: the HUD is mapped onto the 16:9 layout, not yet checked on real captures of these formats. If detection fails, [report a problem](#-report-a-problem) with a game log. |
+| 🧪 16:10, ultrawide (21:9, 32:9), 4:3, windowed with borders, a 16:10 or 4:3 game on a 16:9 screen (stretched or black bars) | Experimental: the HUD is mapped onto the 16:9 layout, not yet checked on real captures of these formats. If detection fails, [report a problem](#-report-a-problem) with a game log. |
 | ⛔ Vertical screen, tiny window | The app says so and **pauses detection** instead of showing wrong recommendations. |
 | ⚠️ A changed HUD scale, colour filters | The HUD is not where the scanner looks: the app shows a hint when it finds no HUD for a few minutes. |
 

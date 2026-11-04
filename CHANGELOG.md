@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.1] — 2026-11-04
+
+### Fixed
+- **A 16:10 or 4:3 game on a 16:9 screen was not read** (2304×1440 on a 2560×1440 screen, [#17](https://github.com/PedroGomesFR/deadlock-blueprint/issues/17)): the capture is 16:9 but the game's HUD is the 16:10 one, stretched to the screen's width or shown between black bars. The app read it as a 16:9 HUD: half the portraits were missed or read as another hero, and the items and souls were not read at all. It now tells these layouts apart by the height of the score boxes at the top of the screen, then by the souls counter. Checked on simulated captures of these layouts (16:10 and 4:3, stretched and between black bars, shop open), not yet on a real one: if it still fails for you, please [report it](https://github.com/PedroGomesFR/deadlock-blueprint/issues/new?template=bug_report.yml) with a game log. Games that fill a 16:9 screen are read exactly as before. Thanks to [@australium7](https://github.com/australium7) for the report.
+
 ## [2.1.0] — 2026-11-03
 
 A new look for the whole app, and an Active build page that fits on one screen. Thanks to [@roroos](https://github.com/roroos) ([#14](https://github.com/PedroGomesFR/deadlock-blueprint/pull/14), [#15](https://github.com/PedroGomesFR/deadlock-blueprint/pull/15), [#16](https://github.com/PedroGomesFR/deadlock-blueprint/pull/16)).
