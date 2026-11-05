@@ -9,7 +9,11 @@ import type { VisionDetectionResult } from '../services/visionScanner';
 export interface SimulatedLayout {
   width: number;
   height: number;
-  mode: '16:9' | '16:10' | 'ultrawide' | 'windowed';
+  /**
+   * 16:10: HUD scaled to the width. ultrawide / height-scaled: HUD scaled to the height (Panorama), top bar and
+   * abilities centred, bottom-left HUD at the left edge — also how the game lays out 16:10 and 4:3 (issue #17).
+   */
+  mode: '16:9' | '16:10' | 'ultrawide' | 'height-scaled' | 'windowed';
   borderX?: number;
   borderTop?: number;
   borderBottom?: number;
@@ -128,7 +132,7 @@ async function composeFrame(job: ReplayJob): Promise<ImageBitmap> {
     const halfH = Math.round(540 * scale);
     ctx.drawImage(baseCanvas, 0, 0, 1920, 540, 0, 0, width, halfH);
     ctx.drawImage(baseCanvas, 0, 540, 1920, 540, 0, height - halfH, width, halfH);
-  } else if (mode === 'ultrawide') {
+  } else if (mode === 'ultrawide' || mode === 'height-scaled') {
     const scale = height / 1080;
     const centerOffsetX = Math.round((width - 1920 * scale) / 2);
     // Top bar centered

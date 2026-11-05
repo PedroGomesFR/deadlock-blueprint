@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.2] — 2026-11-05
+
+### Fixed
+- **A 16:10 or 4:3 game stretched to a 16:9 screen was still not read** (2304×1440 stretched to 2560×1440, [#17](https://github.com/PedroGomesFR/deadlock-blueprint/issues/17)): 2.1.1 expected the game to shrink its HUD to fit the 16:10 width, but the game sizes its HUD by the screen's height. Stretched, the HUD keeps its height and only gets 11 % wider (a third wider in 4:3), so the portraits were read in the wrong places. The app now detects the stretching from the portraits at the top of the screen, which only match where the stretched layout puts them. Between black bars, the items and souls are now read too (the inventory starts after the left bar). A native 16:10 capture with the HUD sized this way is also read. Checked on simulated captures, not yet on a real one. Frame by frame, games that fill a 16:9 screen are read exactly as before. Thanks again to [@australium7](https://github.com/australium7) for testing 2.1.1.
+
 ## [2.1.1] — 2026-11-04
 
 ### Fixed

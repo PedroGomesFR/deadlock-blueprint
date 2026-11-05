@@ -377,7 +377,7 @@
     },
     {
       "name": "sapphire_late_16x10_stretched_1440p",
-      "description": "Issue #17: the game at 2304x1440 (16:10) stretched to a 2560x1440 screen. The capture is 16:9 but the HUD is 16:10, squeezed to 90 % of its height.",
+      "description": "Issue #17, if the game scaled its 16:10 HUD to its width (a layout kept as a candidate): the game at 2304x1440 (16:10) stretched to a 2560x1440 screen. The capture is 16:9 but the HUD is 16:10, squeezed to 90 % of its height.",
       "heroId": "infernus",
       "simulateLayout": { "width": 2304, "height": 1440, "mode": "16:10", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
       "parts": [
@@ -485,6 +485,187 @@
         "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", "toxic_bullets", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "lock"],
         "locked": 1,
         "souls": 4650
+      }
+    },
+    {
+      "name": "sapphire_late_16x10_hud_height_stretched_1440p",
+      "description": "Issue #17 (second report): the game at 2304x1440 (16:10) stretched to a 2560x1440 screen. The game scales its HUD to the height, so the stretched HUD keeps its height and is only 11 % wider: the score boxes are 32 rows high, the portraits only match in the widened layout.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
+        "topBar": "29:58 156/172",
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "amber_rat_king_0709_16x10_hud_height_stretched_1440p",
+      "description": "Highlighted portrait, game at 2304x1440 stretched to 2560x1440 (HUD scaled to the height).",
+      "knownIssues": ["enemy slot 0 is dead, but its respawn timer has 30 pixels of the timer colour on the real frame, exactly the threshold: resampled by the simulation, it falls just under"],
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/amber_rat_king_0709_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_rat_king_0709_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_rat_king_0709_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": "rat_king",
+        "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|010000",
+        "topBar": "7:09 26/23",
+        "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
+        "locked": 3,
+        "souls": 191
+      }
+    },
+    {
+      "name": "amber_shop_open_16x10_hud_height_stretched_1440p",
+      "description": "Shop open right after the previous case, game at 2304x1440 stretched to 2560x1440: no top bar, the layout proven by the last frame with the top bar stays.",
+      "heroId": "infernus",
+      "keepState": true,
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/amber_shop_open_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_shop_open_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_shop_open_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "shop",
+        "highlighted": null,
+        "allySlots": null,
+        "enemySlots": null,
+        "slots": ["extra_regen", "spirit_shielding", "return_fire", "suppressor", "pristine_emblem", "toxic_bullets", "slowing_hex", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "lock"],
+        "locked": 1,
+        "souls": 4650
+      }
+    },
+    {
+      "name": "amber_many_dead_2927_16x10_hud_height_stretched_1440p",
+      "description": "6 dead heroes (grey portraits), game at 2304x1440 stretched to 2560x1440.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/amber_many_dead_2927_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/amber_many_dead_2927_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/amber_many_dead_2927_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": "infernus",
+        "allySlots": ["mo_and_krill", "graves", "infernus", null, null, "deadman_danny"],
+        "enemySlots": [null, null, "doorman", null, null, null],
+        "dead": "000110|110111",
+        "topBar": "29:27 174/186",
+        "slots": ["slowing_hex", "return_fire", "suppressor", "pristine_emblem", "recharging_rush", "express_shot", "swift_striker", "improved_spirit", "titanic_magazine", "healbane", "toxic_bullets", "lock"],
+        "locked": 1,
+        "souls": 3580
+      }
+    },
+    {
+      "name": "sapphire_death_cam_16x10_hud_height_stretched_1440p",
+      "description": "Death cam right after the previous case, game at 2304x1440 stretched to 2560x1440: no souls digits, and the killer's portraits match in no layout. The stretching found on the previous frames stays (the clock and souls, read in the background, are those of the previous case here).",
+      "heroId": "infernus",
+      "keepState": true,
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/sapphire_death_cam_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_death_cam_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_death_cam_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": [null, "vindicta", null, null, "seven", null],
+        "dead": "101100|001101",
+        "slots": ["extra_regen", "enduring_speed", "slowing_hex", "lifestrike", ".", "lock", "stalker", "spirit_shielding", "rapid_recharge", "crushing_fists", ".", "lock"],
+        "locked": 2
+      }
+    },
+    {
+      "name": "sapphire_late_16x10_hud_height_pillarbox_1440p",
+      "description": "Game at 2304x1440 between black bars on a 2560x1440 screen, HUD scaled to the height: the top bar is where it is in 16:9, the bottom-left HUD starts after the left bar.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "pillarbox" } },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1440",
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
+        "topBar": "29:58 156/172",
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_late_4x3_hud_height_stretched_1080p",
+      "description": "4:3 game (1440x1080) stretched to a 1920x1080 screen, HUD scaled to the height: one third wider.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 1440, "height": 1080, "mode": "height-scaled", "display": { "width": 1920, "height": 1080, "fit": "stretch" } },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "1920x1080",
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
+        "topBar": "29:58 156/172",
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
+      }
+    },
+    {
+      "name": "sapphire_late_2k_16x10_hud_height",
+      "description": "Native 16:10 capture (2560x1600) with the HUD scaled to the height.",
+      "heroId": "infernus",
+      "simulateLayout": { "width": 2560, "height": 1600, "mode": "height-scaled" },
+      "parts": [
+        { "file": "frames/sapphire_late_top.jpg", "x": 0, "y": 0 },
+        { "file": "frames/sapphire_late_inv.jpg", "x": 0, "y": 820 },
+        { "file": "frames/sapphire_late_abilities.jpg", "x": 790, "y": 970 }
+      ],
+      "expect": {
+        "frame": "2560x1600",
+        "mode": "hud",
+        "highlighted": null,
+        "allySlots": ["celeste", "vindicta", "infernus", "sinclair", null, null],
+        "enemySlots": ["apollo", "warden", "paige", null, "rat_king", null],
+        "dead": "000011|000101",
+        "topBar": "29:58 156/172",
+        "slots": ["reactive_barrier", "improved_spirit", "titanic_magazine", "spirit_lifesteal", "debuff_remover", "lock", "return_fire", "swift_striker", "soul_shredder_bullets", "slowing_bullets", "metal_skin", "lock"],
+        "locked": 2,
+        "souls": 3724
       }
     },
     {

@@ -759,6 +759,7 @@ export function resetScannerState(): void {
   lastTopBarOcrAt = -Infinity;
   cachedTopBar = undefined;
   lastProvenLayout = null;
+  widenedLayout = null;
 }
 
 /** Resolves once the background OCR (souls, top bar) is done (replay harness: the next scan of the frame reads it). */
@@ -826,13 +827,18 @@ function buildHudCandidates(rawW: number, rawH: number): HudLayout[] {
   if (Math.abs(ratio - aspect16x9) <= 0.02) {
     // Standard 16:9 (1280x720, 1600x900, 1920x1080, 2560x1440 2K, 3840x2160 4K)
     add('16:9', 0, 0, rawW, rawH, rawW / 1920, rawH / 1080);
-    // A 16:10 or 4:3 game on a 16:9 screen (issue #17: 2304x1440 on 2560x1440): its HUD is scaled to the game's
-    // width, then the screen stretches the image to its width (HUD squeezed to 90 % / 75 % of its height, the top
-    // bar is still found) or shows it between black bars. Only tried when the score boxes are not 32 rows high in
-    // the 16:9 layout (drawNormalizedFrame).
+    // A 16:10 or 4:3 game on a 16:9 screen (issue #17: 2304x1440 on 2560x1440), stretched to the screen's width or
+    // between black bars. The game scales its HUD to the height (-h, Panorama, like the ultrawide layout): stretched,
+    // the HUD keeps its height and is 10/9 or 4/3 wider, told by the portraits (they only match there); between
+    // black bars, the top bar is where it is in 16:9 and the bottom-left HUD starts after the left bar. The layouts
+    // with the HUD scaled to the game's width (squeezed to 90 % / 75 % of its height once stretched) are kept: only
+    // tried when the score boxes are not 32 rows high in the 16:9 layout (drawNormalizedFrame).
+    const s = rawH / 1080;
     for (const [tag, aspect] of [['16:10', 16 / 10], ['4:3', 4 / 3]] as const) {
-      add(`${tag}-stretched`, 0, 0, rawW, rawH, rawW / 1920, (rawH * aspect) / 1920);
       const vw = Math.round(rawH * aspect);
+      add(`${tag}-stretched-h`, 0, 0, rawW, rawH, (s * aspect16x9) / aspect, s);
+      add(`${tag}-pillarbox-h`, Math.round((rawW - vw) / 2), 0, vw, rawH, s, s);
+      add(`${tag}-stretched`, 0, 0, rawW, rawH, rawW / 1920, (rawH * aspect) / 1920);
       add(`${tag}-pillarbox`, Math.round((rawW - vw) / 2), 0, vw, rawH, vw / 1920, vw / 1920);
     }
   } else if (ratio > aspect16x9) {
@@ -859,6 +865,8 @@ function buildHudCandidates(rawW: number, rawH: number): HudLayout[] {
     }
     const sw = rawW / 1920;
     add('narrow-native', 0, 0, rawW, rawH, sw, sw);
+    // HUD scaled to the height, as the game does on a 16:10 or 4:3 game stretched to a 16:9 screen (issue #17)
+    add('narrow-height', 0, 0, rawW, rawH, rawH / 1080, rawH / 1080);
     const letterH = Math.round((rawW * 9) / 16);
     const letterY = Math.round((rawH - letterH) / 2);
     if (letterY >= 8) {
@@ -986,6 +994,87 @@ function scoreBoxHeightOn1080pCanvas(ctx: CanvasRenderingContext2D): number {
   }
 }
 
+// A 16:10 or 4:3 game stretched to a 16:9 screen (issue #17, second report): the game scales its HUD to the height,
+// so the top bar keeps its height (the score boxes still fit) and is only 10/9 or 4/3 wider. Told by the portraits:
+// mean error of the 6 best-matched portraits of the top bar drawn in a layout (portraitFitError, lower: the
+// portraits are where the layout puts them). Measured: 9-12 in the right layout on the frames of tests/vision,
+// widened or not; >= 21 in a wrong one. On the 127 full frames with the HUD of 5 real 16:9 games, a widened layout
+// never below 24.7; frames with few live portraits (death cam: the killer's HUD, many dead) ~32-40 in every layout.
+const PORTRAIT_FIT_GOOD = 18;
+const PORTRAIT_FIT_MARGIN = 8;
+const PORTRAIT_FIT_SLOTS = [0, 1, 2, 3, 4, 5].flatMap((i) => [339 + i * 88, 1071 + i * 88]);
+let fitPatchCanvas: HTMLCanvasElement | null = null;
+// Widened layout decided for this capture size: kept through the frames where no layout fits (death cam, Shop),
+// a game does not change its stretching mid-match
+let widenedLayout: { rawW: number; rawH: number; name: string } | null = null;
+
+/** Mean error of the 6 best-matched portraits of the top bar drawn on the canvas (NaN: fewer than 4 portraits). */
+function portraitFitError(ctx: CanvasRenderingContext2D): number {
+  const templates = cachedPortraitTemplates;
+  if (!templates || templates.length === 0) return NaN;
+  if (!fitPatchCanvas) {
+    fitPatchCanvas = document.createElement('canvas');
+    fitPatchCanvas.width = 20;
+    fitPatchCanvas.height = 27;
+  }
+  const patchCtx = fitPatchCanvas.getContext('2d', { willReadFrequently: true });
+  if (!patchCtx) return NaN;
+  const errors: number[] = [];
+  for (const x of PORTRAIT_FIT_SLOTS) {
+    patchCtx.clearRect(0, 0, 20, 27);
+    patchCtx.drawImage(ctx.canvas, x, 0, 70, 95, 0, 0, 20, 27);
+    const p = patchCtx.getImageData(0, 0, 20, 27).data;
+    let lumSum = 0;
+    let lumSq = 0;
+    for (let i = 0; i < 20 * 18; i++) {
+      const lum = 0.299 * p[i * 4] + 0.587 * p[i * 4 + 1] + 0.114 * p[i * 4 + 2];
+      lumSum += lum;
+      lumSq += lum * lum;
+    }
+    if (lumSq / 360 - (lumSum / 360) ** 2 < 180) continue;
+    let best = Infinity;
+    for (const tpl of templates) {
+      const t = tpl.rgba;
+      let diff = 0;
+      let cnt = 0;
+      for (let py = 2; py < 16; py++) {
+        for (let px = 4; px < 16; px++) {
+          const idx = (py * 20 + px) * 4;
+          if (t[idx + 3] > 215) {
+            diff += (Math.abs(t[idx] - p[idx]) + Math.abs(t[idx + 1] - p[idx + 1]) + Math.abs(t[idx + 2] - p[idx + 2])) / 3;
+            cnt++;
+          }
+        }
+      }
+      if (cnt > 25 && diff / cnt < best) best = diff / cnt;
+    }
+    if (best < Infinity) errors.push(best);
+  }
+  if (errors.length < 4) return NaN;
+  errors.sort((a, b) => a - b);
+  const kept = errors.slice(0, 6);
+  return kept.reduce((sum, e) => sum + e, 0) / kept.length;
+}
+
+// Black bars on both sides of the viewport (a game between black bars), on the canvas drawn in the 16:9 layout.
+// The rows of the top bar first: on a real 16:9 HUD, one small read finds a pixel that is not black.
+function sideBarsBlack(ctx: CanvasRenderingContext2D, barWidth: number): boolean {
+  const w = Math.floor(barWidth) - 6;
+  if (w < 4) return false;
+  for (const [y, h] of [
+    [0, 100],
+    [100, 980],
+  ]) {
+    for (const x of [3, 1920 - 3 - w]) {
+      const data = ctx.getImageData(x, y, w, h).data;
+      for (let i = 0; i < data.length; i += 4 * 7) {
+        if (data[i] > 24 || data[i + 1] > 24 || data[i + 2] > 24) return false;
+      }
+    }
+  }
+  return true;
+}
+
 function countSoulsMintPixelsOn1080pCanvas(ctx: CanvasRenderingContext2D, dy: number): number {
   const data = ctx.getImageData(110, 892 + dy, 98, 32).data;
   let mintPixels = 0;
@@ -1014,24 +1103,92 @@ function drawNormalizedFrame(
     // The top bar is found in several layouts (it is at the top centre in all of them). The height of its score
     // boxes gives the vertical scale (a 16:10 or 4:3 game on a 16:9 screen), the souls digits tell apart layouts
     // of the same height (ultrawide: bottom-left HUD at the left edge or in the 16:9 safe zone; stretched or
-    // between black bars). On a 16:9 game: 1 height and 1 souls check per frame, nothing else.
+    // between black bars). On a 16:9 game: 1 height, 1 portrait fit, 1 black bars and 1 souls check per frame.
     const primaryOff = !scoreBoxFits(ctx);
+    // Right height on a 16:9 capture: a 16:10 or 4:3 game stretched to the screen is only wider (the portraits
+    // match in a widened layout; the others only measured when they do not match in 16:9); between black bars, its
+    // bottom-left HUD starts after the left bar (the widest black bars win: those of 4:3 contain those of 16:10).
+    // A real 16:9 HUD never has black bars: the inventory is in the left one.
+    if (primary.name === '16:9' && !primaryOff) {
+      const primaryFit = portraitFitError(ctx);
+      if (primaryFit <= PORTRAIT_FIT_GOOD) {
+        widenedLayout = null;
+      } else {
+        let bestWidened: { layout: HudLayout; fit: number } | null = null;
+        for (const c of candidates) {
+          if (!c.name.endsWith('-stretched-h')) continue;
+          drawTopBarZone(img, ctx, c);
+          const fit = portraitFitError(ctx);
+          if (fit <= PORTRAIT_FIT_GOOD && (!bestWidened || fit < bestWidened.fit)) bestWidened = { layout: c, fit };
+        }
+        // NaN (no portraits in the 16:9 layout) counts as not fitting
+        if (bestWidened && !(primaryFit < bestWidened.fit + PORTRAIT_FIT_MARGIN)) {
+          widenedLayout = { rawW: img.width, rawH: img.height, name: bestWidened.layout.name };
+        }
+        drawHudLayout(img, ctx, primary);
+      }
+      const widened = widenedLayout;
+      let other =
+        widened && widened.rawW === img.width && widened.rawH === img.height
+          ? candidates.find((c) => c.name === widened.name)
+          : undefined;
+      if (!other) {
+        // Between black bars: the souls digits in the bottom-left HUD after the left bar, or that layout already
+        // proven (death cam: no souls)
+        for (const c of candidates) {
+          if (!c.name.endsWith('-pillarbox-h') || !sideBarsBlack(ctx, c.vx / primary.scaleX)) continue;
+          if (lastProvenLayout?.name === c.name && lastProvenLayout.rawW === c.rawW && lastProvenLayout.rawH === c.rawH) {
+            other = c;
+            continue;
+          }
+          drawHudLayout(img, ctx, c);
+          if (countSoulsMintPixelsOn1080pCanvas(ctx, 0) >= MIN_SOULS_DIGIT_PIXELS) other = c;
+          drawHudLayout(img, ctx, primary);
+        }
+      }
+      if (other) {
+        drawHudLayout(img, ctx, other);
+        const otherTopBar = checkTopBarOn1080pCanvas(ctx);
+        if (otherTopBar.visible && scoreBoxFits(ctx)) {
+          lastProvenLayout = other;
+          return { layout: other, topBarVisible: true, isMyTeamAmber: otherTopBar.amber };
+        }
+        drawHudLayout(img, ctx, primary);
+      }
+    }
     const primarySouls = countSoulsMintPixelsOn1080pCanvas(ctx, 0);
     if (primaryOff || primarySouls < MIN_SOULS_DIGIT_PIXELS) {
       // Among the layouts where the boxes are 32 rows high, the most souls digits wins: a few digits often
       // overlap the souls box of a wrong layout
-      let best: { layout: HudLayout; amber: boolean; souls: number } | null = null;
+      // Not on a 16:9 capture: a layout where the portraits match clearly better comes first (same height,
+      // different width: a native 16:10 capture read as a 16:9 screen stretched), then the souls digits. On a 16:9
+      // capture, the souls digits only, as before: replaying 5 real 16:9 games, the portraits picked a wrong layout
+      // for a frame whose score boxes did not fit.
+      const byFit = primary.name !== '16:9';
+      let best: { layout: HudLayout; amber: boolean; souls: number; fit: number } | null = null;
       for (let i = 1; i < candidates.length; i++) {
         const cand = candidates[i];
         // Right height in the primary layout (souls hidden: dead, death cam): only layouts of the same vertical
-        // scale (ultrawide safe zone), none on a 16:9 capture
-        if (!primaryOff && Math.abs(cand.scaleY - primary.scaleY) > 0.01 * primary.scaleY) continue;
+        // scale (ultrawide safe zone), none on a 16:9 capture (the 16:10 and 4:3 games scaled to the height are
+        // told above)
+        const sameHeight = Math.abs(cand.scaleY - primary.scaleY) <= 0.01 * primary.scaleY;
+        if (!primaryOff && (!sameHeight || primary.name === '16:9')) continue;
+        // Wrong height in the primary layout: a layout of the same vertical scale does not explain it (the widened
+        // 16:10 and 4:3 layouts passed the height test on a 16:9 frame where a game effect covered a score box)
+        if (primaryOff && sameHeight) continue;
         drawTopBarZone(img, ctx, cand);
         const candTopBar = checkTopBarOn1080pCanvas(ctx);
         if (!candTopBar.visible || !scoreBoxFits(ctx)) continue;
+        const fit = byFit ? portraitFitError(ctx) : NaN;
         drawHudLayout(img, ctx, cand);
         const souls = countSoulsMintPixelsOn1080pCanvas(ctx, 0);
-        if (!best || souls > best.souls) best = { layout: cand, amber: candTopBar.amber, souls };
+        if (
+          !best ||
+          fit < best.fit - PORTRAIT_FIT_MARGIN ||
+          (!(best.fit < fit - PORTRAIT_FIT_MARGIN) && souls > best.souls)
+        ) {
+          best = { layout: cand, amber: candTopBar.amber, souls, fit };
+        }
       }
       // More digits than the primary layout, or the primary is clearly off and the candidate has digits (early in
       // the match, the haunted souls line moves the digits up by 18 rows: the right layout sees only part of them)
@@ -1050,17 +1207,26 @@ function drawNormalizedFrame(
     return { layout: primary, topBarVisible: true, isMyTeamAmber: topBar.amber };
   }
 
-  // Test alternative layouts (16:10 letterbox/stretched, windowed title bar) to see if the top bar sits there
+  // Test alternative layouts (16:10 letterbox/stretched, windowed title bar) to see if the top bar sits there. A
+  // squeezed top bar can pass the colour test in a wrong layout: its boxes must also be 32 rows high. Among those,
+  // the first one unless the portraits match clearly better in another (same height, different width; not on a
+  // 16:9 capture, as above).
+  let found: { layout: HudLayout; amber: boolean; fit: number } | null = null;
   for (let i = 1; i < candidates.length; i++) {
     const cand = candidates[i];
+    // The 16:10 and 4:3 games scaled to the height are only told by their top bar in the 16:9 layout (above)
+    if (cand.name.endsWith('-h')) continue;
     drawTopBarZone(img, ctx, cand);
     topBar = checkTopBarOn1080pCanvas(ctx);
-    // A squeezed top bar can pass the colour test in a wrong layout: its boxes must also be 32 rows high
-    if (topBar.visible && scoreBoxFits(ctx)) {
-      drawHudLayout(img, ctx, cand);
-      lastProvenLayout = cand;
-      return { layout: cand, topBarVisible: true, isMyTeamAmber: topBar.amber };
-    }
+    if (!topBar.visible || !scoreBoxFits(ctx)) continue;
+    const fit = primary.name === '16:9' ? NaN : portraitFitError(ctx);
+    if (!found || fit < found.fit - PORTRAIT_FIT_MARGIN) found = { layout: cand, amber: topBar.amber, fit };
+    if (primary.name === '16:9') break;
+  }
+  if (found) {
+    drawHudLayout(img, ctx, found.layout);
+    lastProvenLayout = found.layout;
+    return { layout: found.layout, topBarVisible: true, isMyTeamAmber: found.amber };
   }
 
   // Top bar hidden (Shop open or menus): test if an alternative layout has the Shop / HUD souls digits. Not on a
