@@ -336,6 +336,16 @@ const RESPAWN_DIGIT_MIN_PIXELS = 30;
 const isRespawnDigitPixel = (d: Uint8ClampedArray, i: number) =>
   d[i] > 220 && d[i + 1] > 45 && d[i + 1] < 115 && d[i + 2] < 60;
 
+// Critical HP: the portrait turns red under a red "CRITIQUE" / "CRITICAL" banner (rows 76..95 of the portrait).
+// 4 of the 9 such portraits of 5 recorded games were read as another hero (1-2 % of the others), and a player
+// saw lineups mismatched when a hero was low on HP (issue #17): they no longer vote, like dead ones. Red banner
+// pixels on x 2..67, y 76..95 of every portrait of these games: <= 133 without the banner (respawn timer digits,
+// menus), >= 209 with it. The red glow around such a portrait also passed the respawn timer test (10 of these 20
+// portraits counted as dead): a portrait under the banner is alive.
+const CRITICAL_BANNER_MIN_PIXELS = 170;
+const isCriticalBannerPixel = (d: Uint8ClampedArray, i: number) =>
+  d[i] > 200 && d[i + 1] > 40 && d[i + 1] < 110 && d[i + 2] < 90;
+
 // Match clock and team souls of the top bar (measured on the 12 frames of tests/vision, 0:32 to 35:01). The clock
 // ("15:45", light grey, 9 px high) sits in a dark box above the score boxes; each score box shows its team's souls
 // in thousands ("62 k", 20 px high): white on the blue box, black on the amber one, followed by a faint "k". The
@@ -1783,6 +1793,9 @@ export async function analyzeDeadlockScreen(
       // Portraits under a respawn timer (dead hero): read, but not trusted for the lineups
       const allyDead: boolean[] = new Array(6).fill(false);
       const enemyDead: boolean[] = new Array(6).fill(false);
+      // Portraits under the critical HP banner: same (red portrait, often read as another hero)
+      const allyCritical: boolean[] = new Array(6).fill(false);
+      const enemyCritical: boolean[] = new Array(6).fill(false);
       let myAllySlotIdx = -1;
 
       if (isDeadlockTopBarVisible) {
@@ -1971,9 +1984,22 @@ export async function analyzeDeadlockScreen(
           for (let i = 0; i < data.length; i += 4) if (isRespawnDigitPixel(data, i)) n++;
           return n >= RESPAWN_DIGIT_MIN_PIXELS * (w / 1920) * (h / 1080);
         };
+        const isCritical = (baseX1920: number) => {
+          const data = fullCtx.getImageData(
+            Math.round((w * (baseX1920 + 2)) / 1920),
+            Math.round((h * 76) / 1080),
+            Math.max(1, Math.round((w * 66) / 1920)),
+            Math.max(1, Math.round((h * 20) / 1080))
+          ).data;
+          let n = 0;
+          for (let i = 0; i < data.length; i += 4) if (isCriticalBannerPixel(data, i)) n++;
+          return n >= CRITICAL_BANNER_MIN_PIXELS * (w / 1920) * (h / 1080);
+        };
         for (let i = 0; i < 6; i++) {
-          allyDead[i] = isRespawning(339 + i * 88);
-          enemyDead[i] = isRespawning(1071 + i * 88);
+          allyCritical[i] = isCritical(339 + i * 88);
+          enemyCritical[i] = isCritical(1071 + i * 88);
+          allyDead[i] = !allyCritical[i] && isRespawning(339 + i * 88);
+          enemyDead[i] = !enemyCritical[i] && isRespawning(1071 + i * 88);
         }
 
         const usedHeroes = new Set<string>();
@@ -2053,11 +2079,11 @@ export async function analyzeDeadlockScreen(
 
         debugLogs.push(
           `Portraits alliés : ${allyHeroesBySlot
-            .map((id, i) => `${i + 1}:${id ?? '?'}${i === myAllySlotIdx ? '★' : ''}${allyDead[i] ? '✝' : ''}`)
+            .map((id, i) => `${i + 1}:${id ?? '?'}${i === myAllySlotIdx ? '★' : ''}${allyDead[i] ? '✝' : ''}${allyCritical[i] ? '⚠' : ''}`)
             .join(' ')}`
         );
         debugLogs.push(
-          `Portraits ennemis : ${enemyHeroesBySlot.map((id, i) => `${i + 1}:${id ?? '?'}${enemyDead[i] ? '✝' : ''}`).join(' ')}`
+          `Portraits ennemis : ${enemyHeroesBySlot.map((id, i) => `${i + 1}:${id ?? '?'}${enemyDead[i] ? '✝' : ''}${enemyCritical[i] ? '⚠' : ''}`).join(' ')}`
         );
       }
 
@@ -2135,8 +2161,8 @@ export async function analyzeDeadlockScreen(
       }
 
       // 4. NON-BLOCKING TOP BAR OCR: match clock and team souls, every few seconds while the top bar is visible
-      const frameAllySlots = allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id));
-      const frameEnemySlots = enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id));
+      const frameAllySlots = allyHeroesBySlot.map((id, i) => (allyDead[i] || allyCritical[i] ? null : id));
+      const frameEnemySlots = enemyHeroesBySlot.map((id, i) => (enemyDead[i] || enemyCritical[i] ? null : id));
       const frameAt = Date.now();
       if (isDeadlockTopBarVisible && !isTopBarOcrBusy && frameAt - lastTopBarOcrAt >= TOP_BAR_OCR_INTERVAL_MS) {
         try {
@@ -2218,8 +2244,8 @@ export async function analyzeDeadlockScreen(
         highlightedHeroId,
         abilityHeroId: abilityDetectedHeroId,
         // Dead heroes (respawn timer over a grey portrait) count as unreadable for the lineup votes
-        allySlots: isDeadlockTopBarVisible ? allyHeroesBySlot.map((id, i) => (allyDead[i] ? null : id)) : undefined,
-        enemySlots: isDeadlockTopBarVisible ? enemyHeroesBySlot.map((id, i) => (enemyDead[i] ? null : id)) : undefined,
+        allySlots: isDeadlockTopBarVisible ? frameAllySlots : undefined,
+        enemySlots: isDeadlockTopBarVisible ? frameEnemySlots : undefined,
         allyDead: isDeadlockTopBarVisible ? [...allyDead] : undefined,
         enemyDead: isDeadlockTopBarVisible ? [...enemyDead] : undefined,
         topBar: cachedTopBar,

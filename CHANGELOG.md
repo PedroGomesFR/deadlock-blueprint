@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.4] — 2026-11-06
+
+### Fixed
+- **Nurse Harrow was never recognized** in the top bar: her stored portrait was a close-up of her face instead of the hero card the app compares the portraits to. Thanks to [@australium7](https://github.com/australium7) ([#17](https://github.com/PedroGomesFR/deadlock-blueprint/issues/17)).
+- **Heroes at critical HP mixed up the lineups and counted as dead**: at critical HP, a hero's portrait turns red under a red "CRITICAL" banner. It was often read as another hero (4 of the 9 such portraits of our recorded games), and half the time its red glow passed for a respawn timer, so "Now" counted the hero as dead (for example "push, they are down 3"). These portraits are now recognized: they no longer count toward the lineups, and the hero stays alive.
+
 ## [2.1.3] — 2026-11-05
 
 ### Fixed

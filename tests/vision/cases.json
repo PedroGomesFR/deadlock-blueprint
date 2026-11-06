@@ -330,6 +330,60 @@
       }
     },
     {
+      "name": "amber_critical_hp_0828",
+      "description": "8:28, enemy Doorman (slot 1) at critical HP: red portrait under the red CRITIQUE banner, alive, not voted (it was read as dead, its red glow passing the respawn timer test); Vyper (slot 4) dead.",
+      "heroId": "rat_king",
+      "parts": [
+        {
+          "file": "frames/amber_critical_hp_0828_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/amber_critical_hp_0828_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/amber_critical_hp_0828_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "enemySlots": [null, "abrams", "lady_geist", null, "wraith", "lash"],
+        "dead": "000000|000100"
+      }
+    },
+    {
+      "name": "sapphire_critical_hp_1041",
+      "description": "10:41, enemy Apollo (slot 2) at critical HP: not voted (it was read as Seven); Holliday (slot 3) and my ally in slot 1 dead.",
+      "heroId": "rat_king",
+      "parts": [
+        {
+          "file": "frames/sapphire_critical_hp_1041_top.jpg",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "file": "frames/sapphire_critical_hp_1041_inv.jpg",
+          "x": 0,
+          "y": 820
+        },
+        {
+          "file": "frames/sapphire_critical_hp_1041_abilities.jpg",
+          "x": 790,
+          "y": 970
+        }
+      ],
+      "expect": {
+        "mode": "hud",
+        "enemySlots": ["vindicta", null, null, "billy", "infernus", "venator"],
+        "dead": "100000|001000"
+      }
+    },
+    {
       "name": "sapphire_late_2k_1440p",
       "description": "2K QHD 2560x1440 (16:9): HUD, portraits, 10 items, and souls read at 2K.",
       "heroId": "infernus",
@@ -459,6 +513,7 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|010000",
         "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
@@ -513,7 +568,6 @@
     {
       "name": "amber_rat_king_0709_16x10_hud_height_stretched_1440p",
       "description": "Highlighted portrait, game at 2304x1440 stretched to 2560x1440 (HUD scaled to the height).",
-      "knownIssues": ["enemy slot 0 is dead, but its respawn timer has 30 pixels of the timer colour on the real frame, exactly the threshold: resampled 3 times by the simulation, it is found or not depending on the machine's canvas (not compared)"],
       "heroId": "infernus",
       "simulateLayout": { "width": 2304, "height": 1440, "mode": "height-scaled", "display": { "width": 2560, "height": 1440, "fit": "stretch" } },
       "parts": [
@@ -526,6 +580,7 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|010000",
         "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
@@ -736,7 +791,7 @@
     },
     {
       "name": "amber_rat_king_0709",
-      "description": "Same match, 7:09: Rat King with 2 items, two enemies dead. Other players' nameplates blanked out of the inventory crop.",
+      "description": "Same match, 7:09: Rat King with 2 items, enemy slot 0 at critical HP (red portrait under the CRITIQUE banner: alive, it was read as dead until 2.1.4), enemy slot 1 dead. Other players' nameplates blanked out of the inventory crop.",
       "heroId": "infernus",
       "parts": [
         { "file": "frames/amber_rat_king_0709_top.jpg", "x": 0, "y": 0 },
@@ -747,7 +802,7 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
-        "dead": "000000|110000",
+        "dead": "000000|010000",
         "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
@@ -757,7 +812,6 @@
     {
       "name": "amber_rat_king_0709_2k_1440p",
       "description": "The 7:09 frame at 2560x1440: my portrait's frame (3 px strips at 1080p) still found once the frame is scaled down to 1920x1080.",
-      "knownIssues": ["enemy slots 0 and 1 are dead (read at 1080p), but slot 0's respawn timer is borderline once scaled from 2560x1440: found with the software canvas (CI), missed with the GPU one, so the dead slots are not checked here"],
       "heroId": "infernus",
       "simulateLayout": { "width": 2560, "height": 1440, "mode": "16:9" },
       "parts": [
@@ -770,6 +824,7 @@
         "mode": "hud",
         "highlighted": "rat_king",
         "allySlots": ["rem", "victor", "venator", "haze", "rat_king", "sinclair"],
+        "dead": "000000|010000",
         "topBar": "7:09 26/23",
         "slots": ["pristine_emblem", ".", ".", ".", ".", "lock", "improved_spirit", ".", ".", ".", "lock", "lock"],
         "locked": 3,
